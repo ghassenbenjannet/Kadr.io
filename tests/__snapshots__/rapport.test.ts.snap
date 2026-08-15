@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`rapport hebdo — snapshot jeu de données fixe > rend le rapport complet 1`] = `
+"# Revue SI — semaine 2026-W33
+
+## Demandes
+2 reçues (CS : 1, Produit : 1), 1 traitées, 2 en attente
+— Marc (ADV) : corriger l'affichage du délai sur les devis, depuis 26 j
+— Sophie (CS) : voir les factures dans la fiche client, depuis 3 j
+
+## Changements en production
+— 12/08/2026 · deluge · Désactivation de la règle de relance ⚠ sans rollback
+— 13/08/2026 · sql · Correction mapping API Books
+
+## Incidents
+— Synchro devis en échec · impact : Devis non transmis à la facturation · résolu en 3h
+
+## Points de vigilance
+— changement du 12/08 : Désactivation de la règle de relance : Aucun retour arrière déclaré : un incident sur ce changement se traitera en improvisation.
+
+## Semaine prochaine
+— Demande arbitrée à réaliser : ouvrir un accès Zoho (Karim, AE)
+— Décision validée à appliquer : Lecture seule sauf Admin
+"
+`;
