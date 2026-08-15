@@ -1,8 +1,8 @@
 # Registre SI
 
 Mémoire structurée et vérifiable du SI d'Abraxio — outil personnel de l'opérateur SI
-solo. Une seule application : agent IA intégré (API Anthropic) + interface web, un
-seul processus, `npm start`.
+solo. Une seule application : agent IA intégré (Anthropic par défaut, ou tout modèle
+compatible OpenAI) + interface web, un seul processus, `npm start`.
 
 Voir `docs/cahier-des-charges-registre-SI.md` pour le produit et les
 `docs/spec-technique-*.md` pour l'implémentation détaillée de chaque jalon —
@@ -59,10 +59,10 @@ npm run build   # compile le serveur ET construit l'interface (front/)
 sautez cette étape, `npm start` la fait à votre place au premier lancement (voir
 plus bas).
 
-## Configuration de la clé API Anthropic
+## Configuration du modèle
 
-Créez `~/.registre-si/config.json` (permissions 600, jamais commité — déjà dans
-`.gitignore`) :
+Par défaut, l'application appelle l'API Anthropic. Créez `~/.registre-si/config.json`
+(permissions 600, jamais commité — déjà dans `.gitignore`) :
 
 ```json
 {
@@ -76,6 +76,31 @@ Créez `~/.registre-si/config.json` (permissions 600, jamais commité — déjà
 sur le fichier si présents. **Sans clé configurée, l'application démarre quand même** :
 les vues de lecture (Journal, Constats, Rapport hebdo) fonctionnent normalement, et la
 conversation affiche une erreur explicative tant que la clé n'est pas renseignée.
+
+### Utiliser un autre modèle (n'importe quel endpoint compatible OpenAI)
+
+L'application n'est pas verrouillée sur Anthropic : `REGISTRE_PROVIDER=compatible_openai`
+bascule sur n'importe quel endpoint exposant l'API "chat completions" standard
+(NVIDIA NIM — [build.nvidia.com/models](https://build.nvidia.com/models), Together,
+Groq, un serveur vLLM auto-hébergé, etc.).
+
+```json
+{
+  "provider": "compatible_openai",
+  "baseUrl": "https://integrate.api.nvidia.com/v1",
+  "apiKey": "nvapi-...",
+  "model": "meta/llama-3.1-405b-instruct"
+}
+```
+
+Ou par variables d'environnement (prioritaires sur le fichier) :
+`REGISTRE_PROVIDER`, `REGISTRE_BASE_URL`, `REGISTRE_API_KEY`, `REGISTRE_MODEL`.
+`baseUrl` est l'URL de base de l'API (sans `/chat/completions`, ajouté automatiquement) ;
+`model` est le nom du modèle tel qu'attendu par cet endpoint précis — il n'y a pas de
+valeur par défaut, chaque fournisseur ayant sa propre nomenclature. Les outils (tool
+calling), le streaming et l'usage de tokens sont traduits automatiquement vers/depuis le
+format Anthropic interne ; le comportement de l'agent (validation des écritures, modes de
+travail, etc.) est identique quel que soit le fournisseur.
 
 ## Sécurité et authentification
 
@@ -143,11 +168,13 @@ docker run -p 3737:3737 \
   -v registre_data:/data registre-si
 ```
 
-`REGISTRE_MODEL` et `PORT` sont aussi surchargeables via `-e`. Sans clé API,
-le conteneur démarre quand même — mêmes garanties qu'en local (lecture
-disponible, conversation désactivée). **`REGISTRE_PASSWORD` mérite la même
-attention que la clé API** : dès que le conteneur est exposé au-delà de
-`localhost` (déploiement, reverse proxy), définissez-le — voir
+`REGISTRE_MODEL`, `REGISTRE_PROVIDER`/`REGISTRE_BASE_URL` (pour un fournisseur
+compatible OpenAI — voir [Utiliser un autre modèle](#utiliser-un-autre-modèle-nimporte-quel-endpoint-compatible-openai))
+et `PORT` sont aussi surchargeables via `-e`. Sans clé API, le conteneur
+démarre quand même — mêmes garanties qu'en local (lecture disponible,
+conversation désactivée). **`REGISTRE_PASSWORD` mérite la même attention que
+la clé API** : dès que le conteneur est exposé au-delà de `localhost`
+(déploiement, reverse proxy), définissez-le — voir
 [Sécurité et authentification](#sécurité-et-authentification). Derrière un
 reverse proxy HTTPS, ajoutez aussi `-e REGISTRE_COOKIE_SECURE=true`.
 
@@ -276,7 +303,7 @@ npm run build         # backend + front
 
 Structure : `src/db` (schéma, migrations), `src/controles` (C/M/I), `src/tools`
 (logique des outils, fonctions pures `(db, params) => Resultat`), `src/agent`
-(catalogue d'outils, boucle, client Anthropic, prompt système), `src/server` (Hono,
+(catalogue d'outils, boucle, client Anthropic/compatible OpenAI, prompt système), `src/server` (Hono,
 routes API), `src/rapport`, `src/web` (requêtes de cartographie partagées avec l'API
 + rendu HTML autonome utilisé par `generer_rapport(type: "matrice_habilitations")`),
 `src/zoho` (Jalon 3) ; `front/` (React + Vite, tous les écrans y compris

@@ -9,7 +9,7 @@ import { getConnInfo } from "@hono/node-server/conninfo";
 import type Database from "better-sqlite3";
 import type { ConfigAgent } from "../agent/config.js";
 import type { ClientAnthropic } from "../agent/client.js";
-import { clientAnthropicReel } from "../agent/client.js";
+import { clientAnthropicReel, clientCompatibleOpenAI } from "../agent/client.js";
 import { envoyerMessageUtilisateur, reprendreApresDecision } from "../agent/boucle.js";
 import { listerMessages } from "../agent/messages.js";
 import { resumerResultatLecture } from "../agent/resume-resultat.js";
@@ -52,6 +52,19 @@ export interface DependancesApp {
 const COOKIE_SESSION = "registre_session";
 const ROUTES_AUTH_PUBLIQUES = new Set(["/api/login", "/api/logout", "/api/session"]);
 
+function messageCleManquante(config: ConfigAgent): string {
+  if (config.fournisseur === "compatible_openai") {
+    return (
+      "Fournisseur de modèle compatible OpenAI configuré, mais REGISTRE_API_KEY (ou apiKey dans " +
+      "~/.registre-si/config.json) est absent. Renseigne-le, ainsi que REGISTRE_BASE_URL, puis redémarre."
+    );
+  }
+  return (
+    "Clé API Anthropic non configurée. Ajoute-la dans ~/.registre-si/config.json (anthropicApiKey) " +
+    "ou via la variable d'environnement ANTHROPIC_API_KEY, puis redémarre."
+  );
+}
+
 function adresseClient(c: Context): string {
   // X-Forwarded-For n'est fiable que derrière un proxy de confiance qui le
   // pose lui-même ; ici c'est un signal de rate-limit best-effort, pas une
@@ -68,7 +81,12 @@ function adresseClient(c: Context): string {
 
 export function creerApp(deps: DependancesApp): Hono {
   const { db, config, promptSysteme } = deps;
-  const creerClient = deps.creerClient ?? clientAnthropicReel;
+  const creerClient =
+    deps.creerClient ??
+    ((apiKey: string) =>
+      config.fournisseur === "compatible_openai"
+        ? clientCompatibleOpenAI(config.baseUrl ?? "", apiKey)
+        : clientAnthropicReel(apiKey));
   const motDePasse = deps.motDePasse ?? null;
   const secretSession = deps.secretSession ?? genererSecret();
   const app = new Hono();
@@ -241,15 +259,7 @@ export function creerApp(deps: DependancesApp): Hono {
 
   app.post("/api/chat", async (c) => {
     if (!config.apiKey) {
-      return c.json(
-        {
-          ok: false,
-          erreur:
-            "Clé API Anthropic non configurée. Ajoute-la dans ~/.registre-si/config.json (anthropicApiKey) " +
-            "ou via la variable d'environnement ANTHROPIC_API_KEY, puis redémarre.",
-        },
-        503
-      );
+      return c.json({ ok: false, erreur: messageCleManquante(config) }, 503);
     }
 
     const corps = await c.req.json<{ conversationId?: string; message?: string }>();
@@ -297,10 +307,7 @@ export function creerApp(deps: DependancesApp): Hono {
 
   app.post("/api/confirm", async (c) => {
     if (!config.apiKey) {
-      return c.json(
-        { ok: false, erreur: "Clé API Anthropic non configurée. Impossible de reprendre la conversation." },
-        503
-      );
+      return c.json({ ok: false, erreur: messageCleManquante(config) }, 503);
     }
 
     const corps = await c.req.json<{ ecritureId?: string; action?: "valider" | "rejeter"; parametres?: unknown }>();

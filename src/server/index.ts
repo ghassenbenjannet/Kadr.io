@@ -37,8 +37,17 @@ function main(): void {
   const config = chargerConfig();
   if (!config.apiKey) {
     console.warn(
-      "Aucune clé API Anthropic configurée : les vues de lecture fonctionnent, la conversation sera indisponible " +
-        "tant que ~/.registre-si/config.json (anthropicApiKey) ou ANTHROPIC_API_KEY ne sont pas renseignés."
+      config.fournisseur === "compatible_openai"
+        ? "Aucune clé API configurée (REGISTRE_API_KEY) pour le fournisseur compatible OpenAI : les vues de " +
+            "lecture fonctionnent, la conversation sera indisponible tant qu'elle n'est pas renseignée."
+        : "Aucune clé API Anthropic configurée : les vues de lecture fonctionnent, la conversation sera indisponible " +
+            "tant que ~/.registre-si/config.json (anthropicApiKey) ou ANTHROPIC_API_KEY ne sont pas renseignés."
+    );
+  }
+  if (config.fournisseur === "compatible_openai" && !config.baseUrl) {
+    console.warn(
+      "Fournisseur compatible OpenAI sélectionné (REGISTRE_PROVIDER=compatible_openai) mais REGISTRE_BASE_URL " +
+        "est absent : la conversation échouera tant qu'il n'est pas renseigné."
     );
   }
   const promptSysteme = chargerPromptSysteme();
