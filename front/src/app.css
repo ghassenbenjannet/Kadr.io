@@ -28,8 +28,9 @@
 
 .sidebar__nom {
   font-size: var(--taille-h4);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.01em;
+  font-family: var(--police-mono);
 }
 
 .sidebar__baseline {
@@ -68,9 +69,11 @@
   border-radius: var(--rayon-s);
   font-size: var(--taille-corps);
   font-weight: 500;
+  font-family: var(--police-mono);
   color: var(--ink-2);
   background: transparent;
   border: none;
+  border-left: 2px solid transparent;
   text-align: left;
   width: 100%;
   transition: background 120ms cubic-bezier(0.23, 1, 0.32, 1), color 120ms;
@@ -83,8 +86,9 @@
 
 .nav__item--actif,
 .nav__item--actif:hover {
-  background: var(--ink);
-  color: var(--ink-on-dark);
+  background: var(--paper-raised);
+  color: var(--accent);
+  border-left-color: var(--accent);
 }
 
 .nav__icone {
@@ -270,9 +274,10 @@ td.editable {
   align-items: center;
   gap: var(--e-1);
   padding: 2px var(--e-2);
-  border-radius: 999px;
+  border-radius: var(--rayon-s);
+  font-family: var(--police-mono);
   font-size: var(--taille-caption);
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   white-space: nowrap;

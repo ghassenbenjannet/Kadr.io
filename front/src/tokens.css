@@ -1,35 +1,39 @@
-/* Registre SI — tokens visuels (§7 spec Jalon 1 bis).
-   Direction : chrome achromatique, couleur strictement sémantique.
-   Encre brun-noir sur papier légèrement chaud — un carnet de bord, pas un
-   dashboard. Vert / ambre / rouge n'apparaissent JAMAIS ailleurs que sur un
-   état (constat ouvert, changement sans rollback, incident, validé/rejeté). */
+/* Registre SI — tokens visuels (direction "console technique").
+   Neutres froids quasi achromatiques, encre presque noire, un seul bleu de
+   signal réservé à la navigation active et aux liens — pas de décoration.
+   Vert / ambre / rouge n'apparaissent JAMAIS ailleurs que sur un état
+   (constat ouvert, changement sans rollback, incident, validé/rejeté). */
 
 :root {
-  /* Surfaces — papier */
-  --paper: #f5f1e7;
-  --paper-raised: #fffcf6;
-  --paper-sunken: #ece5d3;
-  --paper-sidebar: #f5f1e7;
+  /* Surfaces */
+  --paper: #eef0f3;
+  --paper-raised: #ffffff;
+  --paper-sunken: #e3e6eb;
+  --paper-sidebar: #eef0f3;
 
-  /* Encre — texte, achromatique (teinte brun-noir, jamais gris pur) */
-  --ink: #241a10;
-  --ink-2: rgba(36, 26, 16, 0.68);
-  --ink-3: rgba(36, 26, 16, 0.48);
-  --ink-4: rgba(36, 26, 16, 0.3);
-  --ink-on-dark: #f5f1e7;
+  /* Encre — texte, gris froid quasi neutre, jamais brun */
+  --ink: #14181f;
+  --ink-2: rgba(20, 24, 31, 0.66);
+  --ink-3: rgba(20, 24, 31, 0.46);
+  --ink-4: rgba(20, 24, 31, 0.26);
+  --ink-on-dark: #eef0f3;
 
   /* Règles — bordures, toujours l'encre en transparence */
-  --rule: rgba(36, 26, 16, 0.12);
-  --rule-strong: rgba(36, 26, 16, 0.24);
-  --rule-focus: rgba(36, 26, 16, 0.6);
+  --rule: rgba(20, 24, 31, 0.1);
+  --rule-strong: rgba(20, 24, 31, 0.18);
+  --rule-focus: rgba(20, 24, 31, 0.6);
+
+  /* Accent — un seul, réservé à la navigation active et aux liens */
+  --accent: #2954d1;
+  --accent-fond: #e1e8fb;
 
   /* Sémantique — strictement réservé aux états */
-  --etat-succes: #2f6f4a;
-  --etat-succes-fond: #e2ebe0;
-  --etat-attention: #93600d;
-  --etat-attention-fond: #f2e6cd;
-  --etat-danger: #a5350a;
-  --etat-danger-fond: #f5e2d8;
+  --etat-succes: #1a7a4c;
+  --etat-succes-fond: #dbefe1;
+  --etat-attention: #9c6b0a;
+  --etat-attention-fond: #f4e8cc;
+  --etat-danger: #b23422;
+  --etat-danger-fond: #f8ddd7;
 
   /* Typographie */
   --police-texte: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
