@@ -9,6 +9,7 @@ import { ouvrirDb } from "../db/client.js";
 import { migrer } from "../db/migrate.js";
 import { chargerConfig } from "../agent/config.js";
 import { chargerPromptSysteme } from "../agent/prompt.js";
+import { chargerMotDePasse } from "../auth/config.js";
 import { creerApp } from "./app.js";
 
 const iciDir = dirname(fileURLToPath(import.meta.url)); // dist/server
@@ -41,10 +42,17 @@ function main(): void {
     );
   }
   const promptSysteme = chargerPromptSysteme();
+  const motDePasse = chargerMotDePasse();
+  if (!motDePasse) {
+    console.warn(
+      "Aucun mot de passe configuré (REGISTRE_PASSWORD ou ~/.registre-si/config.json) : l'application est " +
+        "accessible sans authentification à quiconque atteint ce port. À réserver à un usage strictement local."
+    );
+  }
 
   assurerFrontBuild();
 
-  const app = creerApp({ db, config, promptSysteme });
+  const app = creerApp({ db, config, promptSysteme, motDePasse });
 
   if (existsSync(join(dossierPublic, "index.html"))) {
     const racineRelative = relative(process.cwd(), dossierPublic) || ".";

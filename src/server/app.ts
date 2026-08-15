@@ -2,8 +2,10 @@
 // démarrage réseau (index.ts) pour rester testable via app.request(), sans
 // jamais ouvrir de socket ni appeler l'API Anthropic réellement.
 
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { streamSSE } from "hono/streaming";
+import { getCookie, setCookie, deleteCookie } from "hono/cookie";
+import { getConnInfo } from "@hono/node-server/conninfo";
 import type Database from "better-sqlite3";
 import type { ConfigAgent } from "../agent/config.js";
 import type { ClientAnthropic } from "../agent/client.js";
@@ -30,19 +32,97 @@ import {
   champsParSourceDeVerite,
   integrationsAvecConstats,
 } from "../web/donnees.js";
+import { cookieSecurise } from "../auth/config.js";
+import { DUREE_SESSION_MS, creerJetonSession, genererSecret, jetonValide } from "../auth/session.js";
+import { motDePasseValide } from "../auth/motdepasse.js";
+import { enregistrerEchec, limiteAtteinte, reinitialiser } from "../auth/limiteur.js";
 
 export interface DependancesApp {
   db: Database.Database;
   config: ConfigAgent;
   promptSysteme: string;
+  /** null/absent = pas de verrou configuré : toutes les routes restent ouvertes, comme avant. */
+  motDePasse?: string | null;
+  /** Injectable pour les tests ; sinon un secret aléatoire par instance d'app. */
+  secretSession?: Buffer;
   /** Injectable pour les tests : par défaut, le vrai client Anthropic en streaming. */
   creerClient?: (apiKey: string) => ClientAnthropic;
+}
+
+const COOKIE_SESSION = "registre_session";
+const ROUTES_AUTH_PUBLIQUES = new Set(["/api/login", "/api/logout", "/api/session"]);
+
+function adresseClient(c: Context): string {
+  // X-Forwarded-For n'est fiable que derrière un proxy de confiance qui le
+  // pose lui-même ; ici c'est un signal de rate-limit best-effort, pas une
+  // frontière de sécurité — un client pourrait le forger pour contourner le
+  // compteur. À défaut, l'adresse du socket brut.
+  const xff = c.req.header("x-forwarded-for");
+  if (xff) return xff.split(",")[0]!.trim();
+  try {
+    return getConnInfo(c).remote.address ?? "inconnu";
+  } catch {
+    return "inconnu";
+  }
 }
 
 export function creerApp(deps: DependancesApp): Hono {
   const { db, config, promptSysteme } = deps;
   const creerClient = deps.creerClient ?? clientAnthropicReel;
+  const motDePasse = deps.motDePasse ?? null;
+  const secretSession = deps.secretSession ?? genererSecret();
   const app = new Hono();
+
+  // --- Authentification --------------------------------------------------
+  // Un seul mot de passe partagé (l'app est mono-opérateur) : pas de compte,
+  // pas de rôle. Sans REGISTRE_PASSWORD configuré, aucun verrou — comme
+  // avant, pour ne rien casser en usage purement local.
+
+  app.use("/api/*", async (c, next) => {
+    if (!motDePasse || ROUTES_AUTH_PUBLIQUES.has(c.req.path)) return next();
+    const jeton = getCookie(c, COOKIE_SESSION);
+    if (!jetonValide(jeton, secretSession)) {
+      return c.json({ ok: false, erreur: "Authentification requise." }, 401);
+    }
+    return next();
+  });
+
+  app.get("/api/session", (c) => {
+    if (!motDePasse) return c.json({ ok: true, verrouille: false, authentifie: true });
+    const jeton = getCookie(c, COOKIE_SESSION);
+    return c.json({ ok: true, verrouille: true, authentifie: jetonValide(jeton, secretSession) });
+  });
+
+  app.post("/api/login", async (c) => {
+    if (!motDePasse) return c.json({ ok: true });
+
+    const ip = adresseClient(c);
+    if (limiteAtteinte(ip)) {
+      return c.json({ ok: false, erreur: "Trop de tentatives. Réessaie dans quelques minutes." }, 429);
+    }
+
+    const corps = await c.req.json<{ motDePasse?: string }>().catch(() => ({}) as { motDePasse?: string });
+    if (!corps.motDePasse || !motDePasseValide(corps.motDePasse, motDePasse)) {
+      enregistrerEchec(ip);
+      return c.json({ ok: false, erreur: "Mot de passe incorrect." }, 401);
+    }
+
+    reinitialiser(ip);
+    const jeton = creerJetonSession(secretSession);
+    setCookie(c, COOKIE_SESSION, jeton, {
+      httpOnly: true,
+      sameSite: "Lax",
+      secure: cookieSecurise(),
+      path: "/",
+      maxAge: Math.floor(DUREE_SESSION_MS / 1000),
+    });
+    return c.json({ ok: true });
+  });
+
+  app.post("/api/logout", (c) => {
+    deleteCookie(c, COOKIE_SESSION, { path: "/" });
+    return c.json({ ok: true });
+  });
 
   // --- Lecture ---------------------------------------------------------
 
