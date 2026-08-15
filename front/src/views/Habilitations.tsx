@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { recupererHabilitations, type ChampAvecContexte, type DroitCellule } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
+import { ActionsGlobales } from "../components/ActionsGlobales";
 
 function libelleCellule(droit: DroitCellule | undefined): { texte: string; classe: string } {
   switch (droit) {
@@ -42,11 +43,9 @@ export function Habilitations() {
 
   return (
     <div>
-      <PageHeader
-        icone="⊞"
-        titre="Matrice d'habilitations"
-        sousTitre="Qui voit quoi, qui édite quoi — par champ et par profil."
-      />
+      <PageHeader groupe="Cartographie" titre="Matrice d'habilitations">
+        <ActionsGlobales />
+      </PageHeader>
 
       {donnees && donnees.modules.length > 0 && (
         <div className="filtre">

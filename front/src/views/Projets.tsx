@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { recupererProjets, creerProjetDirect, type ProjetResume } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
+import { ActionsGlobales } from "../components/ActionsGlobales";
 import { ProjetDetail } from "./ProjetDetail";
 import { EditeurFiche, type DescripteurChamp } from "../components/EditeurFiche";
 
@@ -66,14 +67,11 @@ export function Projets() {
 
   return (
     <div>
-      <PageHeader
-        icone="▣"
-        titre="Projets"
-        sousTitre="Demande → projet → epic → ticket, avec sa suite de recette."
-      >
-        <button className="sidebar__nouvelle" onClick={() => setCreationOuverte((v) => !v)}>
+      <PageHeader groupe="Projets" titre="Projets">
+        <button className="btn" onClick={() => setCreationOuverte((v) => !v)}>
           {creationOuverte ? "Fermer" : "+ Nouveau projet"}
         </button>
+        <ActionsGlobales />
       </PageHeader>
 
       {creationOuverte && (

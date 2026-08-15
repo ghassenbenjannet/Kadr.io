@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import {
   recupererConversations,
+  recupererDemandes,
+  recupererConstats,
+  recupererProjets,
   seDeconnecter,
   surSessionExpiree,
   verifierSession,
   type ConversationResume,
 } from "./lib/api";
+import { definirNavigation, type Vue } from "./lib/navigation";
+import { Aujourdhui } from "./views/Aujourdhui";
 import { Journal } from "./views/Journal";
 import { Constats } from "./views/Constats";
 import { RapportHebdo } from "./views/RapportHebdo";
@@ -16,56 +21,71 @@ import { Integrations } from "./views/Integrations";
 import { Tickets } from "./views/Tickets";
 import { Projets } from "./views/Projets";
 import { BaseConnaissances } from "./views/BaseConnaissances";
+import { EcransMobiles } from "./views/EcransMobiles";
 import { Login } from "./views/Login";
 
-type Vue =
-  | "conversation"
-  | "tickets"
-  | "projets"
-  | "connaissances"
-  | "journal"
-  | "constats"
-  | "rapport"
-  | "habilitations"
-  | "champs"
-  | "integrations";
-
-const GROUPES_NAV: { titre: string; items: { vue: Vue; label: string; icone: string }[] }[] = [
-  {
-    titre: "Registre",
-    items: [
-      { vue: "conversation", label: "Conversation", icone: "●" },
-      { vue: "tickets", label: "Tickets", icone: "▥" },
-      { vue: "journal", label: "Journal", icone: "☰" },
-      { vue: "constats", label: "Constats", icone: "▲" },
-      { vue: "rapport", label: "Rapport hebdo", icone: "▤" },
-    ],
-  },
-  {
-    titre: "Projets",
-    items: [
-      { vue: "projets", label: "Projets", icone: "▣" },
-      { vue: "connaissances", label: "Base de connaissances", icone: "◈" },
-    ],
-  },
-  {
-    titre: "Cartographie",
-    items: [
-      { vue: "habilitations", label: "Habilitations", icone: "⊞" },
-      { vue: "champs", label: "Champs", icone: "≣" },
-      { vue: "integrations", label: "Intégrations", icone: "⇄" },
-    ],
-  },
-];
+function construireGroupes(compteTickets: number, compteConstats: number, compteProjets: number) {
+  return [
+    {
+      titre: "Pilotage",
+      items: [
+        { vue: "aujourdhui" as Vue, label: "Aujourd'hui", icone: "◐" },
+        { vue: "conversation" as Vue, label: "Conversation", icone: "●" },
+        { vue: "tickets" as Vue, label: "Tickets", icone: "▥", compte: compteTickets },
+      ],
+    },
+    {
+      titre: "Mémoire",
+      items: [
+        { vue: "journal" as Vue, label: "Journal", icone: "☰" },
+        { vue: "constats" as Vue, label: "Constats", icone: "▲", compte: compteConstats },
+        { vue: "rapport" as Vue, label: "Rapport hebdo", icone: "▤" },
+      ],
+    },
+    {
+      titre: "Projets",
+      items: [
+        { vue: "projets" as Vue, label: "Projets", icone: "▣", compte: compteProjets },
+        { vue: "connaissances" as Vue, label: "Connaissances", icone: "◈" },
+      ],
+    },
+    {
+      titre: "Cartographie",
+      items: [
+        { vue: "habilitations" as Vue, label: "Habilitations", icone: "⊞" },
+        { vue: "champs" as Vue, label: "Champs", icone: "≣" },
+        { vue: "integrations" as Vue, label: "Intégrations", icone: "⇄" },
+      ],
+    },
+    {
+      titre: "Mobile",
+      items: [{ vue: "mobile" as Vue, label: "Écrans mobiles", icone: "▯" }],
+    },
+  ];
+}
 
 type EtatAuth = "chargement" | "connecte" | "deconnecte";
+
+function initiales(nom: string): string {
+  return nom
+    .split(/\s+/)
+    .map((m) => m[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+const OPERATEUR = "Ghassen B.";
 
 export default function App() {
   const [etatAuth, setEtatAuth] = useState<EtatAuth>("chargement");
   const [verrouille, setVerrouille] = useState(false);
-  const [vue, setVue] = useState<Vue>("conversation");
+  const [vue, setVue] = useState<Vue>("aujourdhui");
   const [conversations, setConversations] = useState<ConversationResume[]>([]);
   const [conversationActive, setConversationActive] = useState<string | undefined>(undefined);
+  const [compteTickets, setCompteTickets] = useState(0);
+  const [compteConstats, setCompteConstats] = useState(0);
+  const [compteProjets, setCompteProjets] = useState(0);
 
   useEffect(() => {
     surSessionExpiree(() => setEtatAuth("deconnecte"));
@@ -78,24 +98,48 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    definirNavigation(setVue);
+  }, []);
+
+  useEffect(() => {
     if (etatAuth !== "connecte") return;
     recupererConversations()
       .then((r) => setConversations(r.conversations))
       .catch(() => setConversations([]));
+    recupererDemandes()
+      .then((r) => setCompteTickets(r.demandes.length))
+      .catch(() => {});
+    recupererConstats()
+      .then((r) => setCompteConstats(r.ok ? r.constats.length : 0))
+      .catch(() => {});
+    recupererProjets()
+      .then((r) => setCompteProjets(r.projets.length))
+      .catch(() => {});
   }, [vue, conversationActive, etatAuth]);
 
   if (etatAuth === "chargement") return <div className="page-chargement">Chargement…</div>;
   if (etatAuth === "deconnecte") return <Login onConnecte={() => setEtatAuth("connecte")} />;
 
+  const groupes = construireGroupes(compteTickets, compteConstats, compteProjets);
+
   return (
     <div className="app">
       <aside className="sidebar">
         <div className="sidebar__titre">
-          <span className="sidebar__nom">Registre SI</span>
-          <span className="sidebar__baseline">Abraxio</span>
+          <div className="sidebar__logo">◆</div>
+          <div className="sidebar__identite">
+            <span className="sidebar__nom">Registre SI</span>
+            <span className="sidebar__baseline">Abraxio</span>
+          </div>
         </div>
 
-        {GROUPES_NAV.map((groupe) => (
+        <div className="sidebar__recherche">
+          <span aria-hidden="true">⌕</span>
+          <span>Demander à l'agent</span>
+          <span className="sidebar__recherche-raccourci">⌘K</span>
+        </div>
+
+        {groupes.map((groupe) => (
           <div className="nav-groupe" key={groupe.titre}>
             <div className="nav-groupe__titre">{groupe.titre}</div>
             <nav className="nav">
@@ -107,6 +151,7 @@ export default function App() {
                 >
                   <span className="nav__icone">{o.icone}</span>
                   {o.label}
+                  {!!o.compte && <span className="nav__compte">{o.compte}</span>}
                 </button>
               ))}
             </nav>
@@ -145,19 +190,28 @@ export default function App() {
           </div>
         </div>
 
-        {verrouille && (
-          <button
-            className="sidebar__deconnexion"
-            onClick={() => {
-              seDeconnecter().finally(() => setEtatAuth("deconnecte"));
-            }}
-          >
-            Se déconnecter
-          </button>
-        )}
+        <div className="sidebar__pied">
+          <div className="sidebar__avatar">{initiales(OPERATEUR)}</div>
+          <div className="sidebar__identite-pied">
+            <span className="sidebar__nom-pied">{OPERATEUR}</span>
+            <span className="sidebar__role-pied">Opérateur SI</span>
+          </div>
+          {verrouille && (
+            <button
+              className="sidebar__deconnexion"
+              title="Se déconnecter"
+              onClick={() => {
+                seDeconnecter().finally(() => setEtatAuth("deconnecte"));
+              }}
+            >
+              ⏻
+            </button>
+          )}
+        </div>
       </aside>
 
       <main className={vue === "conversation" ? "main main--conversation" : "main"}>
+        {vue === "aujourdhui" && <Aujourdhui />}
         {vue === "conversation" && (
           <Conversation conversationId={conversationActive} onConversationDemarree={setConversationActive} />
         )}
@@ -170,6 +224,7 @@ export default function App() {
         {vue === "habilitations" && <Habilitations />}
         {vue === "champs" && <ChampsSourceVerite />}
         {vue === "integrations" && <Integrations />}
+        {vue === "mobile" && <EcransMobiles />}
       </main>
     </div>
   );

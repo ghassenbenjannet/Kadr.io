@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { recupererConnaissances, creerDocumentDirect, type DocumentResume } from "../lib/api";
 import { LIBELLES_TYPE_DOCUMENT } from "../lib/documents-libelles";
 import { PageHeader } from "../components/PageHeader";
+import { ActionsGlobales } from "../components/ActionsGlobales";
 import { DocumentEditor } from "./DocumentEditor";
 
 function formaterDate(iso: string): string {
@@ -59,14 +60,11 @@ export function BaseConnaissances() {
 
   return (
     <div>
-      <PageHeader
-        icone="◈"
-        titre="Base de connaissances"
-        sousTitre="L'existant de l'entreprise, des spécifications de référence — indépendant de tout projet."
-      >
+      <PageHeader groupe="Projets" titre="Base de connaissances">
         <button className="btn" onClick={() => setFormulaireOuvert((v) => !v)}>
           + Nouvelle page
         </button>
+        <ActionsGlobales />
       </PageHeader>
 
       {formulaireOuvert && (

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { recupererRapportHebdo } from "../lib/api";
 import { rendreMarkdownLeger } from "../lib/markdown-lite";
 import { PageHeader } from "../components/PageHeader";
+import { ActionsGlobales } from "../components/ActionsGlobales";
 
 export function RapportHebdo() {
   const [markdown, setMarkdown] = useState<string | null>(null);
@@ -23,10 +24,11 @@ export function RapportHebdo() {
 
   return (
     <div>
-      <PageHeader icone="▤" titre="Rapport hebdo" sousTitre="Prêt à envoyer au CEO, tel quel.">
+      <PageHeader groupe="Mémoire" titre="Rapport hebdo">
         <button className="btn" onClick={copier} disabled={!markdown}>
           {copie ? "Copié" : "Copier le markdown"}
         </button>
+        <ActionsGlobales />
       </PageHeader>
 
       {erreur && <div className="erreur">{erreur}</div>}

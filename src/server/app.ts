@@ -53,7 +53,10 @@ import { schemaEntree as schemaCreerEpic } from "../tools/creer-epic.js";
 import { creerTicket } from "../tools/creer-ticket.js";
 import { schemaEntree as schemaCreerTicket } from "../tools/creer-ticket.js";
 import { constatsOuverts } from "../tools/constats-ouverts.js";
+import { lancerControles } from "../tools/lancer-controles.js";
+import { schemaEntree as schemaLancerControles } from "../tools/lancer-controles.js";
 import { genererRapport } from "../tools/generer-rapport.js";
+import { detailTableauDeBord } from "./tableauDeBord.js";
 import {
   matriceHabilitations,
   modulesDistincts,
@@ -206,6 +209,22 @@ export function creerApp(deps: DependancesApp): Hono {
 
   app.get("/api/constats", (c) => {
     return c.json(constatsOuverts(db, {}));
+  });
+
+  // Écriture directe : lancer_controles est un calcul déterministe et
+  // idempotent (upsert de constats), sans effet sur le journal ni sur la
+  // carte — voir §5.3 de la spec. Aucune validation IA nécessaire.
+  app.post("/api/controles", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaLancerControles).safeParse(corps);
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    return c.json(lancerControles(db, analyse.data));
+  });
+
+  app.get("/api/tableau-de-bord", (c) => {
+    return c.json({ ok: true, ...detailTableauDeBord(db) });
   });
 
   app.get("/api/rapport/hebdo", (c) => {

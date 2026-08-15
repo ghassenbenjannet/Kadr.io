@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { recupererIntegrations, type IntegrationAvecConstats } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
+import { ActionsGlobales } from "../components/ActionsGlobales";
 
 export function Integrations() {
   const [integrations, setIntegrations] = useState<IntegrationAvecConstats[] | null>(null);
@@ -14,7 +15,9 @@ export function Integrations() {
 
   return (
     <div>
-      <PageHeader icone="⇄" titre="Carte des intégrations" sousTitre="Flux entre systèmes — points de vigilance rattachés." />
+      <PageHeader groupe="Cartographie" titre="Carte des intégrations">
+        <ActionsGlobales />
+      </PageHeader>
 
       {erreur && <div className="erreur">{erreur}</div>}
       {!erreur && integrations === null && <div className="chargement">Chargement…</div>}

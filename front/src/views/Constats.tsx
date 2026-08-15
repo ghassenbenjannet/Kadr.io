@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { recupererConstats, type ConstatOuvert } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
+import { ActionsGlobales } from "../components/ActionsGlobales";
 
 type Famille = "pratique" | "modele" | "integration";
 
@@ -33,7 +34,9 @@ export function Constats() {
 
   return (
     <div>
-      <PageHeader icone="▲" titre="Constats" sousTitre="La vigie : chaque constat cite sa conséquence." />
+      <PageHeader groupe="Mémoire" titre="Constats">
+        <ActionsGlobales />
+      </PageHeader>
 
       {erreur && <div className="erreur">{erreur}</div>}
       {!erreur && constats === null && <div className="chargement">Chargement…</div>}
@@ -46,11 +49,17 @@ export function Constats() {
         (["pratique", "modele", "integration"] as const).map((famille) =>
           groupes[famille].length === 0 ? null : (
             <div className="constats-groupe" key={famille}>
-              <div className="constats-groupe__titre">{TITRES_FAMILLE[famille]}</div>
+              <div className="constats-groupe__titre">
+                {TITRES_FAMILLE[famille]}
+                <span className="constats-groupe__titre-compte">{groupes[famille].length}</span>
+              </div>
               {groupes[famille].map((c, i) => (
                 <div className="constat" key={i}>
-                  <div className="constat__resume">{c.resume}</div>
-                  <div className="constat__consequence">{c.consequence}</div>
+                  <div className="constat__corps">
+                    <div className="constat__resume">{c.resume}</div>
+                    <div className="constat__consequence">{c.consequence}</div>
+                  </div>
+                  <span className="constat__code mono">{c.controle}</span>
                 </div>
               ))}
             </div>

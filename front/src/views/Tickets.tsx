@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { recupererDemandes, type DemandeComplete } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
+import { ActionsGlobales } from "../components/ActionsGlobales";
 import { EntiteDetail } from "./EntiteDetail";
 
 const COLONNES: { statut: string[]; titre: string }[] = [
@@ -50,11 +51,9 @@ export function Tickets() {
 
   return (
     <div>
-      <PageHeader
-        icone="▥"
-        titre="Tickets"
-        sousTitre="Les demandes, de leur réception à leur réalisation — le statut se fait avancer en conversation."
-      />
+      <PageHeader groupe="Pilotage" titre="Tickets">
+        <ActionsGlobales />
+      </PageHeader>
 
       {erreur && <div className="erreur">{erreur}</div>}
       {!erreur && demandes === null && <div className="chargement">Chargement…</div>}

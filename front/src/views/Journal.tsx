@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
 import { recupererJournal, creerEntiteDirect, type LigneJournal } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
+import { ActionsGlobales } from "../components/ActionsGlobales";
 import { EntiteDetail } from "./EntiteDetail";
 import { EditeurFiche, type DescripteurChamp } from "../components/EditeurFiche";
 import { OPTIONS_EQUIPE, OPTIONS_TYPE_DEMANDE, OPTIONS_TYPE_CHANGEMENT, OPTIONS_PRIORITE } from "../lib/statuts-libelles";
-
-const LIBELLES_ENTITE: Record<string, string> = {
-  demande: "Demande",
-  decision: "Décision",
-  changement: "Changement",
-  incident: "Incident",
-};
+import { LIBELLES_ENTITE, badgeEntite } from "../lib/entite-libelles";
+import { definirOuvertureCreationJournal } from "../lib/navigation";
 
 type TypeCreation = "demande" | "decision" | "changement" | "incident";
 
@@ -61,8 +57,17 @@ function formaterDate(iso: string): string {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 }
 
+const FILTRES_ENTITE: { valeur: string; label: string }[] = [
+  { valeur: "", label: "Tout" },
+  { valeur: "demande", label: "Demandes" },
+  { valeur: "decision", label: "Décisions" },
+  { valeur: "changement", label: "Changements" },
+  { valeur: "incident", label: "Incidents" },
+];
+
 export function Journal() {
   const [entite, setEntite] = useState("");
+  const [recherche, setRecherche] = useState("");
   const [lignes, setLignes] = useState<LigneJournal[] | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ entite: string; id: string } | null>(null);
@@ -71,6 +76,15 @@ export function Journal() {
   const [valeurs, setValeurs] = useState<Record<string, string>>(() => valeursInitiales("demande"));
   const [creationEnCours, setCreationEnCours] = useState(false);
   const [erreurCreation, setErreurCreation] = useState<string | null>(null);
+
+  useEffect(() => {
+    definirOuvertureCreationJournal(() => {
+      changerTypeCreation(typeCreation);
+      setCreationOuverte(true);
+    });
+    return () => definirOuvertureCreationJournal(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeCreation]);
 
   function charger() {
     setErreur(null);
@@ -127,18 +141,14 @@ export function Journal() {
     );
   }
 
+  const lignesFiltrees = (lignes ?? []).filter(
+    (l) => !recherche.trim() || l.resume.toLowerCase().includes(recherche.trim().toLowerCase())
+  );
+
   return (
     <div>
-      <PageHeader icone="☰" titre="Journal" sousTitre="Demandes, décisions, changements, incidents.">
-        <button
-          className="sidebar__nouvelle"
-          onClick={() => {
-            changerTypeCreation(typeCreation);
-            setCreationOuverte((v) => !v);
-          }}
-        >
-          {creationOuverte ? "Fermer" : "+ Nouvelle entrée"}
-        </button>
+      <PageHeader groupe="Mémoire" titre="Journal">
+        <ActionsGlobales />
       </PageHeader>
 
       {creationOuverte && (
@@ -177,24 +187,35 @@ export function Journal() {
         </div>
       )}
 
-      <div className="filtre">
-        <select value={entite} onChange={(e) => setEntite(e.target.value)} aria-label="Filtrer par type">
-          <option value="">Toutes les entités</option>
-          <option value="demande">Demandes</option>
-          <option value="decision">Décisions</option>
-          <option value="changement">Changements</option>
-          <option value="incident">Incidents</option>
-        </select>
+      <div className="pilules">
+        {FILTRES_ENTITE.map((f) => (
+          <button
+            key={f.valeur}
+            className={`pilule${entite === f.valeur ? " pilule--actif" : ""}`}
+            onClick={() => setEntite(f.valeur)}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
+
+      <input
+        className="recherche"
+        type="search"
+        placeholder="Rechercher dans le journal…"
+        value={recherche}
+        onChange={(e) => setRecherche(e.target.value)}
+        aria-label="Rechercher dans le journal"
+      />
 
       {erreur && <div className="erreur">{erreur}</div>}
       {!erreur && lignes === null && <div className="chargement">Chargement…</div>}
-      {!erreur && lignes !== null && lignes.length === 0 && (
+      {!erreur && lignes !== null && lignesFiltrees.length === 0 && (
         <div className="etat-vide">Rien à afficher pour l'instant.</div>
       )}
-      {!erreur && lignes !== null && lignes.length > 0 && (
+      {!erreur && lignes !== null && lignesFiltrees.length > 0 && (
         <div className="liste">
-          {lignes.map((l) => (
+          {lignesFiltrees.map((l) => (
             <button
               className="ligne ligne--cliquable"
               key={`${l.entite}-${l.id}`}
@@ -202,7 +223,7 @@ export function Journal() {
             >
               <div className="ligne__date mono">{formaterDate(l.date)}</div>
               <div className="ligne__corps">
-                <span className="badge badge--neutre">{LIBELLES_ENTITE[l.entite] ?? l.entite}</span>
+                <span className={badgeEntite(l.entite)}>{LIBELLES_ENTITE[l.entite] ?? l.entite}</span>
                 <span className="ligne__resume">{l.resume}</span>
               </div>
             </button>

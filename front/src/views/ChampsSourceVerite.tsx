@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { recupererChamps, type GroupeSourceDeVerite } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
+import { ActionsGlobales } from "../components/ActionsGlobales";
 
 export function ChampsSourceVerite() {
   const [groupes, setGroupes] = useState<GroupeSourceDeVerite[] | null>(null);
@@ -14,11 +15,9 @@ export function ChampsSourceVerite() {
 
   return (
     <div>
-      <PageHeader
-        icone="≣"
-        titre="Champs par source de vérité"
-        sousTitre="Les contradictions (M2) remontent en tête de chaque groupe."
-      />
+      <PageHeader groupe="Cartographie" titre="Champs par source de vérité">
+        <ActionsGlobales />
+      </PageHeader>
 
       {erreur && <div className="erreur">{erreur}</div>}
       {!erreur && groupes === null && <div className="chargement">Chargement…</div>}

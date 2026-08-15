@@ -16,6 +16,35 @@ export interface ConstatOuvert {
   depuis: string;
 }
 
+export interface TableauDeBord {
+  demandesEnAttente: number;
+  constatsOuverts: number;
+  changements7j: number;
+  incidentsOuverts: number;
+  journalSemaine: LigneJournal[];
+  vigie: { controle: string; resume: string; consequence: string }[];
+  resumeSemaine: { demandes: number; decisions: number; changements: number; incidentsClos: number };
+}
+
+export function recupererTableauDeBord(): Promise<{ ok: true } & TableauDeBord> {
+  return requeteJson("/api/tableau-de-bord");
+}
+
+export interface ResultatControles {
+  ok: true;
+  nouveaux: number;
+  resolus: number;
+  ouverts: { controle: string; entite: string; resume: string; consequence: string }[];
+}
+
+export function lancerControlesDirect(perimetre?: string): Promise<ResultatControles> {
+  return requeteJson("/api/controles", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(perimetre ? { perimetre } : {}),
+  });
+}
+
 export interface ConversationResume {
   id: string;
   titre: string | null;
