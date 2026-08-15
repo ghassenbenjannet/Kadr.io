@@ -6,21 +6,24 @@ import { genererRapportHebdo, semaineCouranteIso } from "../rapport/hebdo.js";
 import { genererRapportEtatSi } from "../rapport/etat-si.js";
 import { rendreImpactMarkdown, type SortieImpact } from "../rapport/impact.js";
 import { impact } from "./impact.js";
+import { rendrePageHabilitations } from "../web/pages/habilitations.js";
 import { resoudreCheminDb } from "../db/client.js";
 import type { Resultat } from "../db/util.js";
 
 export const nom = "generer_rapport";
 
 export const description =
-  "Génère un rapport en markdown. 'hebdo' produit la revue de la semaine (demandes, " +
+  "Génère un rapport. 'hebdo' produit la revue de la semaine en markdown (demandes, " +
   "changements, incidents, points de vigilance, éléments de carte décrits). 'etat_si' produit la " +
-  "synthèse de la carte et des constats ouverts (document de passation). 'impact' produit la " +
-  "sortie d'impact() en markdown, à joindre à une demande de validation avant changement.";
+  "synthèse de la carte et des constats ouverts en markdown (document de passation). 'impact' " +
+  "produit la sortie d'impact() en markdown, à joindre à une demande de validation avant " +
+  "changement. 'matrice_habilitations' produit la page HTML autonome, à envoyer telle quelle au " +
+  "CEO ou à un auditeur.";
 
 const typeCibleEnum = z.enum(["champ", "module", "integration", "automatisation"]);
 
 export const schemaEntree = {
-  type: z.enum(["hebdo", "etat_si", "impact"]),
+  type: z.enum(["hebdo", "etat_si", "impact", "matrice_habilitations"]),
   semaine: z.string().optional().describe("Semaine ISO, ex 2026-W34 (défaut : semaine courante) — pour 'hebdo'"),
   cible: z
     .object({
@@ -31,13 +34,15 @@ export const schemaEntree = {
     })
     .optional()
     .describe("Requis pour 'impact' : la cible à analyser"),
+  module: z.string().optional().describe("Filtre optionnel pour 'matrice_habilitations'"),
 };
 
 const schema = z.object(schemaEntree);
 export type EntreeGenererRapport = z.infer<typeof schema>;
 
 interface Sortie {
-  markdown: string;
+  markdown?: string;
+  html?: string;
   chemin?: string;
 }
 
@@ -67,6 +72,16 @@ export function genererRapport(db: Database.Database, entree: EntreeGenererRappo
     const markdown = genererRapportEtatSi(db);
     const chemin = ecrireSurDisque(`etat_si-${new Date().toISOString().slice(0, 10)}.md`, markdown);
     return { ok: true, markdown, chemin };
+  }
+
+  if (entree.type === "matrice_habilitations") {
+    const html = rendrePageHabilitations(db, entree.module, { navigation: false });
+    const suffixe = entree.module ? `-${entree.module}` : "";
+    const chemin = ecrireSurDisque(
+      `matrice_habilitations${suffixe}-${new Date().toISOString().slice(0, 10)}.html`,
+      html
+    );
+    return { ok: true, html, chemin };
   }
 
   // impact

@@ -1,5 +1,6 @@
 import type Database from "better-sqlite3";
 import { detailEntite } from "../db/libelles.js";
+import { integrationsAvecConstats } from "../web/donnees.js";
 
 interface SystemeLigne {
   nom: string;
@@ -56,16 +57,7 @@ export function collecterDonneesEtatSi(db: Database.Database): DonneesEtatSi {
     )
     .all() as ModuleLigne[];
 
-  const integrationsRows = db
-    .prepare(
-      `SELECT i.nom, so.nom AS source, ci.nom AS cible,
-              (SELECT COUNT(*) FROM constats co WHERE co.entite = 'integration' AND co.entite_id = i.id AND co.statut = 'ouvert') AS constatsOuverts
-       FROM integrations i
-       JOIN systemes so ON so.id = i.source_id
-       JOIN systemes ci ON ci.id = i.cible_id
-       ORDER BY i.nom`
-    )
-    .all() as IntegrationLigne[];
+  const integrationsRows: IntegrationLigne[] = integrationsAvecConstats(db);
 
   const constatsRows = db
     .prepare(
