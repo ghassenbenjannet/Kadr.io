@@ -1,0 +1,31 @@
+{
+  "name": "registre-si",
+  "version": "1.0.0",
+  "description": "Registre SI — mémoire structurée et vérifiable du SI d'Abraxio (serveur MCP)",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "dist/server.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "web": "node dist/web/server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "better-sqlite3": "^11.9.1",
+    "nanoid": "^5.0.9",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.13.5",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.6"
+  }
+}
