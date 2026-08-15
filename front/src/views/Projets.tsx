@@ -1,21 +1,67 @@
 import { useEffect, useState } from "react";
-import { recupererProjets, type ProjetResume } from "../lib/api";
+import { recupererProjets, creerProjetDirect, type ProjetResume } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
 import { ProjetDetail } from "./ProjetDetail";
+import { EditeurFiche, type DescripteurChamp } from "../components/EditeurFiche";
+
+const CHAMPS_CREATION: DescripteurChamp[] = [
+  { cle: "nom", label: "Nom du projet", type: "texte", requis: true },
+  { cle: "description", label: "Description", type: "textarea" },
+];
 
 export function Projets() {
   const [projets, setProjets] = useState<ProjetResume[] | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [idSelectionne, setIdSelectionne] = useState<string | undefined>(undefined);
+  const [creationOuverte, setCreationOuverte] = useState(false);
+  const [valeurs, setValeurs] = useState<Record<string, string>>({ nom: "", description: "" });
+  const [creationEnCours, setCreationEnCours] = useState(false);
+  const [erreurCreation, setErreurCreation] = useState<string | null>(null);
 
-  useEffect(() => {
-    recupererProjets()
+  function charger() {
+    setErreur(null);
+    return recupererProjets()
       .then((r) => setProjets(r.projets))
       .catch((e) => setErreur(e instanceof Error ? e.message : String(e)));
+  }
+
+  useEffect(() => {
+    charger();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  async function creer() {
+    if (!valeurs.nom?.trim()) {
+      setErreurCreation("« Nom du projet » est requis.");
+      return;
+    }
+    setCreationEnCours(true);
+    setErreurCreation(null);
+    try {
+      const r = await creerProjetDirect({
+        nom: valeurs.nom.trim(),
+        description: valeurs.description || undefined,
+      });
+      setCreationOuverte(false);
+      setValeurs({ nom: "", description: "" });
+      setIdSelectionne(r.id);
+    } catch (e) {
+      setErreurCreation(e instanceof Error ? e.message : String(e));
+    } finally {
+      setCreationEnCours(false);
+    }
+  }
+
   if (idSelectionne) {
-    return <ProjetDetail id={idSelectionne} onRetour={() => setIdSelectionne(undefined)} />;
+    return (
+      <ProjetDetail
+        id={idSelectionne}
+        onRetour={() => {
+          setIdSelectionne(undefined);
+          charger();
+        }}
+      />
+    );
   }
 
   return (
@@ -24,7 +70,30 @@ export function Projets() {
         icone="▣"
         titre="Projets"
         sousTitre="Demande → projet → epic → ticket, avec sa suite de recette."
-      />
+      >
+        <button className="sidebar__nouvelle" onClick={() => setCreationOuverte((v) => !v)}>
+          {creationOuverte ? "Fermer" : "+ Nouveau projet"}
+        </button>
+      </PageHeader>
+
+      {creationOuverte && (
+        <div className="editeur-fiche">
+          <EditeurFiche
+            champs={CHAMPS_CREATION}
+            valeurs={valeurs}
+            onChange={(cle, valeur) => setValeurs((v) => ({ ...v, [cle]: valeur }))}
+          />
+          {erreurCreation && <div className="champ__erreur">{erreurCreation}</div>}
+          <div className="editeur-fiche__actions">
+            <button className="btn btn--primaire" onClick={creer} disabled={creationEnCours}>
+              Créer
+            </button>
+            <button className="btn" onClick={() => setCreationOuverte(false)} disabled={creationEnCours}>
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
 
       {erreur && <div className="erreur">{erreur}</div>}
       {!erreur && projets === null && <div className="chargement">Chargement…</div>}

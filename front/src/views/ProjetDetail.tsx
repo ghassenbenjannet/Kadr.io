@@ -4,6 +4,8 @@ import {
   creerDocumentDirect,
   mettreAJourProjetDirect,
   mettreAJourEpicDirect,
+  creerEpicDirect,
+  creerTicketDirect,
   type ProjetDetailComplet,
 } from "../lib/api";
 import { LIBELLES_TYPE_TICKET, badgeStatutTicket, badgeStatutCas } from "../lib/tickets-libelles";
@@ -20,6 +22,23 @@ const CHAMPS_PROJET: DescripteurChamp[] = [
 
 const CHAMPS_EPIC: DescripteurChamp[] = [
   { cle: "statut", label: "Statut", type: "select", options: OPTIONS_STATUT_EPIC },
+  { cle: "description", label: "Description", type: "textarea" },
+];
+
+const CHAMPS_NOUVEL_EPIC: DescripteurChamp[] = [
+  { cle: "nom", label: "Nom de l'epic", type: "texte", requis: true },
+  { cle: "description", label: "Description", type: "textarea" },
+];
+
+const CHAMPS_NOUVEAU_TICKET: DescripteurChamp[] = [
+  { cle: "titre", label: "Titre", type: "texte", requis: true },
+  {
+    cle: "type",
+    label: "Type",
+    type: "select",
+    requis: true,
+    options: Object.entries(LIBELLES_TYPE_TICKET).map(([valeur, label]) => ({ valeur, label })),
+  },
   { cle: "description", label: "Description", type: "textarea" },
 ];
 
@@ -43,6 +62,18 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
   const [epicEnEdition, setEpicEnEdition] = useState<string | null>(null);
   const [valeursEpic, setValeursEpic] = useState<Record<string, string>>({});
   const [enregistrementEpic, setEnregistrementEpic] = useState<"inactif" | "en_cours" | "erreur">("inactif");
+  const [creationEpicOuverte, setCreationEpicOuverte] = useState(false);
+  const [valeursNouvelEpic, setValeursNouvelEpic] = useState<Record<string, string>>({ nom: "", description: "" });
+  const [creationEpicEnCours, setCreationEpicEnCours] = useState(false);
+  const [erreurCreationEpic, setErreurCreationEpic] = useState<string | null>(null);
+  const [epicPourNouveauTicket, setEpicPourNouveauTicket] = useState<string | null>(null);
+  const [valeursNouveauTicket, setValeursNouveauTicket] = useState<Record<string, string>>({
+    titre: "",
+    type: "analyse",
+    description: "",
+  });
+  const [creationTicketEnCours, setCreationTicketEnCours] = useState(false);
+  const [erreurCreationTicket, setErreurCreationTicket] = useState<string | null>(null);
 
   function charger() {
     let annule = false;
@@ -120,6 +151,61 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e));
       setEnregistrementEpic("erreur");
+    }
+  }
+
+  async function creerNouvelEpic() {
+    if (!detail) return;
+    if (!valeursNouvelEpic.nom?.trim()) {
+      setErreurCreationEpic("« Nom de l'epic » est requis.");
+      return;
+    }
+    setCreationEpicEnCours(true);
+    setErreurCreationEpic(null);
+    try {
+      await creerEpicDirect({
+        projet: detail.projet.nom,
+        nom: valeursNouvelEpic.nom.trim(),
+        description: valeursNouvelEpic.description || undefined,
+      });
+      setCreationEpicOuverte(false);
+      setValeursNouvelEpic({ nom: "", description: "" });
+      charger();
+    } catch (e) {
+      setErreurCreationEpic(e instanceof Error ? e.message : String(e));
+    } finally {
+      setCreationEpicEnCours(false);
+    }
+  }
+
+  function ouvrirCreationTicket(epicId: string) {
+    setValeursNouveauTicket({ titre: "", type: "analyse", description: "" });
+    setEpicPourNouveauTicket(epicId);
+    setErreurCreationTicket(null);
+  }
+
+  async function creerNouveauTicket(epicNom: string) {
+    if (!detail) return;
+    if (!valeursNouveauTicket.titre?.trim()) {
+      setErreurCreationTicket("« Titre » est requis.");
+      return;
+    }
+    setCreationTicketEnCours(true);
+    setErreurCreationTicket(null);
+    try {
+      await creerTicketDirect({
+        projet: detail.projet.nom,
+        epic: epicNom,
+        titre: valeursNouveauTicket.titre.trim(),
+        type: valeursNouveauTicket.type,
+        description: valeursNouveauTicket.description || undefined,
+      });
+      setEpicPourNouveauTicket(null);
+      charger();
+    } catch (e) {
+      setErreurCreationTicket(e instanceof Error ? e.message : String(e));
+    } finally {
+      setCreationTicketEnCours(false);
     }
   }
 
@@ -256,6 +342,32 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
             )}
           </div>
 
+          <div className="constats-groupe__titre-ligne">
+            <div className="constats-groupe__titre">Epics</div>
+            <button className="sidebar__nouvelle" onClick={() => setCreationEpicOuverte((v) => !v)}>
+              {creationEpicOuverte ? "Fermer" : "+ Nouvel epic"}
+            </button>
+          </div>
+
+          {creationEpicOuverte && (
+            <div className="editeur-fiche">
+              <EditeurFiche
+                champs={CHAMPS_NOUVEL_EPIC}
+                valeurs={valeursNouvelEpic}
+                onChange={(cle, valeur) => setValeursNouvelEpic((v) => ({ ...v, [cle]: valeur }))}
+              />
+              {erreurCreationEpic && <div className="champ__erreur">{erreurCreationEpic}</div>}
+              <div className="editeur-fiche__actions">
+                <button className="btn btn--primaire" onClick={creerNouvelEpic} disabled={creationEpicEnCours}>
+                  Créer
+                </button>
+                <button className="btn" onClick={() => setCreationEpicOuverte(false)} disabled={creationEpicEnCours}>
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
+
           {detail.epics.length === 0 && (
             <div className="etat-vide">Aucun epic pour l'instant.</div>
           )}
@@ -267,12 +379,22 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
                   {epic.tickets.length === 1 ? "" : "s"}
                 </div>
                 {epicEnEdition !== epic.id && (
-                  <button
-                    className="sidebar__nouvelle"
-                    onClick={() => ouvrirEditionEpic(epic.id, epic.statut, epic.description)}
-                  >
-                    Modifier
-                  </button>
+                  <div style={{ display: "flex", gap: "var(--e-3)" }}>
+                    <button
+                      className="sidebar__nouvelle"
+                      onClick={() =>
+                        epicPourNouveauTicket === epic.id ? setEpicPourNouveauTicket(null) : ouvrirCreationTicket(epic.id)
+                      }
+                    >
+                      {epicPourNouveauTicket === epic.id ? "Fermer" : "+ Nouveau ticket"}
+                    </button>
+                    <button
+                      className="sidebar__nouvelle"
+                      onClick={() => ouvrirEditionEpic(epic.id, epic.statut, epic.description)}
+                    >
+                      Modifier
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -301,6 +423,29 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
                     {enregistrementEpic === "erreur" && <span className="champ__erreur">Échec de l'enregistrement</span>}
                   </div>
                 </>
+              )}
+
+              {epicPourNouveauTicket === epic.id && (
+                <div className="editeur-fiche">
+                  <EditeurFiche
+                    champs={CHAMPS_NOUVEAU_TICKET}
+                    valeurs={valeursNouveauTicket}
+                    onChange={(cle, valeur) => setValeursNouveauTicket((v) => ({ ...v, [cle]: valeur }))}
+                  />
+                  {erreurCreationTicket && <div className="champ__erreur">{erreurCreationTicket}</div>}
+                  <div className="editeur-fiche__actions">
+                    <button
+                      className="btn btn--primaire"
+                      onClick={() => creerNouveauTicket(epic.nom)}
+                      disabled={creationTicketEnCours}
+                    >
+                      Créer
+                    </button>
+                    <button className="btn" onClick={() => setEpicPourNouveauTicket(null)} disabled={creationTicketEnCours}>
+                      Annuler
+                    </button>
+                  </div>
+                </div>
               )}
 
               <div className="liste">
