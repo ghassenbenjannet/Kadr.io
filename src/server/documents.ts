@@ -4,6 +4,7 @@
 // le commentaire au-dessus des routes POST/PUT /api/documents.
 
 import type Database from "better-sqlite3";
+import type { Resultat } from "../db/util.js";
 
 export interface DocumentResume {
   id: string;
@@ -64,4 +65,21 @@ export function detailDocument(db: Database.Database, id: string): DocumentDetai
     maj_le: row.maj_le,
     projet: row.projet_id ? { id: row.projet_id, nom: row.projet_nom! } : null,
   };
+}
+
+// Pas de trigger AFTER DELETE sur documents_fts (schema.sql v7) : le nettoyage
+// de l'index plein texte est à la charge de l'appelant, comme pour journal_fts.
+export function supprimerDocument(db: Database.Database, id: string): Resultat<{ id: string }> {
+  const existant = db.prepare("SELECT rowid AS r FROM documents WHERE id = ?").get(id) as
+    | { r: number }
+    | undefined;
+  if (!existant) return { ok: false, erreur: "Page introuvable." };
+
+  const transaction = db.transaction(() => {
+    db.prepare("DELETE FROM documents_fts WHERE rowid = ?").run(existant.r);
+    db.prepare("DELETE FROM documents WHERE id = ?").run(id);
+  });
+  transaction();
+
+  return { ok: true, id };
 }

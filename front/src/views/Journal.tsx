@@ -137,7 +137,14 @@ export function Journal() {
 
   if (selection) {
     return (
-      <EntiteDetail entite={selection.entite} id={selection.id} onRetour={() => setSelection(null)} />
+      <EntiteDetail
+        entite={selection.entite}
+        id={selection.id}
+        onRetour={() => {
+          setSelection(null);
+          charger();
+        }}
+      />
     );
   }
 

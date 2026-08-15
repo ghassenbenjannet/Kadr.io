@@ -1,5 +1,16 @@
 import { useEffect, useState } from "react";
-import { recupererTicket, mettreAJourTicketDirect, type TicketDetailComplet } from "../lib/api";
+import {
+  recupererTicket,
+  mettreAJourTicketDirect,
+  supprimerTicketDirect,
+  recupererPlansTest,
+  lierPlanTestDirect,
+  delierPlanTestDirect,
+  executerCasTestDirect,
+  supprimerCasTestDirect,
+  type TicketDetailComplet,
+  type PlanTestResume,
+} from "../lib/api";
 import { LIBELLES_TYPE_TICKET, badgeStatutTicket, badgeStatutCas } from "../lib/tickets-libelles";
 import { EditeurFiche, type DescripteurChamp } from "../components/EditeurFiche";
 import { OPTIONS_STATUT_TICKET } from "../lib/statuts-libelles";
@@ -15,6 +26,9 @@ export function TicketDetail({ id, onRetour }: { id: string; onRetour: () => voi
   const [edition, setEdition] = useState(false);
   const [valeurs, setValeurs] = useState<Record<string, string>>({});
   const [enregistrement, setEnregistrement] = useState<"inactif" | "en_cours" | "erreur">("inactif");
+  const [plansDisponibles, setPlansDisponibles] = useState<PlanTestResume[]>([]);
+  const [planALier, setPlanALier] = useState("");
+  const [liaisonEnCours, setLiaisonEnCours] = useState(false);
 
   function charger() {
     setErreur(null);
@@ -27,8 +41,67 @@ export function TicketDetail({ id, onRetour }: { id: string; onRetour: () => voi
     setTicket(null);
     setEdition(false);
     charger();
+    recupererPlansTest()
+      .then((r) => setPlansDisponibles(r.plans))
+      .catch(() => setPlansDisponibles([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  async function supprimer() {
+    if (!ticket) return;
+    if (!confirm(`Supprimer le ticket « ${ticket.titre} » ?`)) return;
+    try {
+      await supprimerTicketDirect(id);
+      onRetour();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function lierPlan() {
+    if (!planALier) return;
+    setLiaisonEnCours(true);
+    try {
+      await lierPlanTestDirect(id, planALier);
+      setPlanALier("");
+      await charger();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLiaisonEnCours(false);
+    }
+  }
+
+  async function delierPlan(planId: string) {
+    try {
+      await delierPlanTestDirect(id, planId);
+      await charger();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function executerCas(casId: string, statut: "a_faire" | "reussi" | "echoue") {
+    try {
+      await executerCasTestDirect(casId, { statut });
+      await charger();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function supprimerCas(casId: string) {
+    if (!confirm("Supprimer ce scénario ?")) return;
+    try {
+      await supprimerCasTestDirect(casId);
+      await charger();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  const plansLies = new Set(ticket?.plans_test.map((p) => p.id) ?? []);
+  const plansALier = plansDisponibles.filter((p) => !plansLies.has(p.id));
 
   function ouvrirEdition() {
     if (!ticket) return;
@@ -86,6 +159,9 @@ export function TicketDetail({ id, onRetour }: { id: string; onRetour: () => voi
                 <button className="sidebar__nouvelle" onClick={ouvrirEdition}>
                   Modifier
                 </button>
+                <button className="btn btn--danger" onClick={supprimer}>
+                  Supprimer
+                </button>
               </div>
             )}
           </div>
@@ -131,16 +207,41 @@ export function TicketDetail({ id, onRetour }: { id: string; onRetour: () => voi
           </dl>
 
           <div className="constats-groupe">
-            <div className="constats-groupe__titre">Plans de test liés</div>
+            <div className="constats-groupe__titre-ligne">
+              <div className="constats-groupe__titre">Plans de test liés</div>
+              {plansALier.length > 0 && (
+                <div style={{ display: "flex", gap: "var(--e-2)" }}>
+                  <select value={planALier} onChange={(e) => setPlanALier(e.target.value)}>
+                    <option value="">Lier un plan existant…</option>
+                    {plansALier.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nom}
+                      </option>
+                    ))}
+                  </select>
+                  <button className="btn" onClick={lierPlan} disabled={!planALier || liaisonEnCours}>
+                    Lier
+                  </button>
+                </div>
+              )}
+            </div>
             {ticket.plans_test.length === 0 && (
               <div className="etat-vide">Aucun plan de test lié à ce ticket.</div>
             )}
             {ticket.plans_test.map((plan) => (
               <div className="plan-test" key={plan.id}>
-                <div className="plan-test__nom">{plan.nom}</div>
+                <div
+                  className="plan-test__nom"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                >
+                  {plan.nom}
+                  <button className="btn" onClick={() => delierPlan(plan.id)}>
+                    Délier
+                  </button>
+                </div>
                 <div className="liste">
                   {plan.cas.map((c) => (
-                    <div className="ligne" key={c.id}>
+                    <div className="ligne" key={c.id} style={{ flexDirection: "column", alignItems: "stretch" }}>
                       <div className="ligne__corps">
                         <span className={badgeStatutCas(c.statut)}>{c.statut.replace("_", " ")}</span>
                         <span className="ligne__resume">{c.etape}</span>
@@ -149,6 +250,20 @@ export function TicketDetail({ id, onRetour }: { id: string; onRetour: () => voi
                             par {c.executee_par}
                           </span>
                         )}
+                      </div>
+                      <div style={{ display: "flex", gap: "var(--e-1)", marginTop: "var(--e-1)", flexWrap: "wrap" }}>
+                        <button className="btn" onClick={() => executerCas(c.id, "reussi")}>
+                          Réussi
+                        </button>
+                        <button className="btn" onClick={() => executerCas(c.id, "echoue")}>
+                          Échoué
+                        </button>
+                        <button className="btn" onClick={() => executerCas(c.id, "a_faire")}>
+                          À faire
+                        </button>
+                        <button className="btn btn--danger" onClick={() => supprimerCas(c.id)}>
+                          Supprimer
+                        </button>
                       </div>
                     </div>
                   ))}

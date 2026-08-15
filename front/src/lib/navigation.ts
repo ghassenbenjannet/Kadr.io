@@ -8,15 +8,17 @@
 export type Vue =
   | "aujourdhui"
   | "conversation"
-  | "tickets"
+  | "demandes"
   | "projets"
   | "connaissances"
   | "journal"
   | "constats"
   | "rapport"
+  | "plans_test"
   | "habilitations"
   | "champs"
   | "integrations"
+  | "agents"
   | "mobile";
 
 let gestionnaireNavigation: ((vue: Vue) => void) | null = null;

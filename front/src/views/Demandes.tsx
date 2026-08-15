@@ -20,13 +20,13 @@ function ageEnJours(iso: string): number {
 function CarteDemande({ demande, onClick }: { demande: DemandeComplete; onClick: () => void }) {
   const age = ageEnJours(demande.cree_le);
   return (
-    <button className="ticket ticket--cliquable" onClick={onClick}>
-      <div className="ticket__entete">
+    <button className="carte-demande carte-demande--cliquable" onClick={onClick}>
+      <div className="carte-demande__entete">
         <span className="badge badge--neutre">{demande.equipe}</span>
-        {demande.priorite && <span className="ticket__priorite">{demande.priorite}</span>}
+        {demande.priorite && <span className="carte-demande__priorite">{demande.priorite}</span>}
       </div>
-      <div className="ticket__expression">{demande.expression_brute}</div>
-      <div className="ticket__pied">
+      <div className="carte-demande__expression">{demande.expression_brute}</div>
+      <div className="carte-demande__pied">
         <span>{demande.demandeur}</span>
         <span>{age === 0 ? "aujourd'hui" : `il y a ${age} j`}</span>
       </div>
@@ -34,24 +34,38 @@ function CarteDemande({ demande, onClick }: { demande: DemandeComplete; onClick:
   );
 }
 
-export function Tickets() {
+export function Demandes() {
   const [demandes, setDemandes] = useState<DemandeComplete[] | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [idSelectionne, setIdSelectionne] = useState<string | null>(null);
 
-  useEffect(() => {
-    recupererDemandes()
+  function charger() {
+    setErreur(null);
+    return recupererDemandes()
       .then((r) => setDemandes(r.demandes))
       .catch((e) => setErreur(e instanceof Error ? e.message : String(e)));
+  }
+
+  useEffect(() => {
+    charger();
   }, []);
 
   if (idSelectionne) {
-    return <EntiteDetail entite="demande" id={idSelectionne} onRetour={() => setIdSelectionne(null)} />;
+    return (
+      <EntiteDetail
+        entite="demande"
+        id={idSelectionne}
+        onRetour={() => {
+          setIdSelectionne(null);
+          charger();
+        }}
+      />
+    );
   }
 
   return (
     <div>
-      <PageHeader groupe="Pilotage" titre="Tickets">
+      <PageHeader groupe="Pilotage" titre="Demandes">
         <ActionsGlobales />
       </PageHeader>
 

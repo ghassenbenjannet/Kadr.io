@@ -548,3 +548,159 @@ export function mettreAJourDocumentDirect(
     body: JSON.stringify(args),
   });
 }
+
+// --- Suppression directe --------------------------------------------------
+
+export function supprimerEntiteDirect(entite: string, id: string): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/journal/${entite}/${id}`, { method: "DELETE" });
+}
+
+export function supprimerTicketDirect(id: string): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/tickets/${id}`, { method: "DELETE" });
+}
+
+export function supprimerEpicDirect(id: string): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/epics/${id}`, { method: "DELETE" });
+}
+
+export function supprimerProjetDirect(id: string): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/projets/${id}`, { method: "DELETE" });
+}
+
+export function supprimerDocumentDirect(id: string): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/documents/${id}`, { method: "DELETE" });
+}
+
+// --- Plans de test ---------------------------------------------------------
+
+export interface PlanTestResume {
+  id: string;
+  nom: string;
+  description: string | null;
+  cree_le: string;
+  cas_total: number;
+  cas_reussis: number;
+  cas_echoues: number;
+}
+
+export function recupererPlansTest(): Promise<{ ok: true; plans: PlanTestResume[] }> {
+  return requeteJson("/api/plans-test");
+}
+
+export interface PlanTestComplet {
+  id: string;
+  nom: string;
+  description: string | null;
+  cree_le: string;
+  cas: CasTestDetail[];
+  tickets: { id: string; titre: string; epic_nom: string; projet_id: string; projet_nom: string }[];
+}
+
+export function recupererPlanTest(id: string): Promise<{ ok: true } & PlanTestComplet> {
+  return requeteJson(`/api/plans-test/${id}`);
+}
+
+export function creerPlanTestDirect(args: {
+  nom: string;
+  description?: string;
+  cas: { etape: string; resultat_attendu: string }[];
+}): Promise<{ ok: true; id: string; resume: string; cas_ids: string[] }> {
+  return requeteJson("/api/plans-test", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(args),
+  });
+}
+
+export function supprimerPlanTestDirect(id: string): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/plans-test/${id}`, { method: "DELETE" });
+}
+
+export function ajouterCasTestDirect(
+  planTestId: string,
+  args: { etape: string; resultat_attendu: string }
+): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/plans-test/${planTestId}/cas`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(args),
+  });
+}
+
+export function executerCasTestDirect(
+  id: string,
+  args: { statut: "a_faire" | "reussi" | "echoue"; executee_par?: string }
+): Promise<{ ok: true; id: string; resume: string }> {
+  return requeteJson(`/api/cas-test/${id}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(args),
+  });
+}
+
+export function supprimerCasTestDirect(id: string): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/cas-test/${id}`, { method: "DELETE" });
+}
+
+export function lierPlanTestDirect(
+  ticketId: string,
+  planTestId: string
+): Promise<{ ok: true; ticket_id: string; plan_test_id: string }> {
+  return requeteJson(`/api/tickets/${ticketId}/plans-test`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ plan_test_id: planTestId }),
+  });
+}
+
+export function delierPlanTestDirect(ticketId: string, planTestId: string): Promise<{ ok: true }> {
+  return requeteJson(`/api/tickets/${ticketId}/plans-test/${planTestId}`, { method: "DELETE" });
+}
+
+// --- Agents (modes de travail spécialisés) ---------------------------------
+
+export interface AgentMode {
+  id: string;
+  cree_le: string;
+  cle: string;
+  titre: string;
+  description: string | null;
+  contenu: string;
+  maj_le: string;
+}
+
+export function recupererAgents(): Promise<{ ok: true; agents: AgentMode[] }> {
+  return requeteJson("/api/agents");
+}
+
+export function recupererAgent(id: string): Promise<{ ok: true } & AgentMode> {
+  return requeteJson(`/api/agents/${id}`);
+}
+
+export function creerAgentDirect(args: {
+  cle: string;
+  titre: string;
+  description?: string;
+  contenu: string;
+}): Promise<{ ok: true; id: string }> {
+  return requeteJson("/api/agents", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(args),
+  });
+}
+
+export function mettreAJourAgentDirect(
+  id: string,
+  args: { cle?: string; titre?: string; description?: string; contenu?: string }
+): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/agents/${id}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(args),
+  });
+}
+
+export function supprimerAgentDirect(id: string): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/agents/${id}`, { method: "DELETE" });
+}

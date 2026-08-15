@@ -48,19 +48,19 @@ export function EcransMobiles() {
             <span>▮▮▮</span>
           </div>
           <div className="telephone__ecran">
-            <div className="telephone__entete">Tickets</div>
+            <div className="telephone__entete">Demandes</div>
             <div className="telephone__corps">
               <div className="pilules">
                 <span className="pilule pilule--actif">Reçue · 3</span>
                 <span className="pilule">Qualifiée · 2</span>
               </div>
-              <div className="ticket">
+              <div className="carte-demande">
                 <span className="badge badge--neutre">CS</span>
-                <div className="ticket__expression">Sophie veut voir les factures dans la fiche client.</div>
+                <div className="carte-demande__expression">Sophie veut voir les factures dans la fiche client.</div>
               </div>
-              <div className="ticket">
+              <div className="carte-demande">
                 <span className="badge badge--neutre">ADV</span>
-                <div className="ticket__expression">Exporter les lignes de commande au format CSV.</div>
+                <div className="carte-demande__expression">Exporter les lignes de commande au format CSV.</div>
               </div>
             </div>
           </div>

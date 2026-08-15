@@ -873,7 +873,7 @@ td.editable {
   padding: var(--e-2) var(--e-1);
 }
 
-.ticket {
+.carte-demande {
   background: var(--paper-raised);
   border: 1px solid var(--rule);
   border-radius: var(--rayon-xl);
@@ -884,7 +884,7 @@ td.editable {
   gap: var(--e-2);
 }
 
-.ticket--cliquable {
+.carte-demande--cliquable {
   font: inherit;
   text-align: left;
   color: inherit;
@@ -892,7 +892,7 @@ td.editable {
   width: 100%;
 }
 
-.ticket--cliquable:hover {
+.carte-demande--cliquable:hover {
   border-color: var(--rule-strong);
   background: var(--paper-sunken);
 }
@@ -905,20 +905,20 @@ td.editable {
   flex-shrink: 0;
 }
 
-.ticket__entete {
+.carte-demande__entete {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.ticket__priorite {
+.carte-demande__priorite {
   font-family: var(--police-mono);
   font-size: var(--taille-caption);
   font-weight: 600;
   color: var(--ink-3);
 }
 
-.ticket__expression {
+.carte-demande__expression {
   font-size: var(--taille-meta);
   color: var(--ink);
   line-height: 1.45;
@@ -928,7 +928,7 @@ td.editable {
   overflow: hidden;
 }
 
-.ticket__pied {
+.carte-demande__pied {
   display: flex;
   align-items: center;
   justify-content: space-between;

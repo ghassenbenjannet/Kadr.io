@@ -7,6 +7,7 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ouvrirDb } from "../db/client.js";
 import { migrer } from "../db/migrate.js";
+import { seedModesDefaut } from "../agent/modes.js";
 import { chargerConfig } from "../agent/config.js";
 import { chargerPromptSysteme } from "../agent/prompt.js";
 import { chargerMotDePasse } from "../auth/config.js";
@@ -34,6 +35,7 @@ const PORT = Number(process.env.PORT ?? 3737);
 function main(): void {
   const db = ouvrirDb();
   migrer(db);
+  seedModesDefaut(db);
   const config = chargerConfig();
   if (!config.apiKey) {
     console.warn(

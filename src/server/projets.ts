@@ -3,6 +3,7 @@
 // plus adaptée à une URL.
 
 import type Database from "better-sqlite3";
+import type { Resultat } from "../db/util.js";
 import { listerDocuments, type DocumentResume } from "./documents.js";
 
 export interface ProjetResume {
@@ -166,4 +167,30 @@ export function detailProjet(db: Database.Database, id: string): ProjetDetail | 
   }));
 
   return { projet, epics, suite_recette: suiteRecette, documents: listerDocuments(db, id) };
+}
+
+// Les FK de epics/tickets/ticket_plans_test sont déclarées ON DELETE CASCADE
+// (v5-projets.sql) : supprimer un projet supprime ses epics puis leurs
+// tickets, et supprimer un epic supprime ses tickets — pas besoin de le
+// faire à la main ici (foreign_keys = ON, voir db/client.ts).
+
+export function supprimerProjet(db: Database.Database, id: string): Resultat<{ id: string }> {
+  const existant = db.prepare("SELECT id FROM projets WHERE id = ?").get(id);
+  if (!existant) return { ok: false, erreur: "Projet introuvable." };
+  db.prepare("DELETE FROM projets WHERE id = ?").run(id);
+  return { ok: true, id };
+}
+
+export function supprimerEpic(db: Database.Database, id: string): Resultat<{ id: string }> {
+  const existant = db.prepare("SELECT id FROM epics WHERE id = ?").get(id);
+  if (!existant) return { ok: false, erreur: "Epic introuvable." };
+  db.prepare("DELETE FROM epics WHERE id = ?").run(id);
+  return { ok: true, id };
+}
+
+export function supprimerTicket(db: Database.Database, id: string): Resultat<{ id: string }> {
+  const existant = db.prepare("SELECT id FROM tickets WHERE id = ?").get(id);
+  if (!existant) return { ok: false, erreur: "Ticket introuvable." };
+  db.prepare("DELETE FROM tickets WHERE id = ?").run(id);
+  return { ok: true, id };
 }

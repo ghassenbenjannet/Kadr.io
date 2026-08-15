@@ -18,20 +18,22 @@ import { Conversation } from "./views/Conversation";
 import { Habilitations } from "./views/Habilitations";
 import { ChampsSourceVerite } from "./views/ChampsSourceVerite";
 import { Integrations } from "./views/Integrations";
-import { Tickets } from "./views/Tickets";
+import { Demandes } from "./views/Demandes";
 import { Projets } from "./views/Projets";
 import { BaseConnaissances } from "./views/BaseConnaissances";
+import { PlansTest } from "./views/PlansTest";
+import { Agents } from "./views/Agents";
 import { EcransMobiles } from "./views/EcransMobiles";
 import { Login } from "./views/Login";
 
-function construireGroupes(compteTickets: number, compteConstats: number, compteProjets: number) {
+function construireGroupes(compteDemandes: number, compteConstats: number, compteProjets: number) {
   return [
     {
       titre: "Pilotage",
       items: [
         { vue: "aujourdhui" as Vue, label: "Aujourd'hui", icone: "◐" },
         { vue: "conversation" as Vue, label: "Conversation", icone: "●" },
-        { vue: "tickets" as Vue, label: "Tickets", icone: "▥", compte: compteTickets },
+        { vue: "demandes" as Vue, label: "Demandes", icone: "▥", compte: compteDemandes },
       ],
     },
     {
@@ -46,6 +48,7 @@ function construireGroupes(compteTickets: number, compteConstats: number, compte
       titre: "Projets",
       items: [
         { vue: "projets" as Vue, label: "Projets", icone: "▣", compte: compteProjets },
+        { vue: "plans_test" as Vue, label: "Plans de test", icone: "☑" },
         { vue: "connaissances" as Vue, label: "Connaissances", icone: "◈" },
       ],
     },
@@ -56,6 +59,10 @@ function construireGroupes(compteTickets: number, compteConstats: number, compte
         { vue: "champs" as Vue, label: "Champs", icone: "≣" },
         { vue: "integrations" as Vue, label: "Intégrations", icone: "⇄" },
       ],
+    },
+    {
+      titre: "Système",
+      items: [{ vue: "agents" as Vue, label: "Agents", icone: "✦" }],
     },
     {
       titre: "Mobile",
@@ -83,7 +90,7 @@ export default function App() {
   const [vue, setVue] = useState<Vue>("aujourdhui");
   const [conversations, setConversations] = useState<ConversationResume[]>([]);
   const [conversationActive, setConversationActive] = useState<string | undefined>(undefined);
-  const [compteTickets, setCompteTickets] = useState(0);
+  const [compteDemandes, setCompteDemandes] = useState(0);
   const [compteConstats, setCompteConstats] = useState(0);
   const [compteProjets, setCompteProjets] = useState(0);
 
@@ -107,7 +114,7 @@ export default function App() {
       .then((r) => setConversations(r.conversations))
       .catch(() => setConversations([]));
     recupererDemandes()
-      .then((r) => setCompteTickets(r.demandes.length))
+      .then((r) => setCompteDemandes(r.demandes.length))
       .catch(() => {});
     recupererConstats()
       .then((r) => setCompteConstats(r.ok ? r.constats.length : 0))
@@ -120,7 +127,7 @@ export default function App() {
   if (etatAuth === "chargement") return <div className="page-chargement">Chargement…</div>;
   if (etatAuth === "deconnecte") return <Login onConnecte={() => setEtatAuth("connecte")} />;
 
-  const groupes = construireGroupes(compteTickets, compteConstats, compteProjets);
+  const groupes = construireGroupes(compteDemandes, compteConstats, compteProjets);
 
   return (
     <div className="app">
@@ -215,15 +222,17 @@ export default function App() {
         {vue === "conversation" && (
           <Conversation conversationId={conversationActive} onConversationDemarree={setConversationActive} />
         )}
-        {vue === "tickets" && <Tickets />}
+        {vue === "demandes" && <Demandes />}
         {vue === "projets" && <Projets />}
         {vue === "connaissances" && <BaseConnaissances />}
         {vue === "journal" && <Journal />}
         {vue === "constats" && <Constats />}
         {vue === "rapport" && <RapportHebdo />}
+        {vue === "plans_test" && <PlansTest />}
         {vue === "habilitations" && <Habilitations />}
         {vue === "champs" && <ChampsSourceVerite />}
         {vue === "integrations" && <Integrations />}
+        {vue === "agents" && <Agents />}
         {vue === "mobile" && <EcransMobiles />}
       </main>
     </div>

@@ -135,7 +135,7 @@ const DEFINITIONS: DefinitionOutil[] = [
     description: outilChargerMode.description,
     nature: "lecture",
     schemaEntree: outilChargerMode.schemaEntree,
-    executer: (_db, p) => chargerModeOutil(p as never),
+    executer: (db, p) => chargerModeOutil(db, p as never),
   },
   {
     nom: outilLireDocument.nom,

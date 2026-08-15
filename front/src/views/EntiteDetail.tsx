@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { recupererEntiteJournal, mettreAJourEntiteDirect } from "../lib/api";
+import { recupererEntiteJournal, mettreAJourEntiteDirect, supprimerEntiteDirect } from "../lib/api";
 import { libelleChamp } from "../lib/outils-libelles";
 import { EditeurFiche, type DescripteurChamp } from "../components/EditeurFiche";
 import { OPTIONS_STATUT_DEMANDE, OPTIONS_STATUT_DECISION, OPTIONS_PRIORITE } from "../lib/statuts-libelles";
@@ -154,6 +154,16 @@ export function EntiteDetail({
     }
   }
 
+  async function supprimer() {
+    if (!confirm(`Supprimer cette fiche « ${TITRES_ENTITE[entite] ?? entite} » ?`)) return;
+    try {
+      await supprimerEntiteDirect(entite, id);
+      onRetour();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   return (
     <div>
       <button className="lien-retour" onClick={onRetour}>
@@ -174,10 +184,15 @@ export function EntiteDetail({
                 <h1>{TITRES_ENTITE[entite] ?? entite}</h1>
               </div>
             </div>
-            {champsModifiables.length > 0 && !edition && (
+            {!edition && (
               <div className="main__entete-actions">
-                <button className="sidebar__nouvelle" onClick={ouvrirEdition}>
-                  Modifier
+                {champsModifiables.length > 0 && (
+                  <button className="sidebar__nouvelle" onClick={ouvrirEdition}>
+                    Modifier
+                  </button>
+                )}
+                <button className="btn btn--danger" onClick={supprimer}>
+                  Supprimer
                 </button>
               </div>
             )}

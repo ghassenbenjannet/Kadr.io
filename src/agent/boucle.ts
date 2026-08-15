@@ -11,6 +11,7 @@ import type Database from "better-sqlite3";
 import type { BlocContenu, ClientAnthropic, GestionnaireTexte } from "./client.js";
 import type { ConfigAgent } from "./config.js";
 import { outilParNom, schemasAnthropic } from "./outils.js";
+import { listerModes } from "./modes.js";
 import {
   conversationExiste,
   creerConversation,
@@ -58,9 +59,14 @@ function messageLimiteAtteinte(maxTours: number): BlocContenu[] {
   ];
 }
 
-function systemeAvecDate(promptSysteme: string): string {
+function systemeAvecContexte(promptSysteme: string, db: Database.Database): string {
   const aujourdhui = new Date().toISOString().slice(0, 10);
-  return `${promptSysteme}\n\nDate du jour : ${aujourdhui}.`;
+  const modes = listerModes(db);
+  const annuaireModes =
+    modes.length === 0
+      ? "Aucun mode disponible pour l'instant."
+      : modes.map((m) => `- \`${m.cle}\` = ${m.titre}${m.description ? ` — ${m.description}` : ""}`).join("\n");
+  return `${promptSysteme}\n\nDate du jour : ${aujourdhui}.\n\nModes disponibles (charger_mode) :\n${annuaireModes}`;
 }
 
 function estBlocToolUse(bloc: BlocContenu): bloc is Extract<BlocContenu, { type: "tool_use" }> {
@@ -75,7 +81,7 @@ async function unTour(ctx: ContexteBoucle): Promise<ResultatBoucle> {
     {
       model: ctx.config.model,
       maxTokens: ctx.config.maxTokens,
-      system: systemeAvecDate(ctx.promptSysteme),
+      system: systemeAvecContexte(ctx.promptSysteme, ctx.db),
       messages: historique,
       tools: schemasAnthropic(),
     },

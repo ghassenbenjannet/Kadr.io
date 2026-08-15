@@ -17,8 +17,16 @@ import { trouverEcriture } from "../agent/ecritures.js";
 import { listerJournal } from "./journal.js";
 import { listerDemandes } from "./demandes.js";
 import { z } from "zod";
-import { listerProjets, detailProjet, detailTicket } from "./projets.js";
-import { detailDocument, listerConnaissances } from "./documents.js";
+import {
+  listerProjets,
+  detailProjet,
+  detailTicket,
+  supprimerProjet,
+  supprimerEpic,
+  supprimerTicket,
+} from "./projets.js";
+import { detailDocument, listerConnaissances, supprimerDocument } from "./documents.js";
+import { supprimerEntiteJournal, TABLE_PAR_ENTITE } from "../tools/supprimer-entite.js";
 import { detailEntiteComplet } from "./entites.js";
 import { creerDocument } from "../tools/creer-document.js";
 import { schemaEntree as schemaCreerDocument } from "../tools/creer-document.js";
@@ -57,6 +65,29 @@ import { lancerControles } from "../tools/lancer-controles.js";
 import { schemaEntree as schemaLancerControles } from "../tools/lancer-controles.js";
 import { genererRapport } from "../tools/generer-rapport.js";
 import { detailTableauDeBord } from "./tableauDeBord.js";
+import {
+  listerModes,
+  obtenirMode,
+  creerMode,
+  mettreAJourMode,
+  supprimerMode,
+  schemaCreerMode,
+  schemaMettreAJourMode,
+} from "../agent/modes.js";
+import {
+  listerPlansTest,
+  detailPlanTest,
+  supprimerPlanTest,
+  ajouterCasTest,
+  schemaAjouterCasTest,
+  supprimerCasTest,
+  lierTicketPlanTestParId,
+  delierTicketPlanTest,
+} from "./plansTest.js";
+import { executerCasTest } from "../tools/executer-cas-test.js";
+import { schemaEntree as schemaExecuterCasTest } from "../tools/executer-cas-test.js";
+import { creerPlanTest } from "../tools/creer-plan-test.js";
+import { schemaEntree as schemaCreerPlanTest } from "../tools/creer-plan-test.js";
 import {
   matriceHabilitations,
   modulesDistincts,
@@ -301,6 +332,11 @@ export function creerApp(deps: DependancesApp): Hono {
     return c.json(resultat, resultat.ok ? 200 : 400);
   });
 
+  app.delete("/api/documents/:id", (c) => {
+    const resultat = supprimerDocument(db, c.req.param("id"));
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
   // Même principe que ci-dessus, étendu à toutes les fiches objet : une
   // écriture directe sur les champs qu'un humain édite lui-même sur la
   // fiche (statut, description, notes) n'a pas besoin de repasser par la
@@ -318,6 +354,14 @@ export function creerApp(deps: DependancesApp): Hono {
     return c.json(resultat, resultat.ok ? 200 : 400);
   });
 
+  app.delete("/api/journal/:entite/:id", (c) => {
+    if (!TABLE_PAR_ENTITE[c.req.param("entite")]) {
+      return c.json({ ok: false, erreur: `Entité inconnue : ${c.req.param("entite")}` }, 404);
+    }
+    const resultat = supprimerEntiteJournal(db, c.req.param("entite"), c.req.param("id"));
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
   app.put("/api/tickets/:id", async (c) => {
     const corps = await c.req.json().catch(() => ({}));
     const analyse = z.object(schemaMettreAJourTicket).safeParse({ ...corps, id: c.req.param("id") });
@@ -325,6 +369,11 @@ export function creerApp(deps: DependancesApp): Hono {
       return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
     }
     const resultat = mettreAJourTicket(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.delete("/api/tickets/:id", (c) => {
+    const resultat = supprimerTicket(db, c.req.param("id"));
     return c.json(resultat, resultat.ok ? 200 : 400);
   });
 
@@ -338,6 +387,11 @@ export function creerApp(deps: DependancesApp): Hono {
     return c.json(resultat, resultat.ok ? 200 : 400);
   });
 
+  app.delete("/api/projets/:id", (c) => {
+    const resultat = supprimerProjet(db, c.req.param("id"));
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
   app.put("/api/epics/:id", async (c) => {
     const corps = await c.req.json().catch(() => ({}));
     const analyse = z.object(schemaMettreAJourEpic).safeParse({ ...corps, id: c.req.param("id") });
@@ -345,6 +399,11 @@ export function creerApp(deps: DependancesApp): Hono {
       return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
     }
     const resultat = mettreAJourEpic(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.delete("/api/epics/:id", (c) => {
+    const resultat = supprimerEpic(db, c.req.param("id"));
     return c.json(resultat, resultat.ok ? 200 : 400);
   });
 
@@ -401,6 +460,114 @@ export function creerApp(deps: DependancesApp): Hono {
     const detail = detailProjet(db, c.req.param("id"));
     if (!detail) return c.json({ ok: false, erreur: "Projet introuvable." }, 404);
     return c.json({ ok: true, ...detail });
+  });
+
+  // --- Plans de test -----------------------------------------------------
+  // Jusqu'ici, seul l'agent pouvait créer un plan de test (avec ses cas),
+  // le lier à un ticket ou exécuter un cas — invisible et inutilisable sans
+  // clé de modèle configurée. Mêmes outils, réutilisés en écriture directe.
+
+  app.get("/api/plans-test", (c) => {
+    return c.json({ ok: true, plans: listerPlansTest(db) });
+  });
+
+  app.get("/api/plans-test/:id", (c) => {
+    const detail = detailPlanTest(db, c.req.param("id"));
+    if (!detail) return c.json({ ok: false, erreur: "Plan de test introuvable." }, 404);
+    return c.json({ ok: true, ...detail });
+  });
+
+  app.post("/api/plans-test", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaCreerPlanTest).safeParse(corps);
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = creerPlanTest(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.delete("/api/plans-test/:id", (c) => {
+    const resultat = supprimerPlanTest(db, c.req.param("id"));
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.post("/api/plans-test/:id/cas", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaAjouterCasTest).safeParse({ ...corps, plan_test_id: c.req.param("id") });
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = ajouterCasTest(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.put("/api/cas-test/:id", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaExecuterCasTest).safeParse({ ...corps, id: c.req.param("id") });
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = executerCasTest(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.delete("/api/cas-test/:id", (c) => {
+    const resultat = supprimerCasTest(db, c.req.param("id"));
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.post("/api/tickets/:id/plans-test", async (c) => {
+    const corps = await c.req.json<{ plan_test_id?: string }>().catch(() => ({}) as { plan_test_id?: string });
+    if (!corps.plan_test_id) {
+      return c.json({ ok: false, erreur: "plan_test_id est requis." }, 400);
+    }
+    const resultat = lierTicketPlanTestParId(db, c.req.param("id"), corps.plan_test_id);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.delete("/api/tickets/:id/plans-test/:planId", (c) => {
+    const resultat = delierTicketPlanTest(db, c.req.param("id"), c.req.param("planId"));
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  // --- Agents (modes de travail spécialisés) ------------------------------
+  // Personnalisables depuis l'écran "Agents" : voir agent/modes.ts pour la
+  // justification du passage en DB plutôt qu'en fichiers.
+
+  app.get("/api/agents", (c) => {
+    return c.json({ ok: true, agents: listerModes(db) });
+  });
+
+  app.get("/api/agents/:id", (c) => {
+    const mode = obtenirMode(db, c.req.param("id"));
+    if (!mode) return c.json({ ok: false, erreur: "Agent introuvable." }, 404);
+    return c.json({ ok: true, ...mode });
+  });
+
+  app.post("/api/agents", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaCreerMode).safeParse(corps);
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = creerMode(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.put("/api/agents/:id", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaMettreAJourMode).safeParse({ ...corps, id: c.req.param("id") });
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = mettreAJourMode(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.delete("/api/agents/:id", (c) => {
+    const resultat = supprimerMode(db, c.req.param("id"));
+    return c.json(resultat, resultat.ok ? 200 : 400);
   });
 
   app.get("/api/conversations", (c) => {

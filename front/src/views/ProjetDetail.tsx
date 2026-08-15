@@ -6,6 +6,8 @@ import {
   mettreAJourEpicDirect,
   creerEpicDirect,
   creerTicketDirect,
+  supprimerProjetDirect,
+  supprimerEpicDirect,
   type ProjetDetailComplet,
 } from "../lib/api";
 import { LIBELLES_TYPE_TICKET, badgeStatutTicket, badgeStatutCas } from "../lib/tickets-libelles";
@@ -209,6 +211,27 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
     }
   }
 
+  async function supprimerProjet() {
+    if (!detail) return;
+    if (!confirm(`Supprimer le projet « ${detail.projet.nom} » et tous ses epics/tickets ?`)) return;
+    try {
+      await supprimerProjetDirect(id);
+      onRetour();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function supprimerEpic(epicId: string, nom: string) {
+    if (!confirm(`Supprimer l'epic « ${nom} » et tous ses tickets ?`)) return;
+    try {
+      await supprimerEpicDirect(epicId);
+      charger();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   async function creerPage() {
     if (!detail || !nouveauTitre.trim()) return;
     setCreationEnCours(true);
@@ -225,7 +248,15 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
   }
 
   if (ticketSelectionne) {
-    return <TicketDetail id={ticketSelectionne} onRetour={() => setTicketSelectionne(null)} />;
+    return (
+      <TicketDetail
+        id={ticketSelectionne}
+        onRetour={() => {
+          setTicketSelectionne(null);
+          charger();
+        }}
+      />
+    );
   }
 
   if (documentSelectionne) {
@@ -268,6 +299,9 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
               <div className="main__entete-actions">
                 <button className="sidebar__nouvelle" onClick={ouvrirEditionProjet}>
                   Modifier
+                </button>
+                <button className="btn btn--danger" onClick={supprimerProjet}>
+                  Supprimer
                 </button>
               </div>
             )}
@@ -393,6 +427,9 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
                       onClick={() => ouvrirEditionEpic(epic.id, epic.statut, epic.description)}
                     >
                       Modifier
+                    </button>
+                    <button className="btn btn--danger" onClick={() => supprimerEpic(epic.id, epic.nom)}>
+                      Supprimer
                     </button>
                   </div>
                 )}

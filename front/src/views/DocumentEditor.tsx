@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { recupererDocument, mettreAJourDocumentDirect, type DocumentComplet } from "../lib/api";
+import { recupererDocument, mettreAJourDocumentDirect, supprimerDocumentDirect, type DocumentComplet } from "../lib/api";
 import { rendreMarkdownLeger } from "../lib/markdown-lite";
 import { LIBELLES_TYPE_DOCUMENT } from "../lib/documents-libelles";
 
@@ -53,6 +53,17 @@ export function DocumentEditor({
     }
   }
 
+  async function supprimer() {
+    if (!document) return;
+    if (!confirm(`Supprimer la page « ${document.titre} » ?`)) return;
+    try {
+      await supprimerDocumentDirect(id);
+      onRetour();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   return (
     <div>
       <button className="lien-retour" onClick={onRetour}>
@@ -72,6 +83,9 @@ export function DocumentEditor({
               aria-label="Titre de la page"
             />
             <span className="badge badge--neutre">{LIBELLES_TYPE_DOCUMENT[document.type] ?? document.type}</span>
+            <button className="btn btn--danger" onClick={supprimer}>
+              Supprimer
+            </button>
           </div>
 
           <div className="editeur__barre">
