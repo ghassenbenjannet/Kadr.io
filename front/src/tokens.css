@@ -1,0 +1,139 @@
+/* Registre SI — tokens visuels (§7 spec Jalon 1 bis).
+   Direction : chrome achromatique, couleur strictement sémantique.
+   Encre brun-noir sur papier légèrement chaud — un carnet de bord, pas un
+   dashboard. Vert / ambre / rouge n'apparaissent JAMAIS ailleurs que sur un
+   état (constat ouvert, changement sans rollback, incident, validé/rejeté). */
+
+:root {
+  /* Surfaces — papier */
+  --paper: #f5f1e7;
+  --paper-raised: #fffcf6;
+  --paper-sunken: #ece5d3;
+  --paper-sidebar: #f5f1e7;
+
+  /* Encre — texte, achromatique (teinte brun-noir, jamais gris pur) */
+  --ink: #241a10;
+  --ink-2: rgba(36, 26, 16, 0.68);
+  --ink-3: rgba(36, 26, 16, 0.48);
+  --ink-4: rgba(36, 26, 16, 0.3);
+  --ink-on-dark: #f5f1e7;
+
+  /* Règles — bordures, toujours l'encre en transparence */
+  --rule: rgba(36, 26, 16, 0.12);
+  --rule-strong: rgba(36, 26, 16, 0.24);
+  --rule-focus: rgba(36, 26, 16, 0.6);
+
+  /* Sémantique — strictement réservé aux états */
+  --etat-succes: #2f6f4a;
+  --etat-succes-fond: #e2ebe0;
+  --etat-attention: #93600d;
+  --etat-attention-fond: #f2e6cd;
+  --etat-danger: #a5350a;
+  --etat-danger-fond: #f5e2d8;
+
+  /* Typographie */
+  --police-texte: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+  --police-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --taille-caption: 0.6875rem; /* 11px */
+  --taille-meta: 0.75rem; /* 12px */
+  --taille-corps: 0.875rem; /* 14px */
+  --taille-h4: 1rem; /* 16px */
+  --taille-h3: 1.125rem; /* 18px */
+  --taille-h2: 1.3125rem; /* 21px */
+  --taille-h1: 1.625rem; /* 26px */
+
+  /* Espacement — base 8px, micro 4px */
+  --e-1: 0.25rem;
+  --e-2: 0.5rem;
+  --e-3: 0.75rem;
+  --e-4: 1rem;
+  --e-5: 1.5rem;
+  --e-6: 2rem;
+  --e-7: 3rem;
+
+  --rayon-s: 4px;
+  --rayon-m: 8px;
+  --rayon-l: 12px;
+
+  --ombre-carte: 0 0 0 1px rgba(36, 26, 16, 0.06), 0 2px 6px rgba(36, 26, 16, 0.06);
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--police-texte);
+  font-size: var(--taille-corps);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--taille-h1);
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: var(--taille-h2);
+  letter-spacing: -0.01em;
+}
+h3 {
+  font-size: var(--taille-h3);
+}
+h4 {
+  font-size: var(--taille-h4);
+}
+
+p {
+  margin: 0;
+}
+
+.mono {
+  font-family: var(--police-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--etat-attention-fond);
+}
+
+a {
+  color: inherit;
+}

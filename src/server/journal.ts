@@ -36,7 +36,12 @@ export function listerJournal(db: Database.Database, filtres: FiltresJournal = {
       if (filtres.depuis && row.cree_le < filtres.depuis) continue;
       if (filtres.jusquA && row.cree_le > filtres.jusquA) continue;
       const detail = detailEntite(db, entite, row.id);
-      lignes.push({ entite, id: row.id, date: row.cree_le, resume: detail?.libelle ?? `${entite} ${row.id}` });
+      const libelle = detail?.libelle ?? `${entite} ${row.id}`;
+      // Le libellé de detailEntite embarque "{mot} du {date} : " (pensé pour un
+      // rapport en prose) ; ici la date et le type sont déjà des colonnes
+      // distinctes de la ligne, donc on ne garde que le reste.
+      const resume = libelle.replace(/^\S+ du \d{2}\/\d{2} : /, "");
+      lignes.push({ entite, id: row.id, date: row.cree_le, resume });
     }
   }
 
