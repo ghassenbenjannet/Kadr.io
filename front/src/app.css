@@ -412,6 +412,107 @@ td.editable {
   margin-bottom: var(--e-1);
 }
 
+/* --- Éditeur de document -------------------------------------------------- */
+
+.editeur__entete {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+  margin-bottom: var(--e-4);
+}
+
+.editeur__titre {
+  flex: 1;
+  font-size: var(--taille-h1);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border: none;
+  background: transparent;
+  padding: var(--e-1) 0;
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.editeur__titre:focus {
+  outline: 2px solid var(--rule-focus);
+  outline-offset: 2px;
+  border-radius: var(--rayon-s);
+}
+
+.editeur__barre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--e-3);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: var(--e-2);
+}
+
+.editeur__onglets {
+  display: flex;
+  gap: var(--e-1);
+}
+
+.editeur__onglet {
+  padding: var(--e-1) var(--e-3);
+  border-radius: var(--rayon-s);
+  font-size: var(--taille-meta);
+  font-weight: 500;
+  color: var(--ink-3);
+  background: transparent;
+  border: none;
+}
+
+.editeur__onglet:hover {
+  color: var(--ink);
+  background: var(--paper-sunken);
+}
+
+.editeur__onglet--actif,
+.editeur__onglet--actif:hover {
+  background: var(--paper-raised);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+}
+
+.editeur__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+}
+
+.editeur__statut {
+  font-size: var(--taille-caption);
+  color: var(--ink-3);
+}
+
+.editeur__zone {
+  width: 100%;
+  min-height: 28rem;
+  resize: vertical;
+  background: var(--paper-sunken);
+  border: 1px solid var(--rule);
+  border-radius: var(--rayon-m);
+  padding: var(--e-4);
+  font-family: var(--police-mono);
+  font-size: var(--taille-meta);
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.editeur__zone:focus {
+  outline: 2px solid var(--rule-focus);
+  outline-offset: 1px;
+}
+
+.editeur__apercu {
+  min-height: 28rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--rayon-m);
+  padding: var(--e-4);
+  background: var(--paper-raised);
+}
+
 /* --- Suite de recette ---------------------------------------------------- */
 
 .plan-test {
@@ -537,6 +638,38 @@ td.editable {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: var(--e-2);
+}
+
+.constats-groupe__titre-ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--e-2);
+}
+
+.constats-groupe__titre-ligne .constats-groupe__titre {
+  margin-bottom: 0;
+}
+
+.editeur__formulaire {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+  margin-bottom: var(--e-3);
+}
+
+.editeur__formulaire select,
+.editeur__formulaire input {
+  background: var(--paper-sunken);
+  border: 1px solid var(--rule);
+  border-radius: var(--rayon-s);
+  padding: var(--e-2) var(--e-3);
+  font-size: var(--taille-corps);
+  color: var(--ink);
+}
+
+.editeur__formulaire input {
+  flex: 1;
 }
 
 .constat {

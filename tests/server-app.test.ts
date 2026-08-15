@@ -9,6 +9,7 @@ import { decrireModule } from "../src/tools/decrire-module.js";
 import { decrireChamp } from "../src/tools/decrire-champ.js";
 import { decrireHabilitation } from "../src/tools/decrire-habilitation.js";
 import { decrireIntegration } from "../src/tools/decrire-integration.js";
+import { creerProjet } from "../src/tools/creer-projet.js";
 import { creerTicket } from "../src/tools/creer-ticket.js";
 import { creerPlanTest } from "../src/tools/creer-plan-test.js";
 import { executerCasTest } from "../src/tools/executer-cas-test.js";
@@ -256,6 +257,51 @@ describe("routes de lecture", () => {
 
     const inconnu = await app.request("/api/projets/inconnu");
     expect(inconnu.status).toBe(404);
+  });
+
+  it("documents : écriture directe sans validation, puis lecture (liste + détail + via le projet)", async () => {
+    contexte = creerDbTemp();
+    const projet = creerProjet(contexte.db, { nom: "CS-Vue360" });
+    expect(projet.ok).toBe(true);
+    if (!projet.ok) return;
+
+    const app = creerApp({ db: contexte.db, config: { apiKey: null, model: "x", maxTokens: 1 }, promptSysteme: PROMPT });
+
+    const creation = await app.request("/api/documents", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ projet: "CS-Vue360", type: "cadrage", titre: "Cadrage initial" }),
+    });
+    expect(creation.status).toBe(200);
+    const creeCorps = (await creation.json()) as any;
+    expect(creeCorps.ok).toBe(true);
+    const docId = creeCorps.id;
+
+    const misAJour = await app.request(`/api/documents/${docId}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ contenu: "## Contexte\n\nLe CS veut une vue 360." }),
+    });
+    expect(misAJour.status).toBe(200);
+
+    const detailDoc = (await (await app.request(`/api/documents/${docId}`)).json()) as any;
+    expect(detailDoc.ok).toBe(true);
+    expect(detailDoc.contenu).toContain("Le CS veut une vue 360.");
+    expect(detailDoc.projet.nom).toBe("CS-Vue360");
+
+    const detailProjet = (await (await app.request(`/api/projets/${projet.id}`)).json()) as any;
+    expect(detailProjet.documents.length).toBe(1);
+    expect(detailProjet.documents[0].titre).toBe("Cadrage initial");
+
+    const corpsInvalide = await app.request("/api/documents", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ projet: "CS-Vue360", type: "pas-un-type", titre: "X" }),
+    });
+    expect(corpsInvalide.status).toBe(400);
+
+    const introuvable = await app.request("/api/documents/inconnu");
+    expect(introuvable.status).toBe(404);
   });
 
   it("GET /api/conversations puis /api/conversations/:id", async () => {

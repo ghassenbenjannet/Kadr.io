@@ -133,10 +133,18 @@ export interface PlanTestDetail {
   cas: CasTestDetail[];
 }
 
+export interface DocumentResume {
+  id: string;
+  titre: string;
+  type: string;
+  maj_le: string;
+}
+
 export interface ProjetDetailComplet {
   projet: { id: string; nom: string; statut: string; description: string | null };
   epics: EpicDetail[];
   suite_recette: PlanTestDetail[];
+  documents: DocumentResume[];
 }
 
 export function recupererProjet(id: string): Promise<{ ok: true } & ProjetDetailComplet> {
@@ -323,6 +331,46 @@ export function confirmerEcriture(args: {
 }): Promise<ResultatConfirm> {
   return requeteJson("/api/confirm", {
     method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(args),
+  });
+}
+
+export interface DocumentComplet {
+  id: string;
+  titre: string;
+  type: string;
+  contenu: string;
+  cree_le: string;
+  maj_le: string;
+  projet: { id: string; nom: string };
+}
+
+export function recupererDocument(id: string): Promise<{ ok: true } & DocumentComplet> {
+  return requeteJson(`/api/documents/${id}`);
+}
+
+// Écriture directe (pas via l'agent, pas de carte de validation) : c'est
+// l'éditeur en page, voir la note dans src/server/app.ts.
+export function creerDocumentDirect(args: {
+  projet: string;
+  type: string;
+  titre: string;
+  contenu?: string;
+}): Promise<{ ok: true; id: string; resume: string }> {
+  return requeteJson("/api/documents", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(args),
+  });
+}
+
+export function mettreAJourDocumentDirect(
+  id: string,
+  args: { titre?: string; contenu?: string }
+): Promise<{ ok: true; id: string; resume: string }> {
+  return requeteJson(`/api/documents/${id}`, {
+    method: "PUT",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(args),
   });

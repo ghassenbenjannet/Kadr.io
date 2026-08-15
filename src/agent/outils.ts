@@ -69,6 +69,10 @@ import * as outilMettreAJourChangement from "../tools/mettre-a-jour-changement.j
 import { mettreAJourChangement } from "../tools/mettre-a-jour-changement.js";
 import * as outilMettreAJourIncident from "../tools/mettre-a-jour-incident.js";
 import { mettreAJourIncident } from "../tools/mettre-a-jour-incident.js";
+import * as outilCreerDocument from "../tools/creer-document.js";
+import { creerDocument } from "../tools/creer-document.js";
+import * as outilMettreAJourDocument from "../tools/mettre-a-jour-document.js";
+import { mettreAJourDocument } from "../tools/mettre-a-jour-document.js";
 
 export type NatureOutil = "lecture" | "ecriture";
 
@@ -301,6 +305,20 @@ const DEFINITIONS: DefinitionOutil[] = [
     nature: "ecriture",
     schemaEntree: outilMettreAJourIncident.schemaEntree,
     executer: (db, p) => mettreAJourIncident(db, p as never),
+  },
+  {
+    nom: outilCreerDocument.nom,
+    description: outilCreerDocument.description,
+    nature: "ecriture",
+    schemaEntree: outilCreerDocument.schemaEntree,
+    executer: (db, p) => creerDocument(db, p as never),
+  },
+  {
+    nom: outilMettreAJourDocument.nom,
+    description: outilMettreAJourDocument.description,
+    nature: "ecriture",
+    schemaEntree: outilMettreAJourDocument.schemaEntree,
+    executer: (db, p) => mettreAJourDocument(db, p as never),
   },
 ];
 

@@ -14,8 +14,14 @@ import { resumerResultatLecture } from "../agent/resume-resultat.js";
 import { trouverEcriture } from "../agent/ecritures.js";
 import { listerJournal } from "./journal.js";
 import { listerDemandes } from "./demandes.js";
+import { z } from "zod";
 import { listerProjets, detailProjet, detailTicket } from "./projets.js";
+import { detailDocument } from "./documents.js";
 import { detailEntiteComplet } from "./entites.js";
+import { creerDocument } from "../tools/creer-document.js";
+import { schemaEntree as schemaCreerDocument } from "../tools/creer-document.js";
+import { mettreAJourDocument } from "../tools/mettre-a-jour-document.js";
+import { schemaEntree as schemaMettreAJourDocument } from "../tools/mettre-a-jour-document.js";
 import { constatsOuverts } from "../tools/constats-ouverts.js";
 import { genererRapport } from "../tools/generer-rapport.js";
 import {
@@ -88,6 +94,38 @@ export function creerApp(deps: DependancesApp): Hono {
     const detail = detailTicket(db, c.req.param("id"));
     if (!detail) return c.json({ ok: false, erreur: "Ticket introuvable." }, 404);
     return c.json({ ok: true, ...detail });
+  });
+
+  app.get("/api/documents/:id", (c) => {
+    const detail = detailDocument(db, c.req.param("id"));
+    if (!detail) return c.json({ ok: false, erreur: "Page introuvable." }, 404);
+    return c.json({ ok: true, ...detail });
+  });
+
+  // Écriture directe, SANS carte de validation : ces deux routes servent
+  // l'éditeur en page, où c'est Ghassen qui tape le texte lui-même — la
+  // validation existe pour rattraper l'agent quand il interprète mal ce
+  // qu'on lui dit, pas pour la prose qu'on écrit soi-même. L'agent garde
+  // ses propres outils (creer_document / mettre_a_jour_document), eux
+  // toujours validés comme le reste.
+  app.post("/api/documents", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaCreerDocument).safeParse(corps);
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = creerDocument(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.put("/api/documents/:id", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaMettreAJourDocument).safeParse({ ...corps, id: c.req.param("id") });
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = mettreAJourDocument(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
   });
 
   app.get("/api/projets", (c) => {

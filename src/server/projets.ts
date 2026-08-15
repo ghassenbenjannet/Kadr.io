@@ -3,6 +3,7 @@
 // plus adaptée à une URL.
 
 import type Database from "better-sqlite3";
+import { listerDocuments, type DocumentResume } from "./documents.js";
 
 export interface ProjetResume {
   id: string;
@@ -60,6 +61,7 @@ export interface ProjetDetail {
   projet: { id: string; nom: string; statut: string; description: string | null };
   epics: EpicDetail[];
   suite_recette: PlanTestDetail[];
+  documents: DocumentResume[];
 }
 
 export interface TicketDetailComplet {
@@ -162,5 +164,5 @@ export function detailProjet(db: Database.Database, id: string): ProjetDetail | 
     cas: casParPlan.all(p.id) as CasTestDetail[],
   }));
 
-  return { projet, epics, suite_recette: suiteRecette };
+  return { projet, epics, suite_recette: suiteRecette, documents: listerDocuments(db, id) };
 }

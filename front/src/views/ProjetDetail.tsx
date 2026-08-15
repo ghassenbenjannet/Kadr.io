@@ -1,16 +1,34 @@
 import { useEffect, useState } from "react";
-import { recupererProjet, type ProjetDetailComplet } from "../lib/api";
+import { recupererProjet, creerDocumentDirect, type ProjetDetailComplet } from "../lib/api";
 import { LIBELLES_TYPE_TICKET, badgeStatutTicket, badgeStatutCas } from "../lib/tickets-libelles";
 import { TicketDetail } from "./TicketDetail";
+import { DocumentEditor } from "./DocumentEditor";
+
+const LIBELLES_TYPE_DOCUMENT: Record<string, string> = {
+  cadrage: "Cadrage",
+  compte_rendu: "Compte-rendu",
+  specification: "Spécification",
+  note: "Note",
+  autre: "Autre",
+};
+
+function formaterDate(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
 
 export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => void }) {
   const [detail, setDetail] = useState<ProjetDetailComplet | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [ticketSelectionne, setTicketSelectionne] = useState<string | null>(null);
+  const [documentSelectionne, setDocumentSelectionne] = useState<string | null>(null);
+  const [formulaireOuvert, setFormulaireOuvert] = useState(false);
+  const [nouveauTitre, setNouveauTitre] = useState("");
+  const [nouveauType, setNouveauType] = useState("note");
+  const [creationEnCours, setCreationEnCours] = useState(false);
 
-  useEffect(() => {
+  function charger() {
     let annule = false;
-    setDetail(null);
     setErreur(null);
     recupererProjet(id)
       .then((r) => {
@@ -22,10 +40,43 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
     return () => {
       annule = true;
     };
+  }
+
+  useEffect(() => {
+    setDetail(null);
+    return charger();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  async function creerPage() {
+    if (!detail || !nouveauTitre.trim()) return;
+    setCreationEnCours(true);
+    try {
+      const r = await creerDocumentDirect({ projet: detail.projet.nom, type: nouveauType, titre: nouveauTitre.trim() });
+      setFormulaireOuvert(false);
+      setNouveauTitre("");
+      setDocumentSelectionne(r.id);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    } finally {
+      setCreationEnCours(false);
+    }
+  }
 
   if (ticketSelectionne) {
     return <TicketDetail id={ticketSelectionne} onRetour={() => setTicketSelectionne(null)} />;
+  }
+
+  if (documentSelectionne) {
+    return (
+      <DocumentEditor
+        id={documentSelectionne}
+        onRetour={() => {
+          setDocumentSelectionne(null);
+          charger();
+        }}
+      />
+    );
   }
 
   return (
@@ -51,6 +102,56 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="constats-groupe">
+            <div className="constats-groupe__titre-ligne">
+              <div className="constats-groupe__titre">Documentation</div>
+              <button className="sidebar__nouvelle" onClick={() => setFormulaireOuvert((v) => !v)}>
+                + Nouvelle page
+              </button>
+            </div>
+
+            {formulaireOuvert && (
+              <div className="editeur__formulaire">
+                <select value={nouveauType} onChange={(e) => setNouveauType(e.target.value)} aria-label="Type de page">
+                  {Object.entries(LIBELLES_TYPE_DOCUMENT).map(([valeur, libelle]) => (
+                    <option key={valeur} value={valeur}>
+                      {libelle}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Titre de la page"
+                  value={nouveauTitre}
+                  onChange={(e) => setNouveauTitre(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && creerPage()}
+                />
+                <button className="btn btn--primaire" onClick={creerPage} disabled={!nouveauTitre.trim() || creationEnCours}>
+                  Créer
+                </button>
+              </div>
+            )}
+
+            {detail.documents.length === 0 && !formulaireOuvert && (
+              <div className="etat-vide">Aucune page pour l'instant.</div>
+            )}
+            {detail.documents.length > 0 && (
+              <div className="liste">
+                {detail.documents.map((doc) => (
+                  <button className="ligne ligne--cliquable" key={doc.id} onClick={() => setDocumentSelectionne(doc.id)}>
+                    <div className="ligne__corps">
+                      <span className="badge badge--neutre">{LIBELLES_TYPE_DOCUMENT[doc.type] ?? doc.type}</span>
+                      <span className="ligne__resume">{doc.titre}</span>
+                      <span className="main__soustitre" style={{ marginLeft: "auto" }}>
+                        {formaterDate(doc.maj_le)}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {detail.epics.length === 0 && (

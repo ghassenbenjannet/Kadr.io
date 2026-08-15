@@ -46,7 +46,7 @@ qui remplace le serveur MCP initial par cette application autonome.
   contre le Zoho d'Abraxio avant d'écrire le moindre code de mapping. Voir
   « Continuer le Jalon 3 » plus bas.
 
-187 tests verts (`npm test`).
+196 tests verts (`npm test`).
 
 ## Installation
 
@@ -120,7 +120,7 @@ SQLite est créée automatiquement au premier démarrage
 | Habilitations | Matrice champs × profils — distinction « non déclaré » ≠ « masqué » ≠ « visible » ≠ « édite », filtrable par module |
 | Champs | Champs groupés par source de vérité déclarée, contradictions (contrôle M2) en tête de groupe |
 | Intégrations | Flux source → cible avec le nombre de constats ouverts rattachés |
-| Projets | Liste des projets, puis détail par projet : epics avec leurs tickets (cliquables vers leur fiche : description, plans de test liés), et la suite de recette |
+| Projets | Liste des projets, puis détail par projet : epics avec leurs tickets (cliquables vers leur fiche : description, plans de test liés), la suite de recette, et la documentation (pages markdown typées, éditeur en page) |
 
 Les écrans sont groupés dans la navigation en trois sections : **Registre**
 (Conversation, Tickets, Journal, Constats, Rapport hebdo), **Projets**, et
@@ -140,11 +140,24 @@ Outils d'**écriture** (toujours proposés, jamais exécutés sans validation) :
 `decrire_automatisation`, `lier_changement`, `zoho_configurer`, `creer_projet`,
 `mettre_a_jour_projet`, `creer_epic`, `mettre_a_jour_epic`, `creer_ticket`,
 `mettre_a_jour_ticket`, `creer_plan_test`, `executer_cas_test`,
-`lier_ticket_plan_test`.
+`lier_ticket_plan_test`, `creer_document`, `mettre_a_jour_document`.
 
 Volontairement absent : aucun outil de suppression, pour aucune entité. Le registre
 n'efface pas ce qui s'est passé — corriger une erreur de saisie se fait par une
 mise à jour qui garde la trace, pas par un retrait silencieux.
+
+### Documentation par projet : deux chemins d'écriture
+
+Les pages de documentation (`GET/POST /api/documents`, `PUT /api/documents/:id`)
+sont la seule exception au principe « rien sans validation ». Deux chemins
+coexistent, volontairement différents :
+
+- **En conversation** : l'agent propose `creer_document` / `mettre_a_jour_document`
+  comme n'importe quel autre outil d'écriture — carte de validation obligatoire.
+- **Dans l'éditeur en page** (écran Projets → un projet → Documentation) :
+  enregistrement direct, sans carte de validation. La validation existe pour
+  rattraper l'agent quand il interprète mal ce qu'on lui dit ; quand c'est Ghassen
+  qui tape le texte lui-même dans l'éditeur, il n'y a rien à valider.
 
 ## Routine hebdomadaire recommandée
 
