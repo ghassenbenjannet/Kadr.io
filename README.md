@@ -1,139 +1,177 @@
 # Registre SI
 
 Mémoire structurée et vérifiable du SI d'Abraxio — outil personnel de l'opérateur SI
-solo. Voir `docs/cahier-des-charges-registre-SI.md` pour le produit et les trois
-`docs/spec-technique-jalon*.md` pour l'implémentation détaillée de chaque jalon.
+solo. Une seule application : agent IA intégré (API Anthropic) + interface web, un
+seul processus, `npm start`.
+
+Voir `docs/cahier-des-charges-registre-SI.md` pour le produit et les
+`docs/spec-technique-*.md` pour l'implémentation détaillée de chaque jalon —
+notamment `docs/spec-technique-jalon1bis-ia-integree.md`, le correctif d'architecture
+qui remplace le serveur MCP initial par cette application autonome.
 
 ## État actuel
 
-- **Jalon 1 (le journal)** : livré. Demandes, décisions, changements, incidents,
-  recherche plein texte, contrôles de pratique C1-C6, rapport hebdo.
-- **Jalon 2 (la carte)** : livré. Cartographie applicative (systèmes, modules, champs,
-  habilitations, intégrations, automatisations), `impact()`, contrôles de modèle
-  (M1-M4) et d'intégration (I1-I7), liens carte ↔ journal, rapports `etat_si` et
-  `impact`, interface web en lecture (`npm run web`).
-- **Jalon 3 (import Zoho)** : amorcé (migration v3, `zoho_configurer`, client HTTP
-  Zoho testé sur transport injecté). **La suite (découverte, mapper, fusion, import,
-  contrôles de dérive) est délibérément arrêtée** : la spec impose de valider le
-  mapping contre des fichiers de découverte réels obtenus en exécutant
-  `zoho_decouvrir` contre le vrai Zoho d'Abraxio (accès admin + Self Client OAuth2
-  requis). Voir « Continuer le Jalon 3 » plus bas.
+- **Jalon 1 (le journal)** et **Jalon 2 (la carte)** : livrés en totalité — demandes,
+  décisions, changements, incidents, cartographie applicative, `impact()`, vigie
+  complète (contrôles de pratique, de modèle, d'intégration), rapports.
+- **Jalon 1 bis (IA intégrée)** : livré. L'outil n'est plus un serveur MCP consommé
+  par un client externe : il embarque son propre agent (streaming, appel d'outils,
+  validation humaine avant toute écriture) et sa propre interface (conversation,
+  journal, constats, rapport hebdo).
+- **Jalon 3 (import Zoho)** : amorcé (migration, `zoho_configurer`, client HTTP Zoho
+  testé sur transport injecté). La suite (découverte, mapper, fusion, import,
+  contrôles de dérive) est **délibérément arrêtée** : elle exige une exécution réelle
+  contre le Zoho d'Abraxio avant d'écrire le moindre code de mapping. Voir
+  « Continuer le Jalon 3 » plus bas.
 
-116 tests verts (`npm test`).
+146 tests verts (`npm test`).
 
 ## Installation
 
 ```bash
 npm install
-npm run build
+npm run build   # compile le serveur ET construit l'interface (front/)
 ```
 
-Le serveur MCP se lance avec `node dist/server.js` (transport stdio). La base SQLite
-est créée automatiquement au premier démarrage.
+`npm run build` installe aussi les dépendances de `front/` si nécessaire. Si vous
+sautez cette étape, `npm start` la fait à votre place au premier lancement (voir
+plus bas).
 
-## Configuration Claude Desktop
+## Configuration de la clé API Anthropic
 
-Ajoutez ce bloc dans la configuration MCP de Claude Desktop
-(`~/Library/Application Support/Claude/claude_desktop_config.json` sur macOS,
-`%APPDATA%\Claude\claude_desktop_config.json` sur Windows) :
+Créez `~/.registre-si/config.json` (permissions 600, jamais commité — déjà dans
+`.gitignore`) :
 
 ```json
 {
-  "mcpServers": {
-    "registre-si": {
-      "command": "node",
-      "args": ["<chemin>/dist/server.js"],
-      "env": { "REGISTRE_DB_PATH": "<chemin>/registre.db" }
-    }
-  }
+  "anthropicApiKey": "sk-ant-...",
+  "model": "claude-sonnet-5",
+  "maxTokens": 4096
 }
 ```
 
-Remplacez `<chemin>` par le chemin absolu du projet cloné. Si `REGISTRE_DB_PATH`
-n'est pas défini, la base est créée par défaut dans `~/.registre-si/registre.db`.
+`ANTHROPIC_API_KEY` et `REGISTRE_MODEL` (variables d'environnement) sont prioritaires
+sur le fichier si présents. **Sans clé configurée, l'application démarre quand même** :
+les vues de lecture (Journal, Constats, Rapport hebdo) fonctionnent normalement, et la
+conversation affiche une erreur explicative tant que la clé n'est pas renseignée.
 
-Redémarrez Claude Desktop après avoir modifié la configuration.
+## Démarrage
+
+```bash
+npm start
+```
+
+Ouvre le serveur sur `http://localhost:3737` (port réglable via `PORT`). La base
+SQLite est créée automatiquement au premier démarrage
+(`~/.registre-si/registre.db`, réglable via `REGISTRE_DB_PATH`).
 
 ## Vérification manuelle
 
-1. Lancez `npm run build` puis redémarrez Claude Desktop avec la configuration
-   ci-dessus.
-2. Dans une conversation Claude Desktop, écrivez :
+1. `npm run build && npm start`, puis ouvrez `http://localhost:3737`.
+2. Dans l'écran Conversation, écrivez :
 
-   > Enregistre une demande de Sophie de l'équipe CS : elle veut voir les factures
-   > directement dans la fiche client.
+   > Sophie de l'équipe CS veut voir les factures directement dans la fiche client.
 
-3. Claude doit appeler l'outil `enregistrer_demande` et répondre avec un résumé et un
-   identifiant.
-4. Pour vérifier en base, ouvrez `registre.db` (ex. avec `sqlite3` ou DB Browser for
-   SQLite) et contrôlez la table `demandes` : une ligne avec `demandeur = 'Sophie'`,
-   `equipe = 'CS'`, `expression_brute` contenant exactement les mots de la phrase, et
-   `statut = 'recue'`.
-5. Testez ensuite : « Décris le système Zoho CRM, module Comptes, champ
-   Statut_Client » (`decrire_champ`), « Si je modifie Statut_Client, qu'est-ce qui
-   casse ? » (`impact`), « Quels sont les points de vigilance ouverts ? »
-   (`constats_ouverts` après un premier `lancer_controles`), et « Génère le rapport
-   hebdo » (`generer_rapport`).
-6. Pour l'interface web : `npm run web`, puis ouvrez `http://localhost:3737`.
+3. L'agent doit répondre puis faire apparaître une **carte de validation** proposant
+   `enregistrer_demande`, avec les champs pré-remplis (demandeur, équipe, expression
+   brute, type) — éditables avant confirmation.
+4. Cliquez *Enregistrer*. La conversation reprend et confirme l'écriture.
+5. Ouvrez l'écran **Journal** : la demande apparaît. Ouvrez `registre.db` (ex. avec
+   `sqlite3`) et contrôlez la table `demandes` : `expression_brute` contient
+   exactement les mots de la phrase, `statut = 'recue'`.
+6. Testez ensuite, toujours en conversation : « Décris le système Zoho CRM, module
+   Comptes, champ Statut_Client » (`decrire_champ`, proposé puis à valider), « Si je
+   modifie Statut_Client, qu'est-ce qui casse ? » (`impact`, lecture directe, pas de
+   validation), et ouvrez l'écran **Rapport hebdo**.
 
-## Outils MCP disponibles
+## Écrans
 
-| Outil | Rôle |
+| Écran | Contenu |
 |---|---|
-| `enregistrer_demande` | Journal — sollicitation reçue |
-| `enregistrer_decision` | Journal — arbitrage |
-| `enregistrer_changement` | Journal — mise en production (propose des liens vers la carte) |
-| `enregistrer_incident` | Journal — incident |
-| `rechercher_journal` | Recherche plein texte dans le journal et la carte |
-| `lancer_controles` | Exécute la vigie (pratique, modèle, intégration) |
-| `constats_ouverts` | Liste les constats ouverts |
-| `generer_rapport` | hebdo / etat_si / impact (markdown) / matrice_habilitations (HTML) |
-| `decrire_systeme` | Carte — décrit un système |
-| `decrire_module` | Carte — décrit un module |
-| `decrire_champ` | Carte — décrit un champ (source de vérité, éditabilité…) |
-| `decrire_habilitation` | Carte — droits d'un profil sur un champ |
-| `decrire_integration` | Carte — intégration entre deux systèmes |
-| `decrire_automatisation` | Carte — workflow / Deluge / blueprint |
-| `impact` | « Si je modifie X, qu'est-ce qui casse ? » |
-| `lier_changement` | Confirme un lien carte ↔ journal |
-| `zoho_configurer` | Jalon 3 — enregistre les identifiants Zoho (Self Client OAuth2) |
+| Conversation | Écran principal : streaming, trace discrète des outils de lecture, carte de validation pour toute écriture |
+| Journal | Demandes, décisions, changements, incidents — filtrable, lecture seule |
+| Constats | La vigie, groupée par famille, conséquence toujours visible |
+| Rapport hebdo | Rendu du rapport de la semaine, bouton copier pour l'envoi au CEO |
 
-## Interface web (lecture seule)
+L'interface Jalon 2 en pages HTML statiques (matrice d'habilitations, carte des
+intégrations) reste disponible séparément via `npm run web` (voir plus bas) ; elle
+n'a pas encore été portée en écrans React de l'application principale.
+
+## Outils de l'agent
+
+Outils de **lecture** (exécutés immédiatement, jamais de validation) :
+`rechercher_journal`, `constats_ouverts`, `lancer_controles`, `generer_rapport`,
+`impact`.
+
+Outils d'**écriture** (toujours proposés, jamais exécutés sans validation) :
+`enregistrer_demande`, `enregistrer_decision`, `enregistrer_changement`,
+`enregistrer_incident`, `decrire_systeme`, `decrire_module`, `decrire_champ`,
+`decrire_habilitation`, `decrire_integration`, `decrire_automatisation`,
+`lier_changement`, `zoho_configurer`.
+
+## Routine hebdomadaire recommandée
+
+- **Au fil de l'eau** : chaque demande reçue, décision prise, changement mis en
+  production ou incident constaté s'enregistre en une phrase dans la conversation.
+  C'est le seul geste qui rend le registre moins cher qu'une note OneNote.
+- **Régulièrement** : « Lance les contrôles » (ou laissez l'agent le faire de
+  lui-même avant une revue) pour tenir la vigie à jour.
+- **Le vendredi** : ouvrez l'écran Rapport hebdo, copiez, envoyez au CEO. Aucun
+  travail supplémentaire si le registre a été alimenté dans la semaine.
+
+## Le critère à J+90 (rappel du CDC §10)
+
+L'outil tient sa promesse si, en moins d'une minute et avec des sources (pas des
+souvenirs), il permet de répondre à :
+
+- « Pourquoi ce champ est comme ça ? » — `rechercher_journal` / la carte.
+- « Qu'est-ce qui casse si je le change ? » — `impact`.
+- « Qu'est-ce qui s'est passé cette semaine ? » — le rapport hebdo.
+
+Si l'un des trois échoue en usage réel, c'est un signal à traiter avant d'ajouter quoi
+que ce soit d'autre.
+
+## Interface web Jalon 2 (lecture seule, séparée)
 
 ```bash
-npm run build
 npm run web        # http://localhost:3737 (port : variable WEB_PORT)
 ```
 
-4 pages générées depuis la base : matrice d'habilitations (filtrable par module),
+4 pages générées depuis la base, indépendantes de l'application principale : matrice
+d'habilitations (filtrable par module, distinction « non déclaré » ≠ « masqué »),
 champs par source de vérité (contradictions en tête), carte des intégrations,
-constats ouverts. Aucune saisie possible depuis le web — c'est la conversation qui
-écrit, le web ne fait que lire.
+constats ouverts. Ne lancez pas ce serveur et `npm start` en même temps sans changer
+l'un des deux ports (`WEB_PORT` / `PORT`) : ils utilisent `3737` par défaut.
 
 ## Développement
 
 ```bash
-npm run typecheck   # tsc --noEmit
+npm run typecheck   # tsc --noEmit (backend)
 npm test             # vitest run
-npm run build         # compile dans dist/
+npm run build         # backend + front
 ```
 
-Structure du repo : voir `docs/spec-technique-jalon1-claude-code.md` §1.
+Structure : `src/db` (schéma, migrations), `src/controles` (C/M/I), `src/tools`
+(logique des outils, fonctions pures `(db, params) => Resultat`), `src/agent`
+(catalogue d'outils, boucle, client Anthropic, prompt système), `src/server` (Hono),
+`src/rapport`, `src/web` (pages Jalon 2), `src/zoho` (Jalon 3) ; `front/` (React +
+Vite, buildé vers `dist/public`).
 
 ## Sauvegarde
 
-La base est un unique fichier SQLite (`registre.db`, plus les fichiers WAL associés
-pendant l'exécution). Sauvegarder = copier ce fichier. Les identifiants Zoho (une
-fois configurés) vivent séparément dans `~/.registre-si/zoho-credentials.json`
-(permissions 600) — ne jamais les commiter.
+La base est un unique fichier SQLite (`registre.db`, plus les fichiers WAL pendant
+l'exécution) — y compris l'historique des conversations. Sauvegarder = copier ce
+fichier. Les identifiants (clé Anthropic, credentials Zoho une fois configurés)
+vivent séparément dans `~/.registre-si/*.json` (permissions 600) — ne jamais les
+commiter.
 
 ## Continuer le Jalon 3
 
-Le reste de l'import Zoho (`docs/spec-technique-jalon3-zoho.md`) nécessite une
-étape en conditions réelles :
+Le reste de l'import Zoho (`docs/spec-technique-jalon3-zoho.md`) nécessite une étape
+en conditions réelles :
 
 1. Créer un Self Client dans la console développeur Zoho (client_id, client_secret,
-   grant code), puis appeler `zoho_configurer` depuis Claude Desktop.
+   grant code), puis proposer `zoho_configurer` depuis la conversation.
 2. Implémenter et exécuter `zoho_decouvrir` contre le vrai Zoho d'Abraxio (§3 de la
    spec) — écrit des fichiers bruts dans `~/.registre-si/decouverte-zoho/{date}/`.
 3. Copier ces fichiers réels dans `tests/fixtures/zoho/`.
@@ -143,6 +181,6 @@ Le reste de l'import Zoho (`docs/spec-technique-jalon3-zoho.md`) nécessite une
 5. `zoho_importer` (aperçu puis appliquer), contrôles de dérive D1-D4, rapport
    `revue_habilitations`.
 
-C'est un arrêt volontaire, pas un oubli : `prompts-claude-code-jalons2-3.md` (Prompt
-17) est explicite là-dessus — « STOP après ce prompt : je reviens avec les fixtures
-réelles avant la suite. »
+C'est un arrêt volontaire, pas un oubli : `docs/prompts-claude-code-jalons2-3.md`
+(Prompt 17) est explicite là-dessus — « STOP après ce prompt : je reviens avec les
+fixtures réelles avant la suite. »
