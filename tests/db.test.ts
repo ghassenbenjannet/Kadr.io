@@ -22,11 +22,11 @@ describe("db: migration", () => {
     return { db, chemin };
   }
 
-  it("crée la DB et amène user_version à 1", () => {
+  it("crée la DB et applique toutes les migrations disponibles", () => {
     const { db } = nouvelleDbTemp();
     migrer(db);
     const version = db.pragma("user_version", { simple: true });
-    expect(version).toBe(1);
+    expect(version).toBeGreaterThanOrEqual(2);
     const tables = db
       .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
       .all()
@@ -40,9 +40,10 @@ describe("db: migration", () => {
   it("relancer migrer() est idempotent", () => {
     const { db } = nouvelleDbTemp();
     migrer(db);
+    const versionApres1erPassage = db.pragma("user_version", { simple: true });
     expect(() => migrer(db)).not.toThrow();
     const version = db.pragma("user_version", { simple: true });
-    expect(version).toBe(1);
+    expect(version).toBe(versionApres1erPassage);
     db.close();
   });
 });

@@ -13,7 +13,10 @@ interface Migration {
 // Chaque migration porte user_version à sa propre valeur. schema.sql est la
 // migration initiale (v1) ; les jalons suivants ajoutent des fichiers dans
 // migrations/.
-const MIGRATIONS: Migration[] = [{ version: 1, fichier: join(iciDir, "schema.sql") }];
+const MIGRATIONS: Migration[] = [
+  { version: 1, fichier: join(iciDir, "schema.sql") },
+  { version: 2, fichier: join(iciDir, "migrations", "v2-carte.sql") },
+];
 
 function versionCourante(db: Database.Database): number {
   const row = db.pragma("user_version", { simple: true });

@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "tsc -p tsconfig.build.json && mkdir -p dist/db && cp src/db/schema.sql dist/db/schema.sql",
+    "build": "tsc -p tsconfig.build.json && mkdir -p dist/db/migrations && cp src/db/schema.sql dist/db/schema.sql && cp src/db/migrations/*.sql dist/db/migrations/",
     "start": "node dist/server.js",
     "web": "node dist/web/server.js"
   },
