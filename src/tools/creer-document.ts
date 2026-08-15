@@ -8,12 +8,14 @@ import { patternPourType } from "../documents/templates.js";
 export const nom = "creer_document";
 
 export const description =
-  "Crée une page de documentation dans un projet : cadrage, compte-rendu, spécification ou note " +
-  "libre. Si contenu est omis, la page démarre avec le squelette du type choisi — à compléter " +
-  "ensuite, en conversation ou directement dans l'éditeur.";
+  "Crée une page de documentation : cadrage, compte-rendu, spécification, note d'architecture " +
+  "existante, ou note libre. Avec projet, la page appartient à ce projet. Sans projet, elle rejoint " +
+  "la base de connaissances globale — l'existant de l'entreprise, des spécifications de référence, " +
+  "utile pour analyser une demande ou construire une architecture de solution, indépendamment de " +
+  "tout projet en cours. Si contenu est omis, la page démarre avec le squelette du type choisi.";
 
 export const schemaEntree = {
-  projet: z.string().min(1),
+  projet: z.string().optional().describe("Omis = page de la base de connaissances globale, pas liée à un projet"),
   type: typeDocumentEnum,
   titre: z.string().min(1),
   contenu: z.string().optional().describe("Markdown ; si omis, utilise le squelette du type"),
@@ -28,9 +30,13 @@ interface Sortie {
 }
 
 export function creerDocument(db: Database.Database, entree: EntreeCreerDocument): Resultat<Sortie> {
-  const projet = trouverProjet(db, entree.projet);
-  if (!projet) {
-    return { ok: false, erreur: `Projet introuvable : ${entree.projet}` };
+  let projetId: string | null = null;
+  if (entree.projet) {
+    const projet = trouverProjet(db, entree.projet);
+    if (!projet) {
+      return { ok: false, erreur: `Projet introuvable : ${entree.projet}` };
+    }
+    projetId = projet.id;
   }
 
   const id = nouvelId();
@@ -40,7 +46,13 @@ export function creerDocument(db: Database.Database, entree: EntreeCreerDocument
   db.prepare(
     `INSERT INTO documents (id, cree_le, projet_id, type, titre, contenu, maj_le)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, maintenant, projet.id, entree.type, entree.titre, contenu, maintenant);
+  ).run(id, maintenant, projetId, entree.type, entree.titre, contenu, maintenant);
 
-  return { ok: true, id, resume: `Page « ${entree.titre} » (${entree.type}) créée dans ${entree.projet}.` };
+  return {
+    ok: true,
+    id,
+    resume: entree.projet
+      ? `Page « ${entree.titre} » (${entree.type}) créée dans ${entree.projet}.`
+      : `Page « ${entree.titre} » (${entree.type}) créée dans la base de connaissances.`,
+  };
 }

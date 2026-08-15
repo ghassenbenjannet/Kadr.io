@@ -1,16 +1,9 @@
 import { useEffect, useState } from "react";
 import { recupererProjet, creerDocumentDirect, type ProjetDetailComplet } from "../lib/api";
 import { LIBELLES_TYPE_TICKET, badgeStatutTicket, badgeStatutCas } from "../lib/tickets-libelles";
+import { LIBELLES_TYPE_DOCUMENT } from "../lib/documents-libelles";
 import { TicketDetail } from "./TicketDetail";
 import { DocumentEditor } from "./DocumentEditor";
-
-const LIBELLES_TYPE_DOCUMENT: Record<string, string> = {
-  cadrage: "Cadrage",
-  compte_rendu: "Compte-rendu",
-  specification: "Spécification",
-  note: "Note",
-  autre: "Autre",
-};
 
 function formaterDate(iso: string): string {
   const d = new Date(iso);
@@ -71,6 +64,7 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
     return (
       <DocumentEditor
         id={documentSelectionne}
+        retourLabel={detail?.projet.nom}
         onRetour={() => {
           setDocumentSelectionne(null);
           charger();

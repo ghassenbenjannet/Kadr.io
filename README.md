@@ -46,7 +46,7 @@ qui remplace le serveur MCP initial par cette application autonome.
   contre le Zoho d'Abraxio avant d'écrire le moindre code de mapping. Voir
   « Continuer le Jalon 3 » plus bas.
 
-196 tests verts (`npm test`).
+212 tests verts (`npm test`).
 
 ## Installation
 
@@ -121,16 +121,17 @@ SQLite est créée automatiquement au premier démarrage
 | Champs | Champs groupés par source de vérité déclarée, contradictions (contrôle M2) en tête de groupe |
 | Intégrations | Flux source → cible avec le nombre de constats ouverts rattachés |
 | Projets | Liste des projets, puis détail par projet : epics avec leurs tickets (cliquables vers leur fiche : description, plans de test liés), la suite de recette, et la documentation (pages markdown typées, éditeur en page) |
+| Base de connaissances | Pages markdown sans projet — l'existant de l'entreprise, des spécifications de référence — même éditeur que la documentation de projet |
 
-Les écrans sont groupés dans la navigation en trois sections : **Registre**
-(Conversation, Tickets, Journal, Constats, Rapport hebdo), **Projets**, et
-**Cartographie** (Habilitations, Champs, Intégrations).
+Les écrans sont groupés dans la navigation en quatre sections : **Registre**
+(Conversation, Tickets, Journal, Constats, Rapport hebdo), **Projets** (Projets,
+Base de connaissances), et **Cartographie** (Habilitations, Champs, Intégrations).
 
 ## Outils de l'agent
 
 Outils de **lecture** (exécutés immédiatement, jamais de validation) :
 `rechercher_journal`, `constats_ouverts`, `lancer_controles`, `generer_rapport`,
-`impact`, `etat_projet`.
+`impact`, `etat_projet`, `lire_document`, `rechercher_connaissance`, `charger_mode`.
 
 Outils d'**écriture** (toujours proposés, jamais exécutés sans validation) :
 `enregistrer_demande`, `mettre_a_jour_demande`, `enregistrer_decision`,
@@ -146,18 +147,38 @@ Volontairement absent : aucun outil de suppression, pour aucune entité. Le regi
 n'efface pas ce qui s'est passé — corriger une erreur de saisie se fait par une
 mise à jour qui garde la trace, pas par un retrait silencieux.
 
-### Documentation par projet : deux chemins d'écriture
+### Documentation et base de connaissances : deux chemins d'écriture
 
-Les pages de documentation (`GET/POST /api/documents`, `PUT /api/documents/:id`)
-sont la seule exception au principe « rien sans validation ». Deux chemins
-coexistent, volontairement différents :
+Les pages de documentation (`GET/POST /api/documents`, `PUT /api/documents/:id`,
+`GET /api/connaissances`) sont la seule exception au principe « rien sans
+validation ». Deux chemins coexistent, volontairement différents :
 
 - **En conversation** : l'agent propose `creer_document` / `mettre_a_jour_document`
   comme n'importe quel autre outil d'écriture — carte de validation obligatoire.
-- **Dans l'éditeur en page** (écran Projets → un projet → Documentation) :
-  enregistrement direct, sans carte de validation. La validation existe pour
-  rattraper l'agent quand il interprète mal ce qu'on lui dit ; quand c'est Ghassen
-  qui tape le texte lui-même dans l'éditeur, il n'y a rien à valider.
+- **Dans l'éditeur en page** (écran Projets → un projet → Documentation, ou écran
+  Base de connaissances) : enregistrement direct, sans carte de validation. La
+  validation existe pour rattraper l'agent quand il interprète mal ce qu'on lui
+  dit ; quand c'est Ghassen qui tape le texte lui-même dans l'éditeur, il n'y a
+  rien à valider.
+
+Une page créée avec `projet` appartient à ce projet ; une page créée sans `projet`
+rejoint la **base de connaissances** — l'existant de l'entreprise, des
+spécifications de référence, indépendants de tout projet en cours. L'agent la
+consulte avec `rechercher_connaissance` (recherche plein texte) et `lire_document`
+(contenu complet d'une page dont il a l'id — fonctionne aussi pour une page de
+projet, qui n'avait jusque-là aucun moyen d'être relue en conversation).
+
+### Modes de travail spécialisés
+
+Le prompt système reste volontairement petit : les instructions détaillées de
+quatre modes (analyse d'une demande, architecture de solution, revue SI,
+préparation d'un livrable) vivent dans leurs propres fichiers
+(`src/agent/modes/*.md`), chargés à la demande par l'outil de lecture
+`charger_mode` — jamais injectés en permanence dans la conversation. Le prompt
+système contient la table de routage ; c'est l'agent qui décide, à la lecture de
+la demande, quel mode charger avant de répondre en profondeur. Pas de mode pour un
+échange bref ou une capture rapide au fil de l'eau — c'est le comportement par
+défaut, déjà dans le prompt de base.
 
 ## Routine hebdomadaire recommandée
 

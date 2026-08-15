@@ -56,6 +56,9 @@ describe("agent/outils — catalogue et adaptateur", () => {
       "generer_rapport",
       "impact",
       "etat_projet",
+      "lire_document",
+      "rechercher_connaissance",
+      "charger_mode",
     ];
     for (const nom of lectures) {
       expect(outilParNom(nom)?.nature).toBe("lecture");

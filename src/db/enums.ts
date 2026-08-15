@@ -46,4 +46,11 @@ export const statutTicketEnum = z.enum(["a_faire", "en_cours", "bloque", "termin
 
 export const statutCasTestEnum = z.enum(["a_faire", "reussi", "echoue"]);
 
-export const typeDocumentEnum = z.enum(["cadrage", "compte_rendu", "specification", "note", "autre"]);
+export const typeDocumentEnum = z.enum([
+  "cadrage",
+  "compte_rendu",
+  "specification",
+  "architecture_existante",
+  "note",
+  "autre",
+]);

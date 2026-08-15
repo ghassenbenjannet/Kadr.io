@@ -304,6 +304,37 @@ describe("routes de lecture", () => {
     expect(introuvable.status).toBe(404);
   });
 
+  it("GET /api/connaissances liste les pages sans projet, distinctes des pages de projet", async () => {
+    contexte = creerDbTemp();
+    const projet = creerProjet(contexte.db, { nom: "CS-Vue360" });
+    expect(projet.ok).toBe(true);
+    if (!projet.ok) return;
+
+    const app = creerApp({ db: contexte.db, config: { apiKey: null, model: "x", maxTokens: 1 }, promptSysteme: PROMPT });
+
+    await app.request("/api/documents", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ projet: "CS-Vue360", type: "cadrage", titre: "Cadrage projet" }),
+    });
+    const global = await app.request("/api/documents", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type: "architecture_existante", titre: "Existant Zoho CRM" }),
+    });
+    expect(global.status).toBe(200);
+    const globalCorps = (await global.json()) as any;
+
+    const liste = (await (await app.request("/api/connaissances")).json()) as any;
+    expect(liste.ok).toBe(true);
+    expect(liste.documents.length).toBe(1);
+    expect(liste.documents[0].titre).toBe("Existant Zoho CRM");
+
+    const detail = (await (await app.request(`/api/documents/${globalCorps.id}`)).json()) as any;
+    expect(detail.ok).toBe(true);
+    expect(detail.projet).toBeNull();
+  });
+
   it("GET /api/conversations puis /api/conversations/:id", async () => {
     contexte = creerDbTemp();
     const config: ConfigAgent = { apiKey: "sk-test", model: "x", maxTokens: 100 };

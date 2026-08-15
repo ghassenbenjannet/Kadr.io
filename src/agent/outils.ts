@@ -73,6 +73,12 @@ import * as outilCreerDocument from "../tools/creer-document.js";
 import { creerDocument } from "../tools/creer-document.js";
 import * as outilMettreAJourDocument from "../tools/mettre-a-jour-document.js";
 import { mettreAJourDocument } from "../tools/mettre-a-jour-document.js";
+import * as outilLireDocument from "../tools/lire-document.js";
+import { lireDocument } from "../tools/lire-document.js";
+import * as outilRechercherConnaissance from "../tools/rechercher-connaissance.js";
+import { rechercherConnaissance } from "../tools/rechercher-connaissance.js";
+import * as outilChargerMode from "../tools/charger-mode.js";
+import { chargerModeOutil } from "../tools/charger-mode.js";
 
 export type NatureOutil = "lecture" | "ecriture";
 
@@ -123,6 +129,27 @@ const DEFINITIONS: DefinitionOutil[] = [
     nature: "lecture",
     schemaEntree: outilImpact.schemaEntree,
     executer: (db, p) => impact(db, p as never),
+  },
+  {
+    nom: outilChargerMode.nom,
+    description: outilChargerMode.description,
+    nature: "lecture",
+    schemaEntree: outilChargerMode.schemaEntree,
+    executer: (_db, p) => chargerModeOutil(p as never),
+  },
+  {
+    nom: outilLireDocument.nom,
+    description: outilLireDocument.description,
+    nature: "lecture",
+    schemaEntree: outilLireDocument.schemaEntree,
+    executer: (db, p) => lireDocument(db, p as never),
+  },
+  {
+    nom: outilRechercherConnaissance.nom,
+    description: outilRechercherConnaissance.description,
+    nature: "lecture",
+    schemaEntree: outilRechercherConnaissance.schemaEntree,
+    executer: (db, p) => rechercherConnaissance(db, p as never),
   },
   {
     nom: outilEtatProjet.nom,

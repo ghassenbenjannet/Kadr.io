@@ -22,6 +22,12 @@ export const PATTERNS_DOCUMENT: Record<string, string> = {
 
 ## Critères d'acceptation
 `,
+  architecture_existante: `## Périmètre
+
+## Composants
+
+## Points d'attention
+`,
   note: "",
   autre: "",
 };

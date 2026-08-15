@@ -9,11 +9,13 @@ import { ChampsSourceVerite } from "./views/ChampsSourceVerite";
 import { Integrations } from "./views/Integrations";
 import { Tickets } from "./views/Tickets";
 import { Projets } from "./views/Projets";
+import { BaseConnaissances } from "./views/BaseConnaissances";
 
 type Vue =
   | "conversation"
   | "tickets"
   | "projets"
+  | "connaissances"
   | "journal"
   | "constats"
   | "rapport"
@@ -34,7 +36,10 @@ const GROUPES_NAV: { titre: string; items: { vue: Vue; label: string; icone: str
   },
   {
     titre: "Projets",
-    items: [{ vue: "projets", label: "Projets", icone: "▣" }],
+    items: [
+      { vue: "projets", label: "Projets", icone: "▣" },
+      { vue: "connaissances", label: "Base de connaissances", icone: "◈" },
+    ],
   },
   {
     titre: "Cartographie",
@@ -122,6 +127,7 @@ export default function App() {
         )}
         {vue === "tickets" && <Tickets />}
         {vue === "projets" && <Projets />}
+        {vue === "connaissances" && <BaseConnaissances />}
         {vue === "journal" && <Journal />}
         {vue === "constats" && <Constats />}
         {vue === "rapport" && <RapportHebdo />}

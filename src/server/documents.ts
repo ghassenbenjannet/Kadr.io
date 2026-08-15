@@ -18,6 +18,13 @@ export function listerDocuments(db: Database.Database, projetId: string): Docume
     .all(projetId) as DocumentResume[];
 }
 
+/** Pages de la base de connaissances : sans projet, portée globale. */
+export function listerConnaissances(db: Database.Database): DocumentResume[] {
+  return db
+    .prepare("SELECT id, titre, type, maj_le FROM documents WHERE projet_id IS NULL ORDER BY maj_le DESC")
+    .all() as DocumentResume[];
+}
+
 export interface DocumentDetail {
   id: string;
   titre: string;
@@ -25,14 +32,14 @@ export interface DocumentDetail {
   contenu: string;
   cree_le: string;
   maj_le: string;
-  projet: { id: string; nom: string };
+  projet: { id: string; nom: string } | null;
 }
 
 export function detailDocument(db: Database.Database, id: string): DocumentDetail | null {
   const row = db
     .prepare(
       `SELECT d.id, d.titre, d.type, d.contenu, d.cree_le, d.maj_le, p.id AS projet_id, p.nom AS projet_nom
-       FROM documents d JOIN projets p ON p.id = d.projet_id
+       FROM documents d LEFT JOIN projets p ON p.id = d.projet_id
        WHERE d.id = ?`
     )
     .get(id) as
@@ -43,8 +50,8 @@ export function detailDocument(db: Database.Database, id: string): DocumentDetai
         contenu: string;
         cree_le: string;
         maj_le: string;
-        projet_id: string;
-        projet_nom: string;
+        projet_id: string | null;
+        projet_nom: string | null;
       }
     | undefined;
   if (!row) return null;
@@ -55,6 +62,6 @@ export function detailDocument(db: Database.Database, id: string): DocumentDetai
     contenu: row.contenu,
     cree_le: row.cree_le,
     maj_le: row.maj_le,
-    projet: { id: row.projet_id, nom: row.projet_nom },
+    projet: row.projet_id ? { id: row.projet_id, nom: row.projet_nom! } : null,
   };
 }

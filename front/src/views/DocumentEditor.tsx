@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { recupererDocument, mettreAJourDocumentDirect, type DocumentComplet } from "../lib/api";
 import { rendreMarkdownLeger } from "../lib/markdown-lite";
+import { LIBELLES_TYPE_DOCUMENT } from "../lib/documents-libelles";
 
-const LIBELLES_TYPE_DOCUMENT: Record<string, string> = {
-  cadrage: "Cadrage",
-  compte_rendu: "Compte-rendu",
-  specification: "Spécification",
-  note: "Note",
-  autre: "Autre",
-};
-
-export function DocumentEditor({ id, onRetour }: { id: string; onRetour: () => void }) {
+export function DocumentEditor({
+  id,
+  retourLabel,
+  onRetour,
+}: {
+  id: string;
+  retourLabel?: string;
+  onRetour: () => void;
+}) {
   const [document, setDocument] = useState<DocumentComplet | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [titre, setTitre] = useState("");
@@ -55,7 +56,7 @@ export function DocumentEditor({ id, onRetour }: { id: string; onRetour: () => v
   return (
     <div>
       <button className="lien-retour" onClick={onRetour}>
-        ← {document ? document.projet.nom : "Retour"}
+        ← {retourLabel ?? document?.projet?.nom ?? "Retour"}
       </button>
 
       {erreur && <div className="erreur">{erreur}</div>}

@@ -343,17 +343,21 @@ export interface DocumentComplet {
   contenu: string;
   cree_le: string;
   maj_le: string;
-  projet: { id: string; nom: string };
+  projet: { id: string; nom: string } | null;
 }
 
 export function recupererDocument(id: string): Promise<{ ok: true } & DocumentComplet> {
   return requeteJson(`/api/documents/${id}`);
 }
 
+export function recupererConnaissances(): Promise<{ ok: true; documents: DocumentResume[] }> {
+  return requeteJson("/api/connaissances");
+}
+
 // Écriture directe (pas via l'agent, pas de carte de validation) : c'est
 // l'éditeur en page, voir la note dans src/server/app.ts.
 export function creerDocumentDirect(args: {
-  projet: string;
+  projet?: string;
   type: string;
   titre: string;
   contenu?: string;

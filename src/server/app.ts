@@ -16,7 +16,7 @@ import { listerJournal } from "./journal.js";
 import { listerDemandes } from "./demandes.js";
 import { z } from "zod";
 import { listerProjets, detailProjet, detailTicket } from "./projets.js";
-import { detailDocument } from "./documents.js";
+import { detailDocument, listerConnaissances } from "./documents.js";
 import { detailEntiteComplet } from "./entites.js";
 import { creerDocument } from "../tools/creer-document.js";
 import { schemaEntree as schemaCreerDocument } from "../tools/creer-document.js";
@@ -94,6 +94,10 @@ export function creerApp(deps: DependancesApp): Hono {
     const detail = detailTicket(db, c.req.param("id"));
     if (!detail) return c.json({ ok: false, erreur: "Ticket introuvable." }, 404);
     return c.json({ ok: true, ...detail });
+  });
+
+  app.get("/api/connaissances", (c) => {
+    return c.json({ ok: true, documents: listerConnaissances(db) });
   });
 
   app.get("/api/documents/:id", (c) => {
