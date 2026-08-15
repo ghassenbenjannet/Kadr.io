@@ -14,6 +14,7 @@ import { resumerResultatLecture } from "../agent/resume-resultat.js";
 import { trouverEcriture } from "../agent/ecritures.js";
 import { listerJournal } from "./journal.js";
 import { listerDemandes } from "./demandes.js";
+import { listerProjets, detailProjet } from "./projets.js";
 import { constatsOuverts } from "../tools/constats-ouverts.js";
 import { genererRapport } from "../tools/generer-rapport.js";
 import {
@@ -74,6 +75,16 @@ export function creerApp(deps: DependancesApp): Hono {
 
   app.get("/api/demandes", (c) => {
     return c.json({ ok: true, demandes: listerDemandes(db) });
+  });
+
+  app.get("/api/projets", (c) => {
+    return c.json({ ok: true, projets: listerProjets(db) });
+  });
+
+  app.get("/api/projets/:id", (c) => {
+    const detail = detailProjet(db, c.req.param("id"));
+    if (!detail) return c.json({ ok: false, erreur: "Projet introuvable." }, 404);
+    return c.json({ ok: true, ...detail });
   });
 
   app.get("/api/conversations", (c) => {

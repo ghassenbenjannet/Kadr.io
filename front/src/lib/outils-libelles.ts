@@ -20,6 +20,14 @@ export const LIBELLES_OUTILS: Record<string, string> = {
   decrire_automatisation: "Décrire une automatisation",
   lier_changement: "Lier un changement à la carte",
   zoho_configurer: "Configurer l'accès Zoho",
+  etat_projet: "État d'un projet",
+  creer_projet: "Créer un projet",
+  creer_epic: "Créer un epic",
+  creer_ticket: "Créer un ticket",
+  mettre_a_jour_ticket: "Faire avancer un ticket",
+  creer_plan_test: "Créer un plan de test",
+  executer_cas_test: "Exécuter un cas de test",
+  lier_ticket_plan_test: "Lier un ticket à un plan de test",
 };
 
 export function libelleOutil(nom: string): string {
@@ -79,6 +87,15 @@ const LIBELLES_CHAMPS: Record<string, string> = {
   client_id: "Client ID",
   client_secret: "Client Secret",
   grant_code: "Grant code",
+  projet: "Projet",
+  epic: "Epic",
+  titre: "Titre",
+  cas: "Cas de test",
+  etape: "Étape",
+  resultat_attendu: "Résultat attendu",
+  executee_par: "Exécuté par",
+  plan_test: "Plan de test",
+  ticket_id: "Ticket",
 };
 
 export function libelleChamp(cle: string): string {

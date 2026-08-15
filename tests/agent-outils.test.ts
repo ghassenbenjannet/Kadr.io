@@ -28,6 +28,13 @@ describe("agent/outils — catalogue et adaptateur", () => {
       "decrire_automatisation",
       "lier_changement",
       "zoho_configurer",
+      "creer_projet",
+      "creer_epic",
+      "creer_ticket",
+      "mettre_a_jour_ticket",
+      "creer_plan_test",
+      "executer_cas_test",
+      "lier_ticket_plan_test",
     ];
     for (const nom of ecritures) {
       expect(outilParNom(nom)?.nature).toBe("ecriture");
@@ -35,7 +42,14 @@ describe("agent/outils — catalogue et adaptateur", () => {
   });
 
   it("chaque outil de lecture attendu est bien classé lecture", () => {
-    const lectures = ["rechercher_journal", "constats_ouverts", "lancer_controles", "generer_rapport", "impact"];
+    const lectures = [
+      "rechercher_journal",
+      "constats_ouverts",
+      "lancer_controles",
+      "generer_rapport",
+      "impact",
+      "etat_projet",
+    ];
     for (const nom of lectures) {
       expect(outilParNom(nom)?.nature).toBe("lecture");
     }

@@ -91,6 +91,58 @@ export function recupererDemandes(): Promise<{ ok: true; demandes: DemandeComple
   return requeteJson("/api/demandes");
 }
 
+export interface ProjetResume {
+  id: string;
+  nom: string;
+  statut: string;
+  epics: number;
+  tickets_total: number;
+  tickets_ouverts: number;
+}
+
+export function recupererProjets(): Promise<{ ok: true; projets: ProjetResume[] }> {
+  return requeteJson("/api/projets");
+}
+
+export interface TicketDetail {
+  id: string;
+  titre: string;
+  type: string;
+  statut: string;
+}
+
+export interface EpicDetail {
+  id: string;
+  nom: string;
+  statut: string;
+  tickets: TicketDetail[];
+}
+
+export interface CasTestDetail {
+  id: string;
+  etape: string;
+  resultat_attendu: string;
+  statut: string;
+  executee_par: string | null;
+  executee_le: string | null;
+}
+
+export interface PlanTestDetail {
+  id: string;
+  nom: string;
+  cas: CasTestDetail[];
+}
+
+export interface ProjetDetailComplet {
+  projet: { id: string; nom: string; statut: string; description: string | null };
+  epics: EpicDetail[];
+  suite_recette: PlanTestDetail[];
+}
+
+export function recupererProjet(id: string): Promise<{ ok: true } & ProjetDetailComplet> {
+  return requeteJson(`/api/projets/${id}`);
+}
+
 export interface ChampAvecContexte {
   id: string;
   nom: string;

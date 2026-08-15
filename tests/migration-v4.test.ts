@@ -39,7 +39,7 @@ describe("migration v3 -> v4 (conversations)", () => {
 
     migrer(db);
 
-    expect(db.pragma("user_version", { simple: true })).toBe(4);
+    expect(db.pragma("user_version", { simple: true })).toBeGreaterThanOrEqual(4);
 
     const demande = db.prepare("SELECT expression_brute FROM demandes WHERE id = 'd1'").get() as {
       expression_brute: string;

@@ -35,3 +35,13 @@ export const typeChangementEnum = z.enum([
   "habilitations",
   "autre",
 ]);
+
+export const statutProjetEnum = z.enum(["actif", "clos"]);
+
+export const statutEpicEnum = z.enum(["a_faire", "en_cours", "termine"]);
+
+export const typeTicketEnum = z.enum(["analyse", "documentation", "atelier", "bug", "task"]);
+
+export const statutTicketEnum = z.enum(["a_faire", "en_cours", "bloque", "termine"]);
+
+export const statutCasTestEnum = z.enum(["a_faire", "reussi", "echoue"]);

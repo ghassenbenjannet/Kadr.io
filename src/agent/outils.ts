@@ -43,6 +43,22 @@ import * as outilLierChangement from "../tools/lier-changement.js";
 import { lierChangement } from "../tools/lier-changement.js";
 import * as outilZohoConfigurer from "../tools/zoho-configurer.js";
 import { zohoConfigurer } from "../tools/zoho-configurer.js";
+import * as outilCreerProjet from "../tools/creer-projet.js";
+import { creerProjet } from "../tools/creer-projet.js";
+import * as outilCreerEpic from "../tools/creer-epic.js";
+import { creerEpic } from "../tools/creer-epic.js";
+import * as outilCreerTicket from "../tools/creer-ticket.js";
+import { creerTicket } from "../tools/creer-ticket.js";
+import * as outilMettreAJourTicket from "../tools/mettre-a-jour-ticket.js";
+import { mettreAJourTicket } from "../tools/mettre-a-jour-ticket.js";
+import * as outilCreerPlanTest from "../tools/creer-plan-test.js";
+import { creerPlanTest } from "../tools/creer-plan-test.js";
+import * as outilExecuterCasTest from "../tools/executer-cas-test.js";
+import { executerCasTest } from "../tools/executer-cas-test.js";
+import * as outilLierTicketPlanTest from "../tools/lier-ticket-plan-test.js";
+import { lierTicketPlanTest } from "../tools/lier-ticket-plan-test.js";
+import * as outilEtatProjet from "../tools/etat-projet.js";
+import { etatProjet } from "../tools/etat-projet.js";
 
 export type NatureOutil = "lecture" | "ecriture";
 
@@ -93,6 +109,13 @@ const DEFINITIONS: DefinitionOutil[] = [
     nature: "lecture",
     schemaEntree: outilImpact.schemaEntree,
     executer: (db, p) => impact(db, p as never),
+  },
+  {
+    nom: outilEtatProjet.nom,
+    description: outilEtatProjet.description,
+    nature: "lecture",
+    schemaEntree: outilEtatProjet.schemaEntree,
+    executer: (db, p) => etatProjet(db, p as never),
   },
   {
     nom: outilDemande.nom,
@@ -184,6 +207,55 @@ const DEFINITIONS: DefinitionOutil[] = [
     nature: "ecriture",
     schemaEntree: outilZohoConfigurer.schemaEntree,
     executer: (_db, p) => zohoConfigurer(p as never),
+  },
+  {
+    nom: outilCreerProjet.nom,
+    description: outilCreerProjet.description,
+    nature: "ecriture",
+    schemaEntree: outilCreerProjet.schemaEntree,
+    executer: (db, p) => creerProjet(db, p as never),
+  },
+  {
+    nom: outilCreerEpic.nom,
+    description: outilCreerEpic.description,
+    nature: "ecriture",
+    schemaEntree: outilCreerEpic.schemaEntree,
+    executer: (db, p) => creerEpic(db, p as never),
+  },
+  {
+    nom: outilCreerTicket.nom,
+    description: outilCreerTicket.description,
+    nature: "ecriture",
+    schemaEntree: outilCreerTicket.schemaEntree,
+    executer: (db, p) => creerTicket(db, p as never),
+  },
+  {
+    nom: outilMettreAJourTicket.nom,
+    description: outilMettreAJourTicket.description,
+    nature: "ecriture",
+    schemaEntree: outilMettreAJourTicket.schemaEntree,
+    executer: (db, p) => mettreAJourTicket(db, p as never),
+  },
+  {
+    nom: outilCreerPlanTest.nom,
+    description: outilCreerPlanTest.description,
+    nature: "ecriture",
+    schemaEntree: outilCreerPlanTest.schemaEntree,
+    executer: (db, p) => creerPlanTest(db, p as never),
+  },
+  {
+    nom: outilExecuterCasTest.nom,
+    description: outilExecuterCasTest.description,
+    nature: "ecriture",
+    schemaEntree: outilExecuterCasTest.schemaEntree,
+    executer: (db, p) => executerCasTest(db, p as never),
+  },
+  {
+    nom: outilLierTicketPlanTest.nom,
+    description: outilLierTicketPlanTest.description,
+    nature: "ecriture",
+    schemaEntree: outilLierTicketPlanTest.schemaEntree,
+    executer: (db, p) => lierTicketPlanTest(db, p as never),
   },
 ];
 

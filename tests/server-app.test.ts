@@ -9,6 +9,10 @@ import { decrireModule } from "../src/tools/decrire-module.js";
 import { decrireChamp } from "../src/tools/decrire-champ.js";
 import { decrireHabilitation } from "../src/tools/decrire-habilitation.js";
 import { decrireIntegration } from "../src/tools/decrire-integration.js";
+import { creerTicket } from "../src/tools/creer-ticket.js";
+import { creerPlanTest } from "../src/tools/creer-plan-test.js";
+import { executerCasTest } from "../src/tools/executer-cas-test.js";
+import { lierTicketPlanTest } from "../src/tools/lier-ticket-plan-test.js";
 import type { ClientAnthropic, ParametresCreationMessage, ResultatMessageAnthropic } from "../src/agent/client.js";
 import type { ConfigAgent } from "../src/agent/config.js";
 
@@ -158,6 +162,44 @@ describe("routes de lecture", () => {
     expect(corps.demandes.length).toBe(1);
     expect(corps.demandes[0].statut).toBe("recue");
     expect(corps.demandes[0].demandeur).toBe("Sophie");
+  });
+
+  it("GET /api/projets puis /api/projets/:id avec la suite de recette", async () => {
+    contexte = creerDbTemp();
+    const ticket = creerTicket(contexte.db, {
+      projet: "CS-Vue360",
+      epic: "Build",
+      titre: "Développer export",
+      type: "task",
+    });
+    expect(ticket.ok).toBe(true);
+    if (!ticket.ok) return;
+    const plan = creerPlanTest(contexte.db, {
+      nom: "Recette export",
+      cas: [{ etape: "Exporter", resultat_attendu: "CSV" }],
+    });
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    lierTicketPlanTest(contexte.db, { ticket_id: ticket.id, plan_test: "Recette export" });
+    executerCasTest(contexte.db, { id: plan.cas_ids[0]!, statut: "reussi" });
+
+    const app = creerApp({ db: contexte.db, config: { apiKey: null, model: "x", maxTokens: 1 }, promptSysteme: PROMPT });
+
+    const liste = (await (await app.request("/api/projets")).json()) as any;
+    expect(liste.ok).toBe(true);
+    expect(liste.projets.length).toBe(1);
+    expect(liste.projets[0].nom).toBe("CS-Vue360");
+    const projetId = liste.projets[0].id;
+
+    const detail = (await (await app.request(`/api/projets/${projetId}`)).json()) as any;
+    expect(detail.ok).toBe(true);
+    expect(detail.epics[0].nom).toBe("Build");
+    expect(detail.epics[0].tickets[0].titre).toBe("Développer export");
+    expect(detail.suite_recette[0].nom).toBe("Recette export");
+    expect(detail.suite_recette[0].cas[0].statut).toBe("reussi");
+
+    const inconnu = await app.request("/api/projets/inconnu");
+    expect(inconnu.status).toBe(404);
   });
 
   it("GET /api/conversations puis /api/conversations/:id", async () => {
