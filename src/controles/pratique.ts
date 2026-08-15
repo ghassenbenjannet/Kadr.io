@@ -7,12 +7,7 @@ export const SEUILS = {
   demandeEnAttenteJours: 14,
 } as const;
 
-export interface Constat {
-  controle: string;
-  entite: "changement" | "decision" | "demande" | "incident";
-  entiteId: string;
-  consequence: string;
-}
+import type { Constat } from "./types.js";
 
 export interface ChangementRow {
   id: string;

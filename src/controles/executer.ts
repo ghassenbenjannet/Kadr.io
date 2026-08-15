@@ -2,11 +2,23 @@ import type Database from "better-sqlite3";
 import {
   executerControlesPratique,
   type ChangementRow,
-  type Constat,
   type DecisionRow,
   type DemandeRow,
   type IncidentRow,
 } from "./pratique.js";
+import {
+  executerControlesModele,
+  type ChampRow,
+  type HabilitationRow,
+  type ModuleSansChampRow,
+} from "./modele.js";
+import {
+  executerControlesIntegration,
+  type ErreurIntegrationRow,
+  type IntegrationRow,
+  type MetriqueRow,
+} from "./integration.js";
+import type { Constat } from "./types.js";
 
 export interface FamilleControle {
   /** Nom exposé dans lancer_controles.perimetre. */
@@ -34,20 +46,53 @@ const FAMILLE_PRATIQUE: FamilleControle = {
   },
 };
 
-// Jalon 2 ajoutera FAMILLE_MODELE ('modele', M1-M4) et FAMILLE_INTEGRATION
-// ('integration', I1-I7) ici.
-const FAMILLES: FamilleControle[] = [FAMILLE_PRATIQUE];
+const FAMILLE_MODELE: FamilleControle = {
+  nom: "modele",
+  codes: ["M1", "M2", "M3", "M4"],
+  calculer: (db) => {
+    const champs = db
+      .prepare(
+        `SELECT c.id, c.nom, c.source_de_verite, c.editable, s.nom AS systeme_module_nom
+         FROM champs c
+         JOIN modules m ON m.id = c.module_id
+         JOIN systemes s ON s.id = m.systeme_id`
+      )
+      .all() as ChampRow[];
+    const habilitations = db
+      .prepare("SELECT id, editable, justification FROM habilitations")
+      .all() as HabilitationRow[];
+    const modules = db
+      .prepare(
+        `SELECT m.id, m.cree_le, (SELECT COUNT(*) FROM champs c WHERE c.module_id = m.id) AS nombreChamps
+         FROM modules m`
+      )
+      .all() as ModuleSansChampRow[];
+    return executerControlesModele({ champs, habilitations, modules });
+  },
+};
 
-export function toutesLesFamilles(): FamilleControle[] {
-  return FAMILLES;
-}
+const FAMILLE_INTEGRATION: FamilleControle = {
+  nom: "integration",
+  codes: ["I1", "I2", "I3", "I4", "I5", "I6", "I7"],
+  calculer: (db) => {
+    const integrations = db
+      .prepare(
+        `SELECT i.id, i.idempotence, i.matching, i.regle_vide, i.procedure_reprise,
+                (SELECT COUNT(*) FROM metriques me WHERE me.integration_id = i.id) AS nombreMetriques
+         FROM integrations i`
+      )
+      .all() as IntegrationRow[];
+    const erreurs = db
+      .prepare("SELECT id, nature FROM erreurs_integration")
+      .all() as ErreurIntegrationRow[];
+    const metriques = db.prepare("SELECT id, seuil FROM metriques").all() as MetriqueRow[];
+    return executerControlesIntegration({ integrations, erreurs, metriques });
+  },
+};
+
+const FAMILLES: FamilleControle[] = [FAMILLE_PRATIQUE, FAMILLE_MODELE, FAMILLE_INTEGRATION];
 
 export function famillesPour(perimetre: string): FamilleControle[] {
   if (perimetre === "tous") return FAMILLES;
   return FAMILLES.filter((f) => f.nom === perimetre);
-}
-
-export function enregistrerFamille(famille: FamilleControle): void {
-  if (FAMILLES.some((f) => f.nom === famille.nom)) return;
-  FAMILLES.push(famille);
 }

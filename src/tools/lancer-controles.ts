@@ -1,20 +1,21 @@
 import { z } from "zod";
 import type Database from "better-sqlite3";
 import { famillesPour } from "../controles/executer.js";
-import type { Constat } from "../controles/pratique.js";
+import type { Constat } from "../controles/types.js";
 import { maintenantIso, nouvelId, type Resultat } from "../db/util.js";
 import { detailEntite } from "../db/libelles.js";
 
 export const nom = "lancer_controles";
 
 export const description =
-  "Exécute la vigie : relit le journal (et la carte, une fois cartographiée) et met à jour les " +
-  "constats. Idempotent : rejouer ne crée jamais de doublon, et un constat dont la cause a " +
-  "disparu passe automatiquement en 'traité'.";
+  "Exécute la vigie : relit le journal et la carte, et met à jour les constats (pratique : " +
+  "retours arrière, tests, origines ; modèle : sources de vérité, habilitations ; intégration : " +
+  "idempotence, supervision). Idempotent : rejouer ne crée jamais de doublon, et un constat dont " +
+  "la cause a disparu passe automatiquement en 'traité'.";
 
 export const schemaEntree = {
   perimetre: z
-    .enum(["tous", "pratique"])
+    .enum(["tous", "pratique", "modele", "integration"])
     .optional()
     .describe("Sous-ensemble de contrôles à exécuter (défaut : tous)"),
 };

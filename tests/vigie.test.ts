@@ -83,4 +83,50 @@ describe("lancer_controles / constats_ouverts", () => {
       expect(c.consequence.length).toBeGreaterThan(0);
     }
   });
+
+  it("M2 (perimetre 'modele') : casse différente entre source et système ne déclenche pas", () => {
+    contexte = creerDbTemp();
+    const db = contexte.db;
+    const maintenant = new Date().toISOString();
+    db.prepare(
+      "INSERT INTO systemes (id, cree_le, nom, role, maj_le) VALUES ('sys1', ?, 'Zoho CRM', 'CRM', ?)"
+    ).run(maintenant, maintenant);
+    db.prepare(
+      "INSERT INTO modules (id, cree_le, systeme_id, nom, maj_le) VALUES ('mod1', ?, 'sys1', 'Comptes', ?)"
+    ).run(maintenant, maintenant);
+    db.prepare(
+      `INSERT INTO champs (id, cree_le, module_id, nom, source_de_verite, editable, maj_le)
+       VALUES ('ch1', ?, 'mod1', 'Statut_Client', 'zoho crm', 1, ?)`
+    ).run(maintenant, maintenant);
+
+    const r = lancerControles(db, { perimetre: "modele" });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.ouverts.some((c) => c.controle === "M2")).toBe(false);
+    // M1 ne doit pas non plus se déclencher : la source est renseignée.
+    expect(r.ouverts.some((c) => c.controle === "M1")).toBe(false);
+  });
+
+  it("I-family (perimetre 'integration') : intégration sans idempotence ni métrique", () => {
+    contexte = creerDbTemp();
+    const db = contexte.db;
+    const maintenant = new Date().toISOString();
+    db.prepare(
+      "INSERT INTO systemes (id, cree_le, nom, role, maj_le) VALUES ('sys1', ?, 'App Devis', 'Devis', ?)"
+    ).run(maintenant, maintenant);
+    db.prepare(
+      "INSERT INTO systemes (id, cree_le, nom, role, maj_le) VALUES ('sys2', ?, 'Zoho CRM', 'CRM', ?)"
+    ).run(maintenant, maintenant);
+    db.prepare(
+      `INSERT INTO integrations (id, cree_le, nom, source_id, cible_id, maj_le)
+       VALUES ('int1', ?, 'Devis -> CRM', 'sys1', 'sys2', ?)`
+    ).run(maintenant, maintenant);
+
+    const r = lancerControles(db, { perimetre: "integration" });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    for (const code of ["I1", "I2", "I3", "I5", "I7"]) {
+      expect(r.ouverts.some((c) => c.controle === code)).toBe(true);
+    }
+  });
 });
