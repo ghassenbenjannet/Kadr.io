@@ -18,6 +18,28 @@
   gap: var(--e-5);
   color: var(--sidebar-ink);
   overflow-y: auto;
+  /* Scrollbar toujours visible (pas la variante overlay masquée de macOS) :
+     sans ça, une fois le contenu plus haut que l'écran, rien ne signale que
+     la barre latérale défile — elle a juste l'air tronquée. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-ink-3) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--sidebar-ink-3);
+  border-radius: var(--rayon-pilule);
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--sidebar-ink-2);
 }
 
 .sidebar__titre {
@@ -147,8 +169,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--e-2);
-  min-height: 0;
-  flex: 1;
 }
 
 .sidebar__section-titre {
@@ -309,7 +329,6 @@
   display: flex;
   flex-direction: column;
   gap: 1px;
-  overflow-y: auto;
 }
 
 .conversation-recente {
@@ -1243,6 +1262,58 @@ td.editable {
   position: absolute;
   left: 0;
   color: var(--ink-4);
+}
+
+.rapport ol {
+  margin: 0 0 var(--e-2);
+  padding-left: var(--e-5);
+}
+
+.rapport ol li {
+  padding-left: 0;
+}
+
+.rapport ol li::before {
+  content: none;
+}
+
+.rapport code {
+  font-family: var(--police-mono);
+  font-size: 0.9em;
+  background: var(--paper-sunken);
+  padding: 0.1em 0.35em;
+  border-radius: var(--rayon-s);
+}
+
+.rapport table {
+  width: 100%;
+  margin: 0 0 var(--e-2);
+  border-collapse: collapse;
+  font-size: var(--taille-meta);
+}
+
+.rapport th,
+.rapport td {
+  padding: var(--e-2) var(--e-3);
+  border: 1px solid var(--rule);
+  text-align: left;
+}
+
+.rapport th {
+  background: var(--paper-sunken);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Dans une bulle de conversation, le texte de l'assistant reste à pleine
+   opacité — .rapport atténue en --ink-2 pensé pour la page Rapport hebdo. */
+.bulle--assistant.rapport p,
+.bulle--assistant.rapport li {
+  color: inherit;
+}
+
+.bulle--assistant.rapport > :last-child {
+  margin-bottom: 0;
 }
 
 /* --- Conversation ------------------------------------------------------- */

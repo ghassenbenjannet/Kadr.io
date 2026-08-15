@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { envoyerMessage, recupererConversation, type EcritureProposee, type ResultatConfirm } from "../lib/api";
 import { libelleOutil } from "../lib/outils-libelles";
 import { ValidationCard } from "../components/ValidationCard";
+import { rendreMarkdownLeger } from "../lib/markdown-lite";
 
 let compteurId = 0;
 function idLocal(): string {
@@ -178,8 +179,8 @@ export function Conversation({ conversationId, onConversationDemarree }: Props) 
           }
           if (e.type === "assistant") {
             return (
-              <div className="bulle bulle--assistant" key={e.id}>
-                {e.texte}
+              <div className="bulle bulle--assistant rapport" key={e.id}>
+                {rendreMarkdownLeger(e.texte)}
               </div>
             );
           }
