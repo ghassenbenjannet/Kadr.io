@@ -2,6 +2,7 @@ import { z } from "zod";
 import type Database from "better-sqlite3";
 import { typeChangementEnum } from "../db/enums.js";
 import { maintenantIso, nouvelId, type Resultat } from "../db/util.js";
+import { proposerLiensPourPerimetre, type PropositionLien } from "../carte/proposer-liens.js";
 
 export const nom = "enregistrer_changement";
 
@@ -13,6 +14,8 @@ export const description =
 
 export const schemaEntree = {
   description: z.string().min(1),
+  // JALON2: perimetre reste un texte libre (choix du Jalon 1) ; le Jalon 2 le scanne pour y
+  // reconnaître des noms déjà décrits dans la carte plutôt que d'exiger une structure liée.
   perimetre: z.string().min(1).describe("Modules, champs, workflows, intégrations touchés"),
   type: typeChangementEnum,
   rollback: z.string().optional().describe("Procédure de retour arrière"),
@@ -29,6 +32,7 @@ interface Sortie {
   id: string;
   resume: string;
   avertissements: string[];
+  liens_proposes?: PropositionLien[];
 }
 
 export function enregistrerChangement(
@@ -75,10 +79,19 @@ export function enregistrerChangement(
     avertissements.push("Aucun retour arrière déclaré. Le contrôle C1 restera ouvert.");
   }
 
+  const liens_proposes = proposerLiensPourPerimetre(db, entree.perimetre);
+  if (liens_proposes.length > 0) {
+    avertissements.push(
+      `${liens_proposes.length} élément(s) de la carte reconnu(s) dans le périmètre : ` +
+        "rappelle lier_changement pour confirmer le lien (aucun lien n'est créé automatiquement)."
+    );
+  }
+
   return {
     ok: true,
     id,
     resume: `Changement « ${entree.description} » (${entree.type}) enregistré.`,
     avertissements,
+    ...(liens_proposes.length > 0 ? { liens_proposes } : {}),
   };
 }

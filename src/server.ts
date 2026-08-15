@@ -34,6 +34,8 @@ import * as outilDecrireAutomatisation from "./tools/decrire-automatisation.js";
 import { decrireAutomatisation } from "./tools/decrire-automatisation.js";
 import * as outilImpact from "./tools/impact.js";
 import { impact } from "./tools/impact.js";
+import * as outilLierChangement from "./tools/lier-changement.js";
+import { lierChangement } from "./tools/lier-changement.js";
 
 const db = ouvrirDb();
 migrer(db);
@@ -135,6 +137,12 @@ server.registerTool(
   outilImpact.nom,
   { description: outilImpact.description, inputSchema: outilImpact.schemaEntree },
   async (args) => texte(impact(db, args))
+);
+
+server.registerTool(
+  outilLierChangement.nom,
+  { description: outilLierChangement.description, inputSchema: outilLierChangement.schemaEntree },
+  async (args) => texte(lierChangement(db, args))
 );
 
 const transport = new StdioServerTransport();
