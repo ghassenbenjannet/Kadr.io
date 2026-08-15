@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type Database from "better-sqlite3";
 import type { Resultat } from "../db/util.js";
+import { detailEntite } from "../db/libelles.js";
 
 export const nom = "rechercher_journal";
 
@@ -42,53 +43,6 @@ function construireRequeteFts(question: string): string {
   return tokens.map((t) => `${t}*`).join(" ");
 }
 
-function formatDateFr(iso: string): string {
-  const d = new Date(iso);
-  const jour = String(d.getUTCDate()).padStart(2, "0");
-  const mois = String(d.getUTCMonth() + 1).padStart(2, "0");
-  return `${jour}/${mois}`;
-}
-
-interface Detail {
-  date: string;
-  lien: string;
-}
-
-function recupererDetail(db: Database.Database, entite: string, id: string): Detail | null {
-  switch (entite) {
-    case "demande": {
-      const row = db
-        .prepare("SELECT cree_le, demandeur, equipe FROM demandes WHERE id = ?")
-        .get(id) as { cree_le: string; demandeur: string; equipe: string } | undefined;
-      if (!row) return null;
-      return { date: row.cree_le, lien: `demande du ${formatDateFr(row.cree_le)} : ${row.demandeur} (${row.equipe})` };
-    }
-    case "decision": {
-      const row = db.prepare("SELECT cree_le, decision FROM decisions WHERE id = ?").get(id) as
-        | { cree_le: string; decision: string }
-        | undefined;
-      if (!row) return null;
-      return { date: row.cree_le, lien: `décision du ${formatDateFr(row.cree_le)} : ${row.decision}` };
-    }
-    case "changement": {
-      const row = db.prepare("SELECT cree_le, description FROM changements WHERE id = ?").get(id) as
-        | { cree_le: string; description: string }
-        | undefined;
-      if (!row) return null;
-      return { date: row.cree_le, lien: `changement du ${formatDateFr(row.cree_le)} : ${row.description}` };
-    }
-    case "incident": {
-      const row = db.prepare("SELECT cree_le, symptome FROM incidents WHERE id = ?").get(id) as
-        | { cree_le: string; symptome: string }
-        | undefined;
-      if (!row) return null;
-      return { date: row.cree_le, lien: `incident du ${formatDateFr(row.cree_le)} : ${row.symptome}` };
-    }
-    default:
-      return null;
-  }
-}
-
 export function rechercherJournal(
   db: Database.Database,
   entree: EntreeRechercherJournal
@@ -115,7 +69,7 @@ export function rechercherJournal(
 
   for (const ligne of lignesFts) {
     if (entree.entites && !entree.entites.includes(ligne.entite as never)) continue;
-    const detail = recupererDetail(db, ligne.entite, ligne.entite_id);
+    const detail = detailEntite(db, ligne.entite, ligne.entite_id);
     if (!detail) continue;
     if (entree.depuis && detail.date < entree.depuis) continue;
     if (entree.jusqu_a && detail.date > entree.jusqu_a) continue;
@@ -124,7 +78,7 @@ export function rechercherJournal(
       id: ligne.entite_id,
       date: detail.date,
       extrait: ligne.extrait,
-      lien_conversationnel: detail.lien,
+      lien_conversationnel: detail.libelle,
       score: ligne.score,
     });
   }
