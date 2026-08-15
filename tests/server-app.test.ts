@@ -143,6 +143,23 @@ describe("routes de lecture", () => {
     expect(corps.integrations[0].nom).toBe("Devis -> CRM");
   });
 
+  it("GET /api/demandes retourne les demandes complètes, avec statut", async () => {
+    contexte = creerDbTemp();
+    enregistrerDemande(contexte.db, {
+      demandeur: "Sophie",
+      equipe: "CS",
+      expression_brute: "voir les factures",
+      type: "evolution",
+    });
+    const app = creerApp({ db: contexte.db, config: { apiKey: null, model: "x", maxTokens: 1 }, promptSysteme: PROMPT });
+    const res = await app.request("/api/demandes");
+    const corps = (await res.json()) as any;
+    expect(corps.ok).toBe(true);
+    expect(corps.demandes.length).toBe(1);
+    expect(corps.demandes[0].statut).toBe("recue");
+    expect(corps.demandes[0].demandeur).toBe("Sophie");
+  });
+
   it("GET /api/conversations puis /api/conversations/:id", async () => {
     contexte = creerDbTemp();
     const config: ConfigAgent = { apiKey: "sk-test", model: "x", maxTokens: 100 };

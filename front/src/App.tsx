@@ -7,9 +7,11 @@ import { Conversation } from "./views/Conversation";
 import { Habilitations } from "./views/Habilitations";
 import { ChampsSourceVerite } from "./views/ChampsSourceVerite";
 import { Integrations } from "./views/Integrations";
+import { Tickets } from "./views/Tickets";
 
 type Vue =
   | "conversation"
+  | "tickets"
   | "journal"
   | "constats"
   | "rapport"
@@ -22,6 +24,7 @@ const GROUPES_NAV: { titre: string; items: { vue: Vue; label: string; icone: str
     titre: "Registre",
     items: [
       { vue: "conversation", label: "Conversation", icone: "●" },
+      { vue: "tickets", label: "Tickets", icone: "▥" },
       { vue: "journal", label: "Journal", icone: "☰" },
       { vue: "constats", label: "Constats", icone: "▲" },
       { vue: "rapport", label: "Rapport hebdo", icone: "▤" },
@@ -111,6 +114,7 @@ export default function App() {
         {vue === "conversation" && (
           <Conversation conversationId={conversationActive} onConversationDemarree={setConversationActive} />
         )}
+        {vue === "tickets" && <Tickets />}
         {vue === "journal" && <Journal />}
         {vue === "constats" && <Constats />}
         {vue === "rapport" && <RapportHebdo />}

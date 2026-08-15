@@ -8,6 +8,7 @@ export const LIBELLES_OUTILS: Record<string, string> = {
   generer_rapport: "Génération du rapport",
   impact: "Analyse d'impact",
   enregistrer_demande: "Enregistrer une demande",
+  mettre_a_jour_demande: "Faire avancer une demande",
   enregistrer_decision: "Enregistrer une décision",
   enregistrer_changement: "Enregistrer un changement",
   enregistrer_incident: "Enregistrer un incident",
@@ -26,6 +27,7 @@ export function libelleOutil(nom: string): string {
 }
 
 const LIBELLES_CHAMPS: Record<string, string> = {
+  id: "Identifiant",
   demandeur: "Demandeur",
   equipe: "Équipe",
   expression_brute: "Expression brute",

@@ -23,13 +23,18 @@ qui remplace le serveur MCP initial par cette application autonome.
   jusque-là des pages HTML statiques séparées — sont maintenant des écrans React de
   la même application, dans la même navigation. Le serveur web statique et
   `npm run web` ont été retirés : une seule interface, à jour en temps réel.
+- **Écran Tickets** : le schéma des demandes portait déjà un vrai cycle de vie
+  (`recue` → `qualifiee` → `arbitree` → `realisee`, ou `refusee`/`reportee`) sans
+  aucun moyen de le faire avancer. L'outil `mettre_a_jour_demande` et l'écran
+  Tickets (colonnes par statut) comblent ce trou — sans assignation utilisateur,
+  l'équipe demandeuse suffit pour un opérateur solo.
 - **Jalon 3 (import Zoho)** : amorcé (migration, `zoho_configurer`, client HTTP Zoho
   testé sur transport injecté). La suite (découverte, mapper, fusion, import,
   contrôles de dérive) est **délibérément arrêtée** : elle exige une exécution réelle
   contre le Zoho d'Abraxio avant d'écrire le moindre code de mapping. Voir
   « Continuer le Jalon 3 » plus bas.
 
-146 tests verts (`npm test`).
+153 tests verts (`npm test`).
 
 ## Installation
 
@@ -96,6 +101,7 @@ SQLite est créée automatiquement au premier démarrage
 | Écran | Contenu |
 |---|---|
 | Conversation | Écran principal : streaming, trace discrète des outils de lecture, carte de validation pour toute écriture |
+| Tickets | Les demandes en colonnes par statut (reçue → qualifiée → arbitrée → réalisée, écartées à part) — le statut avance via `mettre_a_jour_demande`, proposé puis validé comme toute écriture |
 | Journal | Demandes, décisions, changements, incidents — filtrable, lecture seule |
 | Constats | La vigie, groupée par famille, conséquence toujours visible |
 | Rapport hebdo | Rendu du rapport de la semaine, bouton copier pour l'envoi au CEO |
@@ -104,8 +110,8 @@ SQLite est créée automatiquement au premier démarrage
 | Intégrations | Flux source → cible avec le nombre de constats ouverts rattachés |
 
 Les écrans sont groupés dans la navigation en deux sections : **Registre**
-(Conversation, Journal, Constats, Rapport hebdo) et **Cartographie** (Habilitations,
-Champs, Intégrations).
+(Conversation, Tickets, Journal, Constats, Rapport hebdo) et **Cartographie**
+(Habilitations, Champs, Intégrations).
 
 ## Outils de l'agent
 
@@ -114,10 +120,10 @@ Outils de **lecture** (exécutés immédiatement, jamais de validation) :
 `impact`.
 
 Outils d'**écriture** (toujours proposés, jamais exécutés sans validation) :
-`enregistrer_demande`, `enregistrer_decision`, `enregistrer_changement`,
-`enregistrer_incident`, `decrire_systeme`, `decrire_module`, `decrire_champ`,
-`decrire_habilitation`, `decrire_integration`, `decrire_automatisation`,
-`lier_changement`, `zoho_configurer`.
+`enregistrer_demande`, `mettre_a_jour_demande`, `enregistrer_decision`,
+`enregistrer_changement`, `enregistrer_incident`, `decrire_systeme`, `decrire_module`,
+`decrire_champ`, `decrire_habilitation`, `decrire_integration`,
+`decrire_automatisation`, `lier_changement`, `zoho_configurer`.
 
 ## Routine hebdomadaire recommandée
 

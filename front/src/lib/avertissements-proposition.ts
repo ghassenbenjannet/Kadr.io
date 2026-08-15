@@ -14,7 +14,11 @@ export function avertissementsPourProposition(outil: string, parametres: Record<
     avertissements.push("Aucune action préventive déclarée. Le contrôle C6 restera ouvert.");
   }
 
-  if (outil === "enregistrer_demande" && parametres.priorite && !parametres.priorite_arbitree_par) {
+  if (
+    (outil === "enregistrer_demande" || outil === "mettre_a_jour_demande") &&
+    parametres.priorite &&
+    !parametres.priorite_arbitree_par
+  ) {
     avertissements.push("Une priorité doit être attribuable : qui l'a arbitrée ?");
   }
 

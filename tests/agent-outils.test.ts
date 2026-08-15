@@ -16,6 +16,7 @@ describe("agent/outils — catalogue et adaptateur", () => {
   it("chaque outil d'écriture attendu est bien classé écriture", () => {
     const ecritures = [
       "enregistrer_demande",
+      "mettre_a_jour_demande",
       "enregistrer_decision",
       "enregistrer_changement",
       "enregistrer_incident",

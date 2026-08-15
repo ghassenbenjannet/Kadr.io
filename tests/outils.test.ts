@@ -4,6 +4,7 @@ import { enregistrerDemande } from "../src/tools/enregistrer-demande.js";
 import { enregistrerDecision } from "../src/tools/enregistrer-decision.js";
 import { enregistrerChangement } from "../src/tools/enregistrer-changement.js";
 import { enregistrerIncident } from "../src/tools/enregistrer-incident.js";
+import { mettreAJourDemande } from "../src/tools/mettre-a-jour-demande.js";
 
 let contexte: DbTemp;
 
@@ -58,6 +59,121 @@ describe("enregistrer_demande", () => {
       .prepare("SELECT expression_brute FROM demandes WHERE id = ?")
       .get(r.id) as { expression_brute: string };
     expect(ligne.expression_brute).toBe("texte original");
+  });
+});
+
+describe("mettre_a_jour_demande", () => {
+  it("fait avancer le statut", () => {
+    contexte = creerDbTemp();
+    const creation = enregistrerDemande(contexte.db, {
+      demandeur: "Sophie",
+      equipe: "CS",
+      expression_brute: "je veux voir les factures dans la fiche client",
+      type: "evolution",
+    });
+    expect(creation.ok).toBe(true);
+    if (!creation.ok) return;
+
+    const r = mettreAJourDemande(contexte.db, { id: creation.id, statut: "qualifiee" });
+    expect(r.ok).toBe(true);
+
+    const ligne = contexte.db.prepare("SELECT statut FROM demandes WHERE id = ?").get(creation.id) as {
+      statut: string;
+    };
+    expect(ligne.statut).toBe("qualifiee");
+  });
+
+  it("ne touche jamais expression_brute", () => {
+    contexte = creerDbTemp();
+    const creation = enregistrerDemande(contexte.db, {
+      demandeur: "Sophie",
+      equipe: "CS",
+      expression_brute: "texte original",
+      type: "evolution",
+    });
+    expect(creation.ok).toBe(true);
+    if (!creation.ok) return;
+
+    mettreAJourDemande(contexte.db, {
+      id: creation.id,
+      statut: "realisee",
+      reformulation: "Ajouter le bloc factures sur la fiche client",
+    });
+
+    const ligne = contexte.db
+      .prepare("SELECT expression_brute FROM demandes WHERE id = ?")
+      .get(creation.id) as { expression_brute: string };
+    expect(ligne.expression_brute).toBe("texte original");
+  });
+
+  it("refuse une priorité sans arbitre, y compris à la mise à jour", () => {
+    contexte = creerDbTemp();
+    const creation = enregistrerDemande(contexte.db, {
+      demandeur: "Sophie",
+      equipe: "CS",
+      expression_brute: "x",
+      type: "evolution",
+    });
+    expect(creation.ok).toBe(true);
+    if (!creation.ok) return;
+
+    const r = mettreAJourDemande(contexte.db, { id: creation.id, priorite: "P2" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.erreur).toBe("Une priorité doit être attribuable : qui l'a arbitrée ?");
+    }
+  });
+
+  it("arbitre une priorité", () => {
+    contexte = creerDbTemp();
+    const creation = enregistrerDemande(contexte.db, {
+      demandeur: "Sophie",
+      equipe: "CS",
+      expression_brute: "x",
+      type: "evolution",
+    });
+    expect(creation.ok).toBe(true);
+    if (!creation.ok) return;
+
+    const r = mettreAJourDemande(contexte.db, {
+      id: creation.id,
+      priorite: "P1",
+      priorite_arbitree_par: "Samuel",
+    });
+    expect(r.ok).toBe(true);
+
+    const ligne = contexte.db
+      .prepare("SELECT priorite, priorite_arbitree_par FROM demandes WHERE id = ?")
+      .get(creation.id) as { priorite: string; priorite_arbitree_par: string };
+    expect(ligne.priorite).toBe("P1");
+    expect(ligne.priorite_arbitree_par).toBe("Samuel");
+  });
+
+  it("refuse une demande introuvable", () => {
+    contexte = creerDbTemp();
+    const r = mettreAJourDemande(contexte.db, { id: "inconnu", statut: "qualifiee" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.erreur).toBe("Demande introuvable.");
+    }
+  });
+
+  it("refuse une mise à jour vide", () => {
+    contexte = creerDbTemp();
+    const creation = enregistrerDemande(contexte.db, {
+      demandeur: "Sophie",
+      equipe: "CS",
+      expression_brute: "x",
+      type: "evolution",
+    });
+    expect(creation.ok).toBe(true);
+    if (!creation.ok) return;
+
+    const r = mettreAJourDemande(contexte.db, { id: creation.id });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.erreur).toBe("Rien à mettre à jour : précise au moins un champ.");
+    }
   });
 });
 

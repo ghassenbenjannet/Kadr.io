@@ -13,6 +13,7 @@ import { listerMessages } from "../agent/messages.js";
 import { resumerResultatLecture } from "../agent/resume-resultat.js";
 import { trouverEcriture } from "../agent/ecritures.js";
 import { listerJournal } from "./journal.js";
+import { listerDemandes } from "./demandes.js";
 import { constatsOuverts } from "../tools/constats-ouverts.js";
 import { genererRapport } from "../tools/generer-rapport.js";
 import {
@@ -69,6 +70,10 @@ export function creerApp(deps: DependancesApp): Hono {
 
   app.get("/api/integrations", (c) => {
     return c.json({ ok: true, integrations: integrationsAvecConstats(db) });
+  });
+
+  app.get("/api/demandes", (c) => {
+    return c.json({ ok: true, demandes: listerDemandes(db) });
   });
 
   app.get("/api/conversations", (c) => {

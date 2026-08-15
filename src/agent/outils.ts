@@ -9,6 +9,8 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 
 import * as outilDemande from "../tools/enregistrer-demande.js";
 import { enregistrerDemande } from "../tools/enregistrer-demande.js";
+import * as outilMettreAJourDemande from "../tools/mettre-a-jour-demande.js";
+import { mettreAJourDemande } from "../tools/mettre-a-jour-demande.js";
 import * as outilDecision from "../tools/enregistrer-decision.js";
 import { enregistrerDecision } from "../tools/enregistrer-decision.js";
 import * as outilChangement from "../tools/enregistrer-changement.js";
@@ -98,6 +100,13 @@ const DEFINITIONS: DefinitionOutil[] = [
     nature: "ecriture",
     schemaEntree: outilDemande.schemaEntree,
     executer: (db, p) => enregistrerDemande(db, p as never),
+  },
+  {
+    nom: outilMettreAJourDemande.nom,
+    description: outilMettreAJourDemande.description,
+    nature: "ecriture",
+    schemaEntree: outilMettreAJourDemande.schemaEntree,
+    executer: (db, p) => mettreAJourDemande(db, p as never),
   },
   {
     nom: outilDecision.nom,

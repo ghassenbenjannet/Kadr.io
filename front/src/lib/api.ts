@@ -73,6 +73,24 @@ export function recupererConstats(): Promise<{ ok: true; constats: ConstatOuvert
   return requeteJson("/api/constats");
 }
 
+export interface DemandeComplete {
+  id: string;
+  cree_le: string;
+  demandeur: string;
+  equipe: string;
+  expression_brute: string;
+  reformulation: string | null;
+  type: string;
+  priorite: string | null;
+  priorite_arbitree_par: string | null;
+  statut: string;
+  maj_le: string;
+}
+
+export function recupererDemandes(): Promise<{ ok: true; demandes: DemandeComplete[] }> {
+  return requeteJson("/api/demandes");
+}
+
 export interface ChampAvecContexte {
   id: string;
   nom: string;
