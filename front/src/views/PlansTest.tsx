@@ -115,7 +115,7 @@ function PlanTestDetailVue({ id, onRetour, onSupprime }: { id: string; onRetour:
               </div>
             </div>
             <div className="main__entete-actions">
-              <button className="btn btn--danger" onClick={supprimerPlan}>
+              <button className="sidebar__nouvelle sidebar__nouvelle--danger" onClick={supprimerPlan}>
                 Supprimer le plan
               </button>
             </div>

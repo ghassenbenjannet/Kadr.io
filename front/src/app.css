@@ -177,6 +177,13 @@
   text-decoration: underline;
 }
 
+/* Même traitement minimal que "+ Nouveau…"/"Modifier", en rouge : une action
+   de suppression en en-tête de fiche reste une action secondaire au même
+   niveau visuel, pas un bouton encadré qui la ferait ressortir davantage. */
+.sidebar__nouvelle--danger {
+  color: var(--etat-danger);
+}
+
 .conversations-recentes .sidebar__nouvelle,
 .conversations-recentes .sidebar__nouvelle:hover {
   color: var(--accent);

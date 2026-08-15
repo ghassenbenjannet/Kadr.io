@@ -159,7 +159,7 @@ export function TicketDetail({ id, onRetour }: { id: string; onRetour: () => voi
                 <button className="sidebar__nouvelle" onClick={ouvrirEdition}>
                   Modifier
                 </button>
-                <button className="btn btn--danger" onClick={supprimer}>
+                <button className="sidebar__nouvelle sidebar__nouvelle--danger" onClick={supprimer}>
                   Supprimer
                 </button>
               </div>

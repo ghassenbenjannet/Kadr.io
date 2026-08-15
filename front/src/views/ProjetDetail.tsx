@@ -333,7 +333,7 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
                 <button className="sidebar__nouvelle" onClick={ouvrirEditionProjet}>
                   Modifier
                 </button>
-                <button className="btn btn--danger" onClick={supprimerProjet}>
+                <button className="sidebar__nouvelle sidebar__nouvelle--danger" onClick={supprimerProjet}>
                   Supprimer
                 </button>
               </div>
@@ -500,7 +500,10 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
                     >
                       Modifier
                     </button>
-                    <button className="btn btn--danger" onClick={() => supprimerEpic(epic.id, epic.nom)}>
+                    <button
+                      className="sidebar__nouvelle sidebar__nouvelle--danger"
+                      onClick={() => supprimerEpic(epic.id, epic.nom)}
+                    >
                       Supprimer
                     </button>
                   </div>

@@ -191,7 +191,7 @@ export function EntiteDetail({
                     Modifier
                   </button>
                 )}
-                <button className="btn btn--danger" onClick={supprimer}>
+                <button className="sidebar__nouvelle sidebar__nouvelle--danger" onClick={supprimer}>
                   Supprimer
                 </button>
               </div>

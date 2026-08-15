@@ -85,7 +85,7 @@ function AgentEditeur({ id, onRetour, onSupprime }: { id: string; onRetour: () =
               onChange={(e) => setTitre(e.target.value)}
               aria-label="Titre de l'agent"
             />
-            <button className="btn btn--danger" onClick={supprimer}>
+            <button className="sidebar__nouvelle sidebar__nouvelle--danger" onClick={supprimer}>
               Supprimer
             </button>
           </div>

@@ -83,7 +83,7 @@ export function DocumentEditor({
               aria-label="Titre de la page"
             />
             <span className="badge badge--neutre">{LIBELLES_TYPE_DOCUMENT[document.type] ?? document.type}</span>
-            <button className="btn btn--danger" onClick={supprimer}>
+            <button className="sidebar__nouvelle sidebar__nouvelle--danger" onClick={supprimer}>
               Supprimer
             </button>
           </div>
