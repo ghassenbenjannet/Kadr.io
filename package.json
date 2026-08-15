@@ -15,9 +15,11 @@
     "web": "node dist/web/server.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.117.1",
     "better-sqlite3": "^11.9.1",
     "nanoid": "^5.0.9",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
