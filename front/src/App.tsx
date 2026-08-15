@@ -3,6 +3,7 @@ import { recupererConversations, type ConversationResume } from "./lib/api";
 import { Journal } from "./views/Journal";
 import { Constats } from "./views/Constats";
 import { RapportHebdo } from "./views/RapportHebdo";
+import { Conversation } from "./views/Conversation";
 
 type Vue = "conversation" | "journal" | "constats" | "rapport";
 
@@ -13,31 +14,16 @@ const ONGLETS: { vue: Vue; label: string; icone: string }[] = [
   { vue: "rapport", label: "Rapport hebdo", icone: "▤" },
 ];
 
-function ConversationPlaceholder() {
-  return (
-    <div>
-      <div className="main__entete">
-        <div>
-          <h1>Conversation</h1>
-          <div className="main__soustitre">Arrive à l'étape suivante (streaming + carte de validation).</div>
-        </div>
-      </div>
-      <div className="etat-vide">
-        En attendant, les vues Journal, Constats et Rapport hebdo sont disponibles dans la barre latérale.
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
   const [vue, setVue] = useState<Vue>("conversation");
   const [conversations, setConversations] = useState<ConversationResume[]>([]);
+  const [conversationActive, setConversationActive] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     recupererConversations()
       .then((r) => setConversations(r.conversations))
       .catch(() => setConversations([]));
-  }, [vue]);
+  }, [vue, conversationActive]);
 
   return (
     <div className="app">
@@ -61,14 +47,29 @@ export default function App() {
         </nav>
 
         <div className="sidebar__section">
-          <div className="sidebar__section-titre">Conversations récentes</div>
+          <div className="sidebar__section-titre">
+            <span>Conversations récentes</span>
+            <button
+              className="sidebar__nouvelle"
+              title="Nouvelle conversation"
+              onClick={() => {
+                setConversationActive(undefined);
+                setVue("conversation");
+              }}
+            >
+              + Nouvelle
+            </button>
+          </div>
           <div className="conversations-recentes">
             {conversations.length === 0 && <div className="etat-vide">Aucune conversation.</div>}
             {conversations.map((c) => (
               <button
                 key={c.id}
-                className="conversation-recente"
-                onClick={() => setVue("conversation")}
+                className={`conversation-recente${c.id === conversationActive ? " conversation-recente--active" : ""}`}
+                onClick={() => {
+                  setConversationActive(c.id);
+                  setVue("conversation");
+                }}
                 title={c.titre ?? c.id}
               >
                 {c.titre ?? "(sans titre)"}
@@ -78,8 +79,10 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="main">
-        {vue === "conversation" && <ConversationPlaceholder />}
+      <main className={vue === "conversation" ? "main main--conversation" : "main"}>
+        {vue === "conversation" && (
+          <Conversation conversationId={conversationActive} onConversationDemarree={setConversationActive} />
+        )}
         {vue === "journal" && <Journal />}
         {vue === "constats" && <Constats />}
         {vue === "rapport" && <RapportHebdo />}

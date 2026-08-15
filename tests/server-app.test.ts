@@ -179,6 +179,30 @@ describe("POST /api/chat (SSE)", () => {
     expect(ecriture.outil).toBe("enregistrer_demande");
     expect(ecriture.statut).toBe("en_attente");
   });
+
+  it("les événements 'outil_lecture' portent un résumé du résultat à la fin", async () => {
+    contexte = creerDbTemp();
+    const config: ConfigAgent = { apiKey: "sk-test", model: "x", maxTokens: 100 };
+    const { client } = clientSimule([
+      {
+        content: [{ type: "tool_use", id: "tu1", name: "constats_ouverts", input: {} }],
+        stop_reason: "tool_use",
+        usage: USAGE,
+      },
+      { content: [{ type: "text", text: "Aucun point de vigilance." }], stop_reason: "end_turn", usage: USAGE },
+    ]);
+    const app = creerApp({ db: contexte.db, config, promptSysteme: PROMPT, creerClient: () => client });
+
+    const res = await app.request("/api/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "Y a-t-il des points de vigilance ?" }),
+    });
+    const evenements = parseSSE(await res.text());
+    const fin = evenements.find((e) => e.event === "outil_lecture" && JSON.parse(e.data).phase === "fin");
+    expect(fin).toBeDefined();
+    expect(JSON.parse(fin!.data).resume).toBe("0 résultats");
+  });
 });
 
 describe("POST /api/confirm", () => {
@@ -229,5 +253,59 @@ describe("POST /api/confirm", () => {
 
     const demande = contexte.db.prepare("SELECT equipe FROM demandes").get() as { equipe: string };
     expect(demande.equipe).toBe("ADV");
+  });
+
+  it("renvoie le détail complet d'une nouvelle écriture enchaînée", async () => {
+    contexte = creerDbTemp();
+    const config: ConfigAgent = { apiKey: "sk-test", model: "x", maxTokens: 100 };
+    const { client: clientPause } = clientSimule([
+      {
+        content: [
+          {
+            type: "tool_use",
+            id: "tu1",
+            name: "enregistrer_demande",
+            input: { demandeur: "Sophie", equipe: "CS", expression_brute: "x", type: "evolution" },
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: USAGE,
+      },
+    ]);
+    const appPause = creerApp({ db: contexte.db, config, promptSysteme: PROMPT, creerClient: () => clientPause });
+    const resPause = await appPause.request("/api/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message: "Sophie du CS veut voir les factures" }),
+    });
+    const validation = JSON.parse(
+      parseSSE(await resPause.text()).find((e) => e.event === "validation_requise")!.data
+    );
+
+    const { client: clientEnchainee } = clientSimule([
+      {
+        content: [
+          {
+            type: "tool_use",
+            id: "tu2",
+            name: "enregistrer_decision",
+            input: { contexte: "x", options: [{ option: "a" }], decision: "a", decideur: "moi" },
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: USAGE,
+      },
+    ]);
+    const appConfirm = creerApp({ db: contexte.db, config, promptSysteme: PROMPT, creerClient: () => clientEnchainee });
+    const res = await appConfirm.request("/api/confirm", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ecritureId: validation.id, action: "valider" }),
+    });
+    const corps = (await res.json()) as any;
+    expect(corps.enAttenteValidation).toBe(true);
+    expect(corps.ecriture).toBeDefined();
+    expect(corps.ecriture.outil).toBe("enregistrer_decision");
+    expect(corps.ecriture.statut).toBe("en_attente");
   });
 });

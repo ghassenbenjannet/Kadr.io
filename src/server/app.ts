@@ -10,6 +10,8 @@ import type { ClientAnthropic } from "../agent/client.js";
 import { clientAnthropicReel } from "../agent/client.js";
 import { envoyerMessageUtilisateur, reprendreApresDecision } from "../agent/boucle.js";
 import { listerMessages } from "../agent/messages.js";
+import { resumerResultatLecture } from "../agent/resume-resultat.js";
+import { trouverEcriture } from "../agent/ecritures.js";
 import { listerJournal } from "./journal.js";
 import { constatsOuverts } from "../tools/constats-ouverts.js";
 import { genererRapport } from "../tools/generer-rapport.js";
@@ -100,8 +102,11 @@ export function creerApp(deps: DependancesApp): Hono {
             onOutilLecture: async (nomOutil) => {
               await stream.writeSSE({ event: "outil_lecture", data: JSON.stringify({ outil: nomOutil, phase: "debut" }) });
             },
-            onOutilLectureTermine: async (nomOutil) => {
-              await stream.writeSSE({ event: "outil_lecture", data: JSON.stringify({ outil: nomOutil, phase: "fin" }) });
+            onOutilLectureTermine: async (nomOutil, resultat) => {
+              await stream.writeSSE({
+                event: "outil_lecture",
+                data: JSON.stringify({ outil: nomOutil, phase: "fin", resume: resumerResultatLecture(resultat) }),
+              });
             },
             onValidationRequise: async (ecriture) => {
               await stream.writeSSE({ event: "validation_requise", data: JSON.stringify(ecriture) });
@@ -150,7 +155,13 @@ export function creerApp(deps: DependancesApp): Hono {
           .join("\n");
       }
 
-      return c.json({ ok: true, ...resultat, texteAssistant });
+      // Si la reprise enchaîne directement sur une nouvelle écriture proposée
+      // (rare mais possible), on renvoie son détail complet : le front n'a
+      // pas d'autre moyen de l'obtenir que le flux SSE de /api/chat.
+      const ecriture =
+        resultat.enAttenteValidation && resultat.ecritureId ? trouverEcriture(db, resultat.ecritureId) : undefined;
+
+      return c.json({ ok: true, ...resultat, texteAssistant, ecriture });
     } catch (erreur) {
       return c.json({ ok: false, erreur: erreur instanceof Error ? erreur.message : String(erreur) }, 400);
     }

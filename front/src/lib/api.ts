@@ -102,7 +102,7 @@ export interface ResultatChat {
 
 export interface EvenementFluxChat {
   onTexte?: (delta: string) => void;
-  onOutilLecture?: (info: { outil: string; phase: "debut" | "fin" }) => void;
+  onOutilLecture?: (info: { outil: string; phase: "debut" | "fin"; resume?: string }) => void;
   onValidationRequise?: (ecriture: EcritureProposee) => void;
   onFin?: (resultat: ResultatChat) => void;
   onErreur?: (message: string) => void;
@@ -177,6 +177,8 @@ function distribuerEvenementSSE(bloc: string, gestionnaires: EvenementFluxChat):
 
 export interface ResultatConfirm extends ResultatChat {
   texteAssistant?: string;
+  /** Présent si la reprise enchaîne directement sur une nouvelle écriture proposée. */
+  ecriture?: EcritureProposee;
 }
 
 export function confirmerEcriture(args: {
