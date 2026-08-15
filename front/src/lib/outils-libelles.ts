@@ -96,6 +96,11 @@ const LIBELLES_CHAMPS: Record<string, string> = {
   executee_par: "Exécuté par",
   plan_test: "Plan de test",
   ticket_id: "Ticket",
+  resolu_le: "Résolu le",
+  remplacee_par: "Remplacée par",
+  ecartee_car: "Écartée car",
+  cree_le: "Créé le",
+  maj_le: "Mis à jour le",
 };
 
 export function libelleChamp(cle: string): string {

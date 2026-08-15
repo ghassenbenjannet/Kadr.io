@@ -372,6 +372,46 @@ td.editable {
   color: var(--accent);
 }
 
+/* --- Fiche détail (Journal/Tickets) -------------------------------------- */
+
+.fiche {
+  margin: 0;
+  max-width: 42rem;
+}
+
+.fiche__ligne {
+  display: flex;
+  gap: var(--e-5);
+  padding: var(--e-3) 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.fiche__ligne dt {
+  flex: 0 0 11rem;
+  font-size: var(--taille-caption);
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-top: 2px;
+}
+
+.fiche__ligne dd {
+  margin: 0;
+  flex: 1;
+  font-size: var(--taille-corps);
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+.fiche__options {
+  margin: 0;
+  padding-left: var(--e-4);
+}
+
+.fiche__options li {
+  margin-bottom: var(--e-1);
+}
+
 /* --- Suite de recette ---------------------------------------------------- */
 
 .plan-test {
@@ -439,6 +479,19 @@ td.editable {
   display: flex;
   flex-direction: column;
   gap: var(--e-2);
+}
+
+.ticket--cliquable {
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  width: 100%;
+}
+
+.ticket--cliquable:hover {
+  border-color: var(--rule-strong);
+  background: var(--paper-sunken);
 }
 
 .ticket__entete {

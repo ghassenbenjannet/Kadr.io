@@ -35,6 +35,11 @@ describe("agent/outils — catalogue et adaptateur", () => {
       "creer_plan_test",
       "executer_cas_test",
       "lier_ticket_plan_test",
+      "mettre_a_jour_projet",
+      "mettre_a_jour_epic",
+      "mettre_a_jour_decision",
+      "mettre_a_jour_changement",
+      "mettre_a_jour_incident",
     ];
     for (const nom of ecritures) {
       expect(outilParNom(nom)?.nature).toBe("ecriture");

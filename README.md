@@ -46,7 +46,7 @@ qui remplace le serveur MCP initial par cette application autonome.
   contre le Zoho d'Abraxio avant d'écrire le moindre code de mapping. Voir
   « Continuer le Jalon 3 » plus bas.
 
-175 tests verts (`npm test`).
+187 tests verts (`npm test`).
 
 ## Installation
 
@@ -113,14 +113,14 @@ SQLite est créée automatiquement au premier démarrage
 | Écran | Contenu |
 |---|---|
 | Conversation | Écran principal : streaming, trace discrète des outils de lecture, carte de validation pour toute écriture |
-| Tickets | Les demandes en colonnes par statut (reçue → qualifiée → arbitrée → réalisée, écartées à part) — le statut avance via `mettre_a_jour_demande`, proposé puis validé comme toute écriture |
-| Journal | Demandes, décisions, changements, incidents — filtrable, lecture seule |
+| Tickets | Les demandes en colonnes par statut (reçue → qualifiée → arbitrée → réalisée, écartées à part) — cliquables vers leur fiche complète ; le statut avance via `mettre_a_jour_demande`, proposé puis validé comme toute écriture |
+| Journal | Demandes, décisions, changements, incidents — filtrable, cliquable vers la fiche complète de chaque entrée (contexte/options d'une décision, cause/résolution d'un incident, etc.) |
 | Constats | La vigie, groupée par famille, conséquence toujours visible |
 | Rapport hebdo | Rendu du rapport de la semaine, bouton copier pour l'envoi au CEO |
 | Habilitations | Matrice champs × profils — distinction « non déclaré » ≠ « masqué » ≠ « visible » ≠ « édite », filtrable par module |
 | Champs | Champs groupés par source de vérité déclarée, contradictions (contrôle M2) en tête de groupe |
 | Intégrations | Flux source → cible avec le nombre de constats ouverts rattachés |
-| Projets | Liste des projets, puis détail par projet : epics avec leurs tickets, et la suite de recette (plans de test liés) |
+| Projets | Liste des projets, puis détail par projet : epics avec leurs tickets (cliquables vers leur fiche : description, plans de test liés), et la suite de recette |
 
 Les écrans sont groupés dans la navigation en trois sections : **Registre**
 (Conversation, Tickets, Journal, Constats, Rapport hebdo), **Projets**, et
@@ -134,11 +134,17 @@ Outils de **lecture** (exécutés immédiatement, jamais de validation) :
 
 Outils d'**écriture** (toujours proposés, jamais exécutés sans validation) :
 `enregistrer_demande`, `mettre_a_jour_demande`, `enregistrer_decision`,
-`enregistrer_changement`, `enregistrer_incident`, `decrire_systeme`, `decrire_module`,
+`mettre_a_jour_decision`, `enregistrer_changement`, `mettre_a_jour_changement`,
+`enregistrer_incident`, `mettre_a_jour_incident`, `decrire_systeme`, `decrire_module`,
 `decrire_champ`, `decrire_habilitation`, `decrire_integration`,
 `decrire_automatisation`, `lier_changement`, `zoho_configurer`, `creer_projet`,
-`creer_epic`, `creer_ticket`, `mettre_a_jour_ticket`, `creer_plan_test`,
-`executer_cas_test`, `lier_ticket_plan_test`.
+`mettre_a_jour_projet`, `creer_epic`, `mettre_a_jour_epic`, `creer_ticket`,
+`mettre_a_jour_ticket`, `creer_plan_test`, `executer_cas_test`,
+`lier_ticket_plan_test`.
+
+Volontairement absent : aucun outil de suppression, pour aucune entité. Le registre
+n'efface pas ce qui s'est passé — corriger une erreur de saisie se fait par une
+mise à jour qui garde la trace, pas par un retrait silencieux.
 
 ## Routine hebdomadaire recommandée
 

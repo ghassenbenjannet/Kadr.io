@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { recupererDemandes, type DemandeComplete } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
+import { EntiteDetail } from "./EntiteDetail";
 
 const COLONNES: { statut: string[]; titre: string }[] = [
   { statut: ["recue"], titre: "Reçue" },
@@ -15,10 +16,10 @@ function ageEnJours(iso: string): number {
   return Math.floor(jours);
 }
 
-function CarteDemande({ demande }: { demande: DemandeComplete }) {
+function CarteDemande({ demande, onClick }: { demande: DemandeComplete; onClick: () => void }) {
   const age = ageEnJours(demande.cree_le);
   return (
-    <div className="ticket">
+    <button className="ticket ticket--cliquable" onClick={onClick}>
       <div className="ticket__entete">
         <span className="badge badge--neutre">{demande.equipe}</span>
         {demande.priorite && <span className="ticket__priorite">{demande.priorite}</span>}
@@ -28,19 +29,24 @@ function CarteDemande({ demande }: { demande: DemandeComplete }) {
         <span>{demande.demandeur}</span>
         <span>{age === 0 ? "aujourd'hui" : `il y a ${age} j`}</span>
       </div>
-    </div>
+    </button>
   );
 }
 
 export function Tickets() {
   const [demandes, setDemandes] = useState<DemandeComplete[] | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [idSelectionne, setIdSelectionne] = useState<string | null>(null);
 
   useEffect(() => {
     recupererDemandes()
       .then((r) => setDemandes(r.demandes))
       .catch((e) => setErreur(e instanceof Error ? e.message : String(e)));
   }, []);
+
+  if (idSelectionne) {
+    return <EntiteDetail entite="demande" id={idSelectionne} onRetour={() => setIdSelectionne(null)} />;
+  }
 
   return (
     <div>
@@ -68,7 +74,7 @@ export function Tickets() {
                 <div className="kanban__cartes">
                   {items.length === 0 && <div className="kanban__vide">—</div>}
                   {items.map((d) => (
-                    <CarteDemande demande={d} key={d.id} />
+                    <CarteDemande demande={d} key={d.id} onClick={() => setIdSelectionne(d.id)} />
                   ))}
                 </div>
               </div>

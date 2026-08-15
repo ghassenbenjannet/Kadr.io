@@ -164,6 +164,62 @@ describe("routes de lecture", () => {
     expect(corps.demandes[0].demandeur).toBe("Sophie");
   });
 
+  it("GET /api/journal/:entite/:id retourne le détail complet", async () => {
+    contexte = creerDbTemp();
+    const demande = enregistrerDemande(contexte.db, {
+      demandeur: "Sophie",
+      equipe: "CS",
+      expression_brute: "voir les factures",
+      type: "evolution",
+    });
+    expect(demande.ok).toBe(true);
+    if (!demande.ok) return;
+    const app = creerApp({ db: contexte.db, config: { apiKey: null, model: "x", maxTokens: 1 }, promptSysteme: PROMPT });
+
+    const res = (await (await app.request(`/api/journal/demande/${demande.id}`)).json()) as any;
+    expect(res.ok).toBe(true);
+    expect(res.expression_brute).toBe("voir les factures");
+    expect(res.demandeur).toBe("Sophie");
+
+    const inconnu = await app.request(`/api/journal/demande/inconnu`);
+    expect(inconnu.status).toBe(404);
+
+    const mauvaiseEntite = await app.request(`/api/journal/pas-une-entite/${demande.id}`);
+    expect(mauvaiseEntite.status).toBe(404);
+  });
+
+  it("GET /api/tickets/:id retourne le ticket avec ses plans de test liés", async () => {
+    contexte = creerDbTemp();
+    const ticket = creerTicket(contexte.db, {
+      projet: "CS-Vue360",
+      epic: "Build",
+      titre: "Développer export",
+      type: "task",
+      description: "Export CSV des leads",
+    });
+    expect(ticket.ok).toBe(true);
+    if (!ticket.ok) return;
+    const plan = creerPlanTest(contexte.db, {
+      nom: "Recette export",
+      cas: [{ etape: "Exporter", resultat_attendu: "CSV" }],
+    });
+    expect(plan.ok).toBe(true);
+    if (!plan.ok) return;
+    lierTicketPlanTest(contexte.db, { ticket_id: ticket.id, plan_test: "Recette export" });
+
+    const app = creerApp({ db: contexte.db, config: { apiKey: null, model: "x", maxTokens: 1 }, promptSysteme: PROMPT });
+    const res = (await (await app.request(`/api/tickets/${ticket.id}`)).json()) as any;
+    expect(res.ok).toBe(true);
+    expect(res.titre).toBe("Développer export");
+    expect(res.description).toBe("Export CSV des leads");
+    expect(res.epic.nom).toBe("Build");
+    expect(res.epic.projet.nom).toBe("CS-Vue360");
+    expect(res.plans_test[0].nom).toBe("Recette export");
+
+    const inconnu = await app.request("/api/tickets/inconnu");
+    expect(inconnu.status).toBe(404);
+  });
+
   it("GET /api/projets puis /api/projets/:id avec la suite de recette", async () => {
     contexte = creerDbTemp();
     const ticket = creerTicket(contexte.db, {

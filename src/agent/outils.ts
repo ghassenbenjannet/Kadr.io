@@ -59,6 +59,16 @@ import * as outilLierTicketPlanTest from "../tools/lier-ticket-plan-test.js";
 import { lierTicketPlanTest } from "../tools/lier-ticket-plan-test.js";
 import * as outilEtatProjet from "../tools/etat-projet.js";
 import { etatProjet } from "../tools/etat-projet.js";
+import * as outilMettreAJourProjet from "../tools/mettre-a-jour-projet.js";
+import { mettreAJourProjet } from "../tools/mettre-a-jour-projet.js";
+import * as outilMettreAJourEpic from "../tools/mettre-a-jour-epic.js";
+import { mettreAJourEpic } from "../tools/mettre-a-jour-epic.js";
+import * as outilMettreAJourDecision from "../tools/mettre-a-jour-decision.js";
+import { mettreAJourDecision } from "../tools/mettre-a-jour-decision.js";
+import * as outilMettreAJourChangement from "../tools/mettre-a-jour-changement.js";
+import { mettreAJourChangement } from "../tools/mettre-a-jour-changement.js";
+import * as outilMettreAJourIncident from "../tools/mettre-a-jour-incident.js";
+import { mettreAJourIncident } from "../tools/mettre-a-jour-incident.js";
 
 export type NatureOutil = "lecture" | "ecriture";
 
@@ -256,6 +266,41 @@ const DEFINITIONS: DefinitionOutil[] = [
     nature: "ecriture",
     schemaEntree: outilLierTicketPlanTest.schemaEntree,
     executer: (db, p) => lierTicketPlanTest(db, p as never),
+  },
+  {
+    nom: outilMettreAJourProjet.nom,
+    description: outilMettreAJourProjet.description,
+    nature: "ecriture",
+    schemaEntree: outilMettreAJourProjet.schemaEntree,
+    executer: (db, p) => mettreAJourProjet(db, p as never),
+  },
+  {
+    nom: outilMettreAJourEpic.nom,
+    description: outilMettreAJourEpic.description,
+    nature: "ecriture",
+    schemaEntree: outilMettreAJourEpic.schemaEntree,
+    executer: (db, p) => mettreAJourEpic(db, p as never),
+  },
+  {
+    nom: outilMettreAJourDecision.nom,
+    description: outilMettreAJourDecision.description,
+    nature: "ecriture",
+    schemaEntree: outilMettreAJourDecision.schemaEntree,
+    executer: (db, p) => mettreAJourDecision(db, p as never),
+  },
+  {
+    nom: outilMettreAJourChangement.nom,
+    description: outilMettreAJourChangement.description,
+    nature: "ecriture",
+    schemaEntree: outilMettreAJourChangement.schemaEntree,
+    executer: (db, p) => mettreAJourChangement(db, p as never),
+  },
+  {
+    nom: outilMettreAJourIncident.nom,
+    description: outilMettreAJourIncident.description,
+    nature: "ecriture",
+    schemaEntree: outilMettreAJourIncident.schemaEntree,
+    executer: (db, p) => mettreAJourIncident(db, p as never),
   },
 ];
 

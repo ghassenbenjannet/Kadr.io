@@ -14,7 +14,8 @@ import { resumerResultatLecture } from "../agent/resume-resultat.js";
 import { trouverEcriture } from "../agent/ecritures.js";
 import { listerJournal } from "./journal.js";
 import { listerDemandes } from "./demandes.js";
-import { listerProjets, detailProjet } from "./projets.js";
+import { listerProjets, detailProjet, detailTicket } from "./projets.js";
+import { detailEntiteComplet } from "./entites.js";
 import { constatsOuverts } from "../tools/constats-ouverts.js";
 import { genererRapport } from "../tools/generer-rapport.js";
 import {
@@ -75,6 +76,18 @@ export function creerApp(deps: DependancesApp): Hono {
 
   app.get("/api/demandes", (c) => {
     return c.json({ ok: true, demandes: listerDemandes(db) });
+  });
+
+  app.get("/api/journal/:entite/:id", (c) => {
+    const detail = detailEntiteComplet(db, c.req.param("entite"), c.req.param("id"));
+    if (!detail) return c.json({ ok: false, erreur: "Entrée introuvable." }, 404);
+    return c.json({ ok: true, entite: c.req.param("entite"), ...detail });
+  });
+
+  app.get("/api/tickets/:id", (c) => {
+    const detail = detailTicket(db, c.req.param("id"));
+    if (!detail) return c.json({ ok: false, erreur: "Ticket introuvable." }, 404);
+    return c.json({ ok: true, ...detail });
   });
 
   app.get("/api/projets", (c) => {

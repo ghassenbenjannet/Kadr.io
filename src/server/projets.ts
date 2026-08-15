@@ -62,6 +62,70 @@ export interface ProjetDetail {
   suite_recette: PlanTestDetail[];
 }
 
+export interface TicketDetailComplet {
+  id: string;
+  titre: string;
+  description: string | null;
+  type: string;
+  statut: string;
+  cree_le: string;
+  epic: { id: string; nom: string; projet: { id: string; nom: string } };
+  plans_test: PlanTestDetail[];
+}
+
+export function detailTicket(db: Database.Database, id: string): TicketDetailComplet | null {
+  const ticket = db
+    .prepare(
+      `SELECT t.id, t.titre, t.description, t.type, t.statut, t.cree_le,
+              e.id AS epic_id, e.nom AS epic_nom, p.id AS projet_id, p.nom AS projet_nom
+       FROM tickets t
+       JOIN epics e ON e.id = t.epic_id
+       JOIN projets p ON p.id = e.projet_id
+       WHERE t.id = ?`
+    )
+    .get(id) as
+    | {
+        id: string;
+        titre: string;
+        description: string | null;
+        type: string;
+        statut: string;
+        cree_le: string;
+        epic_id: string;
+        epic_nom: string;
+        projet_id: string;
+        projet_nom: string;
+      }
+    | undefined;
+  if (!ticket) return null;
+
+  const planRows = db
+    .prepare(
+      `SELECT pt.id, pt.nom FROM plans_test pt
+       JOIN ticket_plans_test tpt ON tpt.plan_test_id = pt.id
+       WHERE tpt.ticket_id = ? ORDER BY pt.nom`
+    )
+    .all(id) as { id: string; nom: string }[];
+  const casParPlan = db.prepare(
+    "SELECT id, etape, resultat_attendu, statut, executee_par, executee_le FROM cas_test WHERE plan_test_id = ? ORDER BY cree_le"
+  );
+  const plansTest: PlanTestDetail[] = planRows.map((p) => ({
+    ...p,
+    cas: casParPlan.all(p.id) as CasTestDetail[],
+  }));
+
+  return {
+    id: ticket.id,
+    titre: ticket.titre,
+    description: ticket.description,
+    type: ticket.type,
+    statut: ticket.statut,
+    cree_le: ticket.cree_le,
+    epic: { id: ticket.epic_id, nom: ticket.epic_nom, projet: { id: ticket.projet_id, nom: ticket.projet_nom } },
+    plans_test: plansTest,
+  };
+}
+
 export function detailProjet(db: Database.Database, id: string): ProjetDetail | null {
   const projet = db.prepare("SELECT id, nom, statut, description FROM projets WHERE id = ?").get(id) as
     | { id: string; nom: string; statut: string; description: string | null }

@@ -1,28 +1,12 @@
 import { useEffect, useState } from "react";
 import { recupererProjet, type ProjetDetailComplet } from "../lib/api";
-
-const LIBELLES_TYPE_TICKET: Record<string, string> = {
-  analyse: "Analyse",
-  documentation: "Documentation",
-  atelier: "Atelier",
-  bug: "Bug",
-  task: "Tâche",
-};
-
-function badgeStatutTicket(statut: string) {
-  if (statut === "bloque") return "badge badge--attention";
-  return "badge badge--neutre";
-}
-
-function badgeStatutCas(statut: string) {
-  if (statut === "reussi") return "badge badge--succes";
-  if (statut === "echoue") return "badge badge--danger";
-  return "badge badge--neutre";
-}
+import { LIBELLES_TYPE_TICKET, badgeStatutTicket, badgeStatutCas } from "../lib/tickets-libelles";
+import { TicketDetail } from "./TicketDetail";
 
 export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => void }) {
   const [detail, setDetail] = useState<ProjetDetailComplet | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [ticketSelectionne, setTicketSelectionne] = useState<string | null>(null);
 
   useEffect(() => {
     let annule = false;
@@ -39,6 +23,10 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
       annule = true;
     };
   }, [id]);
+
+  if (ticketSelectionne) {
+    return <TicketDetail id={ticketSelectionne} onRetour={() => setTicketSelectionne(null)} />;
+  }
 
   return (
     <div>
@@ -75,7 +63,7 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
               </div>
               <div className="liste">
                 {epic.tickets.map((t) => (
-                  <div className="ligne" key={t.id}>
+                  <button className="ligne ligne--cliquable" key={t.id} onClick={() => setTicketSelectionne(t.id)}>
                     <div className="ligne__corps">
                       <span className="badge badge--neutre">{LIBELLES_TYPE_TICKET[t.type] ?? t.type}</span>
                       <span className="ligne__resume">{t.titre}</span>
@@ -83,7 +71,7 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
                         {t.statut.replace("_", " ")}
                       </span>
                     </div>
-                  </div>
+                  </button>
                 ))}
                 {epic.tickets.length === 0 && <div className="etat-vide">Aucun ticket dans cet epic.</div>}
               </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { recupererJournal, type LigneJournal } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
+import { EntiteDetail } from "./EntiteDetail";
 
 const LIBELLES_ENTITE: Record<string, string> = {
   demande: "Demande",
@@ -18,6 +19,7 @@ export function Journal() {
   const [entite, setEntite] = useState("");
   const [lignes, setLignes] = useState<LigneJournal[] | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [selection, setSelection] = useState<{ entite: string; id: string } | null>(null);
 
   useEffect(() => {
     let annule = false;
@@ -34,6 +36,12 @@ export function Journal() {
       annule = true;
     };
   }, [entite]);
+
+  if (selection) {
+    return (
+      <EntiteDetail entite={selection.entite} id={selection.id} onRetour={() => setSelection(null)} />
+    );
+  }
 
   return (
     <div>
@@ -57,13 +65,17 @@ export function Journal() {
       {!erreur && lignes !== null && lignes.length > 0 && (
         <div className="liste">
           {lignes.map((l) => (
-            <div className="ligne" key={`${l.entite}-${l.id}`}>
+            <button
+              className="ligne ligne--cliquable"
+              key={`${l.entite}-${l.id}`}
+              onClick={() => setSelection({ entite: l.entite, id: l.id })}
+            >
               <div className="ligne__date mono">{formaterDate(l.date)}</div>
               <div className="ligne__corps">
                 <span className="badge badge--neutre">{LIBELLES_ENTITE[l.entite] ?? l.entite}</span>
                 <span className="ligne__resume">{l.resume}</span>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

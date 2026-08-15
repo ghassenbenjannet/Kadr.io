@@ -143,6 +143,28 @@ export function recupererProjet(id: string): Promise<{ ok: true } & ProjetDetail
   return requeteJson(`/api/projets/${id}`);
 }
 
+export function recupererEntiteJournal(
+  entite: string,
+  id: string
+): Promise<{ ok: true; entite: string } & Record<string, unknown>> {
+  return requeteJson(`/api/journal/${entite}/${id}`);
+}
+
+export interface TicketDetailComplet {
+  id: string;
+  titre: string;
+  description: string | null;
+  type: string;
+  statut: string;
+  cree_le: string;
+  epic: { id: string; nom: string; projet: { id: string; nom: string } };
+  plans_test: PlanTestDetail[];
+}
+
+export function recupererTicket(id: string): Promise<{ ok: true } & TicketDetailComplet> {
+  return requeteJson(`/api/tickets/${id}`);
+}
+
 export interface ChampAvecContexte {
   id: string;
   nom: string;
