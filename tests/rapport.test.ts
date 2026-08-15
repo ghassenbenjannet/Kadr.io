@@ -151,6 +151,23 @@ describe("rapport hebdo — snapshot jeu de données fixe", () => {
        ('dec1','2026-08-11T09:00:00.000Z','Champ Statut_Client modifiable partout','[{"option":"Lecture seule sauf Admin"}]','Lecture seule sauf Admin','CEO','validee','2026-08-11T09:00:00.000Z')`
     ).run();
 
+    db.prepare(
+      `INSERT INTO systemes (id, cree_le, nom, role, maj_le) VALUES
+       ('sys1','2026-08-11T09:00:00.000Z','App Devis','Génération des devis','2026-08-11T09:00:00.000Z')`
+    ).run();
+    db.prepare(
+      `INSERT INTO modules (id, cree_le, systeme_id, nom, maj_le) VALUES
+       ('mod1','2026-08-11T09:00:00.000Z','sys1','Devis','2026-08-11T09:00:00.000Z')`
+    ).run();
+    db.prepare(
+      `INSERT INTO champs (id, cree_le, module_id, nom, maj_le) VALUES
+       ('ch_carte1','2026-08-11T09:00:00.000Z','mod1','Statut_Client','2026-08-11T09:00:00.000Z')`
+    ).run();
+    db.prepare(
+      `INSERT INTO constats (id, cree_le, controle, entite, entite_id, consequence, statut) VALUES
+       ('co2','2026-08-11T09:00:00.000Z','M1','champ','ch_carte1','Champ sans source de vérité : aucun arbitrage possible en cas d''écart entre systèmes.','ouvert')`
+    ).run();
+
     const donnees = collecterDonneesHebdo(db, SEMAINE, MAINTENANT);
     const md = rendreHebdo(donnees);
     expect(md).toMatchSnapshot();

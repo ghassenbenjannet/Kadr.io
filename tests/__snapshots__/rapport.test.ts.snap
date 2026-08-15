@@ -17,9 +17,14 @@ exports[`rapport hebdo — snapshot jeu de données fixe > rend le rapport compl
 
 ## Points de vigilance
 — changement du 12/08 : Désactivation de la règle de relance : Aucun retour arrière déclaré : un incident sur ce changement se traitera en improvisation.
+— champ « Statut_Client » (Devis) : Champ sans source de vérité : aucun arbitrage possible en cas d'écart entre systèmes.
 
 ## Semaine prochaine
 — Demande arbitrée à réaliser : ouvrir un accès Zoho (Karim, AE)
 — Décision validée à appliquer : Lecture seule sauf Admin
+
+## Carte
+3 élément(s) décrit(s) ou complété(s) cette semaine (systèmes : 1, modules : 1, champs : 1, habilitations : 0, intégrations : 0, automatisations : 0)
+— champ « Statut_Client » (Devis) : Champ sans source de vérité : aucun arbitrage possible en cas d'écart entre systèmes.
 "
 `;

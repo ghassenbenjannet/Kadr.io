@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`rapport etat_si > snapshot sur jeu de données fixe 1`] = `
+"# État du SI — 15/08/2026
+
+## Systèmes
+— App Devis (criticité moyenne) : À compléter
+— Zoho CRM (criticité haute) : CRM principal
+
+## Modules et couverture
+— Zoho CRM / Comptes : 2 champ(s) décrit(s), 1 avec source de vérité, 1 sans
+
+## Intégrations
+— Devis -> CRM (App Devis → Zoho CRM) : 1 point(s) de vigilance ouvert(s)
+
+## Constats ouverts par famille
+### Modèle
+— champ « Montant » (Comptes) : Champ sans source de vérité : aucun arbitrage possible en cas d'écart entre systèmes.
+### Intégration
+— intégration « Devis -> CRM » : Pas de clé d'idempotence : un rejeu après incident créera des doublons.
+"
+`;

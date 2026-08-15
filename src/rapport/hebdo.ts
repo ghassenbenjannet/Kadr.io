@@ -87,6 +87,15 @@ interface ProchaineDecision {
   decision: string;
 }
 
+interface CarteEtElementsDecrits {
+  systemes: number;
+  modules: number;
+  champs: number;
+  habilitations: number;
+  integrations: number;
+  automatisations: number;
+}
+
 export interface DonneesHebdo {
   semaine: string;
   demandes: {
@@ -101,6 +110,10 @@ export interface DonneesHebdo {
   semaineProchaine: {
     demandesArbitrees: ProchaineDemande[];
     decisionsValidees: ProchaineDecision[];
+  };
+  carte: {
+    elementsDecrits: CarteEtElementsDecrits;
+    nouveauxConstatsMI: VigilanceLigne[];
   };
 }
 
@@ -196,6 +209,36 @@ export function collecterDonneesHebdo(
     .prepare("SELECT decision FROM decisions WHERE statut = 'validee' ORDER BY cree_le")
     .all() as { decision: string }[];
 
+  function compterCreesCetteSemaine(table: string): number {
+    const r = db
+      .prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE cree_le >= ? AND cree_le < ?`)
+      .get(debutIso, finIso) as { n: number };
+    return r.n;
+  }
+
+  const elementsDecrits: CarteEtElementsDecrits = {
+    systemes: compterCreesCetteSemaine("systemes"),
+    modules: compterCreesCetteSemaine("modules"),
+    champs: compterCreesCetteSemaine("champs"),
+    habilitations: compterCreesCetteSemaine("habilitations"),
+    integrations: compterCreesCetteSemaine("integrations"),
+    automatisations: compterCreesCetteSemaine("automatisations"),
+  };
+
+  const nouveauxConstatsMIRows = db
+    .prepare(
+      `SELECT controle, entite, entite_id, consequence FROM constats
+       WHERE statut = 'ouvert' AND controle NOT LIKE 'C%' AND cree_le >= ? AND cree_le < ?
+       ORDER BY controle, cree_le`
+    )
+    .all(debutIso, finIso) as { controle: string; entite: string; entite_id: string; consequence: string }[];
+
+  const nouveauxConstatsMI: VigilanceLigne[] = nouveauxConstatsMIRows.map((c) => ({
+    controle: c.controle,
+    resume: detailEntite(db, c.entite, c.entite_id)?.libelle ?? `${c.entite} ${c.entite_id}`,
+    consequence: c.consequence,
+  }));
+
   return {
     semaine: semaineIsoStr,
     demandes: {
@@ -215,6 +258,7 @@ export function collecterDonneesHebdo(
       })),
       decisionsValidees: decisionsValideesRows.map((d) => ({ decision: d.decision })),
     },
+    carte: { elementsDecrits, nouveauxConstatsMI },
   };
 }
 
@@ -279,6 +323,28 @@ export function rendreHebdo(donnees: DonneesHebdo): string {
     }
     for (const d of decisionsValidees) {
       lignes.push(`— Décision validée à appliquer : ${d.decision}`);
+    }
+  }
+  lignes.push("");
+
+  lignes.push("## Carte");
+  const { elementsDecrits, nouveauxConstatsMI } = donnees.carte;
+  const totalElements = Object.values(elementsDecrits).reduce((a, b) => a + b, 0);
+  if (totalElements === 0) {
+    lignes.push("Aucun nouvel élément cartographié cette semaine.");
+  } else {
+    lignes.push(
+      `${totalElements} élément(s) décrit(s) ou complété(s) cette semaine ` +
+        `(systèmes : ${elementsDecrits.systemes}, modules : ${elementsDecrits.modules}, ` +
+        `champs : ${elementsDecrits.champs}, habilitations : ${elementsDecrits.habilitations}, ` +
+        `intégrations : ${elementsDecrits.integrations}, automatisations : ${elementsDecrits.automatisations})`
+    );
+  }
+  if (nouveauxConstatsMI.length === 0) {
+    lignes.push("Aucun nouveau point de vigilance sur le modèle ou les intégrations cette semaine.");
+  } else {
+    for (const v of nouveauxConstatsMI) {
+      lignes.push(`— ${v.resume} : ${v.consequence}`);
     }
   }
 
