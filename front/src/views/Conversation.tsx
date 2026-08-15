@@ -3,6 +3,8 @@ import { envoyerMessage, recupererConversation, type EcritureProposee, type Resu
 import { libelleOutil } from "../lib/outils-libelles";
 import { ValidationCard } from "../components/ValidationCard";
 import { rendreMarkdownLeger } from "../lib/markdown-lite";
+import { EtatVide } from "../components/EtatVide";
+import { ICONES_NAV } from "../lib/icones";
 
 let compteurId = 0;
 function idLocal(): string {
@@ -164,10 +166,10 @@ export function Conversation({ conversationId, onConversationDemarree }: Props) 
     <div className="conversation">
       <div className="conversation__fil">
         {elements.length === 0 && (
-          <div className="etat-vide">
-            Écris ce que tu veux enregistrer ou demander — par exemple : « Sophie du CS veut voir les factures dans
-            la fiche client ».
-          </div>
+          <EtatVide
+            icone={ICONES_NAV.conversation}
+            phrase="Écris ce que tu veux enregistrer ou demander — par exemple : « Sophie du CS veut voir les factures dans la fiche client »."
+          />
         )}
         {elements.map((e) => {
           if (e.type === "user") {

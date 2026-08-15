@@ -64,6 +64,7 @@
 
   --primitif-bouton-texte: #3a4358;
   --primitif-ombre-carte: rgba(13, 18, 32, 0.04);
+  --primitif-ombre-flottante: rgba(13, 18, 32, 0.22);
 }
 
 :root[data-theme="papier"] {
@@ -120,4 +121,5 @@
 
   --primitif-bouton-texte: #4a3d2c;
   --primitif-ombre-carte: rgba(36, 26, 15, 0.07);
+  --primitif-ombre-flottante: rgba(36, 26, 15, 0.24);
 }

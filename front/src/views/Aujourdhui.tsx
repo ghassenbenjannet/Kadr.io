@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import { recupererTableauDeBord, type TableauDeBord } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
 import { ActionsGlobales } from "../components/ActionsGlobales";
-import { LIBELLES_ENTITE, badgeEntite } from "../lib/entite-libelles";
+import { BadgeEntite } from "../components/BadgeEntite";
+import { EtatVide } from "../components/EtatVide";
+import { SqueletteTexte } from "../components/Squelette";
+import { ICONES_NAV } from "../lib/icones";
 import { naviguerVers } from "../lib/navigation";
+import { ShieldCheck } from "lucide-react";
 
 function formaterDate(iso: string): string {
   const d = new Date(iso);
@@ -29,12 +33,12 @@ export function Aujourdhui() {
 
   return (
     <div>
-      <PageHeader groupe="Pilotage" titre="Aujourd'hui">
+      <PageHeader vue="aujourdhui" groupe="Pilotage" titre="Aujourd'hui">
         <ActionsGlobales />
       </PageHeader>
 
       {erreur && <div className="erreur">{erreur}</div>}
-      {!erreur && donnees === null && <div className="chargement">Chargement…</div>}
+      {!erreur && donnees === null && <SqueletteTexte lignes={4} />}
 
       {!erreur && donnees !== null && (
         <>
@@ -66,7 +70,11 @@ export function Aujourdhui() {
                 </button>
               </div>
               {donnees.journalSemaine.length === 0 && (
-                <div className="etat-vide">Rien de nouveau cette semaine.</div>
+                <EtatVide
+                  icone={ICONES_NAV.journal}
+                  phrase="Rien de nouveau cette semaine."
+                  action={{ label: "Ouvrir le journal", onClick: () => naviguerVers("journal") }}
+                />
               )}
               {donnees.journalSemaine.length > 0 && (
                 <div className="liste" style={{ boxShadow: "none", border: "none" }}>
@@ -74,7 +82,7 @@ export function Aujourdhui() {
                     <div className="ligne" key={`${l.entite}-${l.id}`}>
                       <span className="ligne__date mono">{formaterDate(l.date)}</span>
                       <div className="ligne__corps">
-                        <span className={badgeEntite(l.entite)}>{LIBELLES_ENTITE[l.entite] ?? l.entite}</span>
+                        <BadgeEntite entite={l.entite} />
                         <span className="ligne__resume">{l.resume}</span>
                       </div>
                     </div>
@@ -91,7 +99,9 @@ export function Aujourdhui() {
                     <span className="badge-compte">{donnees.constatsOuverts} ouverts</span>
                   )}
                 </div>
-                {donnees.vigie.length === 0 && <div className="etat-vide">Aucun constat ouvert.</div>}
+                {donnees.vigie.length === 0 && (
+                  <EtatVide icone={ShieldCheck} phrase="Aucun constat ouvert." />
+                )}
                 {donnees.vigie.length > 0 && (
                   <div className="vigie-liste">
                     {donnees.vigie.map((v, i) => (

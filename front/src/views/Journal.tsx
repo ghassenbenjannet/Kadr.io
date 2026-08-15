@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { recupererJournal, creerEntiteDirect, type LigneJournal } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
 import { ActionsGlobales } from "../components/ActionsGlobales";
 import { EntiteDetail } from "./EntiteDetail";
 import { EditeurFiche, type DescripteurChamp } from "../components/EditeurFiche";
 import { OPTIONS_EQUIPE, OPTIONS_TYPE_DEMANDE, OPTIONS_TYPE_CHANGEMENT, OPTIONS_PRIORITE } from "../lib/statuts-libelles";
-import { LIBELLES_ENTITE, badgeEntite } from "../lib/entite-libelles";
 import { definirOuvertureCreationJournal } from "../lib/navigation";
+import { BadgeEntite } from "../components/BadgeEntite";
+import { EtatVide } from "../components/EtatVide";
+import { SqueletteListe } from "../components/Squelette";
+import { ICONES_NAV } from "../lib/icones";
+import { afficherToast } from "../lib/toast";
 
 type TypeCreation = "demande" | "decision" | "changement" | "incident";
 
@@ -76,7 +81,8 @@ export function Journal() {
   const [typeCreation, setTypeCreation] = useState<TypeCreation>("demande");
   const [valeurs, setValeurs] = useState<Record<string, string>>(() => valeursInitiales("demande"));
   const [creationEnCours, setCreationEnCours] = useState(false);
-  const [erreurCreation, setErreurCreation] = useState<string | null>(null);
+  const [erreursCreation, setErreursCreation] = useState<Record<string, string>>({});
+  const [triAscendant, setTriAscendant] = useState(false);
 
   useEffect(() => {
     definirOuvertureCreationJournal(() => {
@@ -103,16 +109,20 @@ export function Journal() {
   function changerTypeCreation(type: TypeCreation) {
     setTypeCreation(type);
     setValeurs(valeursInitiales(type));
-    setErreurCreation(null);
+    setErreursCreation({});
   }
 
   async function creer() {
     const champs = CHAMPS_CREATION[typeCreation];
+    const erreursChamps: Record<string, string> = {};
     for (const c of champs) {
       if (c.requis && !valeurs[c.cle]?.trim()) {
-        setErreurCreation(`« ${c.label} » est requis.`);
-        return;
+        erreursChamps[c.cle] = "Ce champ est requis.";
       }
+    }
+    if (Object.keys(erreursChamps).length > 0) {
+      setErreursCreation(erreursChamps);
+      return;
     }
     const payload: Record<string, unknown> = {};
     for (const c of champs) {
@@ -124,13 +134,14 @@ export function Journal() {
     }
 
     setCreationEnCours(true);
-    setErreurCreation(null);
+    setErreursCreation({});
     try {
       await creerEntiteDirect(typeCreation, payload);
       setCreationOuverte(false);
       charger();
+      afficherToast("Entrée créée dans le journal.");
     } catch (e) {
-      setErreurCreation(e instanceof Error ? e.message : String(e));
+      setErreursCreation({ _global: e instanceof Error ? e.message : String(e) });
     } finally {
       setCreationEnCours(false);
     }
@@ -155,7 +166,7 @@ export function Journal() {
 
   return (
     <div>
-      <PageHeader groupe="Mémoire" titre="Journal">
+      <PageHeader vue="journal" groupe="Mémoire" titre="Journal">
         <ActionsGlobales />
       </PageHeader>
 
@@ -181,9 +192,10 @@ export function Journal() {
             champs={CHAMPS_CREATION[typeCreation]}
             valeurs={valeurs}
             onChange={(cle, valeur) => setValeurs((v) => ({ ...v, [cle]: valeur }))}
+            erreurs={erreursCreation}
           />
 
-          {erreurCreation && <div className="champ__erreur">{erreurCreation}</div>}
+          {erreursCreation._global && <div className="erreur">{erreursCreation._global}</div>}
           <div className="editeur-fiche__actions">
             <button className="btn btn--primaire" onClick={creer} disabled={creationEnCours}>
               Créer
@@ -227,29 +239,56 @@ export function Journal() {
       </div>
 
       {erreur && <div className="erreur">{erreur}</div>}
-      {!erreur && lignes === null && <div className="chargement">Chargement…</div>}
+      {!erreur && lignes === null && <SqueletteListe />}
       {!erreur && lignes !== null && lignesFiltrees.length === 0 && (
-        <div className="etat-vide">Rien à afficher pour l'instant.</div>
+        <EtatVide
+          icone={ICONES_NAV.journal}
+          phrase={
+            recherche.trim() || entite
+              ? "Aucune entrée ne correspond à ce filtre."
+              : "Le journal est vide pour l'instant."
+          }
+          action={{
+            label: "Nouvelle entrée",
+            onClick: () => {
+              changerTypeCreation(typeCreation);
+              setCreationOuverte(true);
+            },
+          }}
+        />
       )}
       {!erreur && lignes !== null && lignesFiltrees.length > 0 && (
-        <div className="liste">
-          {lignesFiltrees.map((l) => (
+        <>
+          <div className="table-entete">
             <button
-              className={`ligne ligne--cliquable${l.annule ? " ligne--annulee" : ""}`}
-              key={`${l.entite}-${l.id}`}
-              onClick={() => setSelection({ entite: l.entite, id: l.id })}
+              className="table-entete__col table-entete__col--date"
+              onClick={() => setTriAscendant((v) => !v)}
+              title={triAscendant ? "Trier du plus récent au plus ancien" : "Trier du plus ancien au plus récent"}
             >
-              <div className="ligne__date mono">{formaterDate(l.date)}</div>
-              <div className="ligne__corps">
-                <span className={badgeEntite(l.entite)}>{LIBELLES_ENTITE[l.entite] ?? l.entite}</span>
-                <span className="ligne__resume">{l.resume}</span>
-                {l.annule && (
-                  <span className="ligne__annulation">annulée — {l.annulationRaison}</span>
-                )}
-              </div>
+              Date
+              {triAscendant ? <ArrowUp size={12} aria-hidden="true" /> : <ArrowDown size={12} aria-hidden="true" />}
             </button>
-          ))}
-        </div>
+            <div className="table-entete__col">Type / résumé</div>
+          </div>
+          <div className="liste">
+            {[...lignesFiltrees]
+              .sort((a, b) => (triAscendant ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date)))
+              .map((l) => (
+                <button
+                  className={`ligne ligne--cliquable${l.annule ? " ligne--annulee" : ""}`}
+                  key={`${l.entite}-${l.id}`}
+                  onClick={() => setSelection({ entite: l.entite, id: l.id })}
+                >
+                  <div className="ligne__date mono">{formaterDate(l.date)}</div>
+                  <div className="ligne__corps">
+                    <BadgeEntite entite={l.entite} />
+                    <span className="ligne__resume">{l.resume}</span>
+                    {l.annule && <span className="ligne__annulation">annulée — {l.annulationRaison}</span>}
+                  </div>
+                </button>
+              ))}
+          </div>
+        </>
       )}
     </div>
   );

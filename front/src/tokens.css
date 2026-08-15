@@ -105,6 +105,20 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Anneau de focus visible par défaut sur tout élément interactif — clavier
+   uniquement (jamais au clic souris). Les règles plus spécifiques déjà
+   posées sur les champs de formulaire (--rule-focus sur :focus) restent
+   prioritaires et continuent de s'appliquer aussi au clic. */
+:focus-visible {
+  outline: 2px solid var(--rule-focus);
+  outline-offset: 2px;
+  border-radius: var(--rayon-s);
+}
+
 ::selection {
   background: var(--etat-attention-fond);
 }

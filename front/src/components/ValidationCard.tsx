@@ -3,6 +3,7 @@ import type { EcritureProposee } from "../lib/api";
 import { confirmerEcriture, type ResultatConfirm } from "../lib/api";
 import { libelleChamp, libelleOutil } from "../lib/outils-libelles";
 import { avertissementsPourProposition } from "../lib/avertissements-proposition";
+import { afficherToast } from "../lib/toast";
 
 interface Props {
   ecriture: EcritureProposee;
@@ -40,6 +41,10 @@ export function ValidationCard({ ecriture, onTranchee }: Props) {
         action,
         parametres: action === "valider" ? champs : undefined,
       });
+      afficherToast(
+        action === "valider" ? `${libelleOutil(ecriture.outil)} enregistré.` : `${libelleOutil(ecriture.outil)} rejeté.`,
+        action === "valider" ? "succes" : "info"
+      );
       onTranchee(action, resultat);
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e));

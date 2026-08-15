@@ -3,6 +3,9 @@ import { recupererEntiteJournal, mettreAJourEntiteDirect, annulerEntiteDirect } 
 import { libelleChamp } from "../lib/outils-libelles";
 import { EditeurFiche, type DescripteurChamp } from "../components/EditeurFiche";
 import { OPTIONS_STATUT_DEMANDE, OPTIONS_STATUT_DECISION, OPTIONS_PRIORITE } from "../lib/statuts-libelles";
+import { iconeEntite, ICONES_NAV } from "../lib/icones";
+import { afficherToast } from "../lib/toast";
+import { EtatVide } from "../components/EtatVide";
 
 const CHAMPS_PAR_ENTITE: Record<string, string[]> = {
   demande: [
@@ -149,6 +152,7 @@ export function EntiteDetail({
       await charger();
       setEdition(false);
       setEnregistrement("inactif");
+      afficherToast("Fiche enregistrée.");
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e));
       setEnregistrement("erreur");
@@ -167,6 +171,7 @@ export function EntiteDetail({
     try {
       await annulerEntiteDirect(entite, id, raison.trim());
       await charger();
+      afficherToast("Entrée annulée.");
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e));
     }
@@ -186,7 +191,10 @@ export function EntiteDetail({
           <div className="main__entete">
             <div className="main__entete-titre">
               <span className="page-icone" aria-hidden="true">
-                ☰
+                {(() => {
+                  const Icone = iconeEntite(entite);
+                  return <Icone size={20} />;
+                })()}
               </span>
               <div>
                 <h1>{TITRES_ENTITE[entite] ?? entite}</h1>
@@ -270,7 +278,12 @@ export function EntiteDetail({
               {(() => {
                 const projetsLies = (donnees.projets_lies as { id: string; nom: string }[] | undefined) ?? [];
                 if (projetsLies.length === 0) {
-                  return <div className="etat-vide">Aucun projet lié à cette demande pour l'instant.</div>;
+                  return (
+                    <EtatVide
+                      icone={ICONES_NAV.projets}
+                      phrase="Aucun projet lié à cette demande pour l'instant."
+                    />
+                  );
                 }
                 return (
                   <div className="liste">

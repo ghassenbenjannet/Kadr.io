@@ -216,7 +216,7 @@ export function Agents() {
 
   return (
     <div>
-      <PageHeader groupe="Système" titre="Agents">
+      <PageHeader vue="agents" groupe="Système" titre="Agents">
         <button className="btn btn--primaire" onClick={() => setCreationOuverte((v) => !v)}>
           {creationOuverte ? "Fermer" : "+ Nouvel agent"}
         </button>

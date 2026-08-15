@@ -60,7 +60,7 @@ export function BaseConnaissances() {
 
   return (
     <div>
-      <PageHeader groupe="Projets" titre="Base de connaissances">
+      <PageHeader vue="connaissances" groupe="Projets" titre="Base de connaissances">
         <button className="btn" onClick={() => setFormulaireOuvert((v) => !v)}>
           + Nouvelle page
         </button>

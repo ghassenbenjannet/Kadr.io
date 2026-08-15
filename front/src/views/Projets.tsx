@@ -67,7 +67,7 @@ export function Projets() {
 
   return (
     <div>
-      <PageHeader groupe="Projets" titre="Projets">
+      <PageHeader vue="projets" groupe="Projets" titre="Projets">
         <button className="btn" onClick={() => setCreationOuverte((v) => !v)}>
           {creationOuverte ? "Fermer" : "+ Nouveau projet"}
         </button>

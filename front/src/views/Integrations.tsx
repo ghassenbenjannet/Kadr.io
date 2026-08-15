@@ -15,7 +15,7 @@ export function Integrations() {
 
   return (
     <div>
-      <PageHeader groupe="Cartographie" titre="Carte des intégrations">
+      <PageHeader vue="integrations" groupe="Cartographie" titre="Carte des intégrations">
         <ActionsGlobales />
       </PageHeader>
 

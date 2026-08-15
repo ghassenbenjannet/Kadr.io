@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { ShieldCheck } from "lucide-react";
 import { recupererConstats, type ConstatOuvert } from "../lib/api";
 import { PageHeader } from "../components/PageHeader";
 import { ActionsGlobales } from "../components/ActionsGlobales";
+import { EtatVide } from "../components/EtatVide";
+import { SqueletteListe } from "../components/Squelette";
 
 type Famille = "pratique" | "modele" | "integration";
 
@@ -34,14 +37,14 @@ export function Constats() {
 
   return (
     <div>
-      <PageHeader groupe="Mémoire" titre="Constats">
+      <PageHeader vue="constats" groupe="Mémoire" titre="Constats">
         <ActionsGlobales />
       </PageHeader>
 
       {erreur && <div className="erreur">{erreur}</div>}
-      {!erreur && constats === null && <div className="chargement">Chargement…</div>}
+      {!erreur && constats === null && <SqueletteListe lignes={4} />}
       {!erreur && constats !== null && constats.length === 0 && (
-        <div className="etat-vide">Aucun point de vigilance ouvert.</div>
+        <EtatVide icone={ShieldCheck} phrase="Aucun point de vigilance ouvert." />
       )}
       {!erreur &&
         constats !== null &&

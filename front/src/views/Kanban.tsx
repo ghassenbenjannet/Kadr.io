@@ -203,7 +203,7 @@ export function Kanban() {
 
   return (
     <div>
-      <PageHeader groupe="Pilotage" titre="Kanban">
+      <PageHeader vue="kanban" groupe="Pilotage" titre="Kanban">
         <ActionsGlobales />
       </PageHeader>
 

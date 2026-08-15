@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Search, LogOut } from "lucide-react";
 import {
   recupererConversations,
   recupererDemandes,
@@ -9,7 +10,8 @@ import {
   verifierSession,
   type ConversationResume,
 } from "./lib/api";
-import { definirNavigation, type Vue } from "./lib/navigation";
+import { definirNavigation, LIBELLES_VUE, type Vue } from "./lib/navigation";
+import { ICONES_NAV } from "./lib/icones";
 import { Aujourdhui } from "./views/Aujourdhui";
 import { Journal } from "./views/Journal";
 import { Constats } from "./views/Constats";
@@ -26,48 +28,45 @@ import { Agents } from "./views/Agents";
 import { EcransMobiles } from "./views/EcransMobiles";
 import { Login } from "./views/Login";
 import { ThemeSelector } from "./components/ThemeSelector";
+import { ToastHost } from "./components/ToastHost";
 
 function construireGroupes(compteDemandes: number, compteConstats: number, compteProjets: number) {
   return [
     {
       titre: "Pilotage",
       items: [
-        { vue: "aujourdhui" as Vue, label: "Aujourd'hui", icone: "◐" },
-        { vue: "conversation" as Vue, label: "Conversation", icone: "●" },
-        { vue: "kanban" as Vue, label: "Kanban", icone: "▥", compte: compteDemandes },
+        { vue: "aujourdhui" as Vue },
+        { vue: "conversation" as Vue },
+        { vue: "kanban" as Vue, compte: compteDemandes },
       ],
     },
     {
       titre: "Mémoire",
       items: [
-        { vue: "journal" as Vue, label: "Journal", icone: "☰" },
-        { vue: "constats" as Vue, label: "Constats", icone: "▲", compte: compteConstats },
-        { vue: "rapport" as Vue, label: "Rapport hebdo", icone: "▤" },
+        { vue: "journal" as Vue },
+        { vue: "constats" as Vue, compte: compteConstats },
+        { vue: "rapport" as Vue },
       ],
     },
     {
       titre: "Projets",
       items: [
-        { vue: "projets" as Vue, label: "Projets", icone: "▣", compte: compteProjets },
-        { vue: "plans_test" as Vue, label: "Plans de test", icone: "☑" },
-        { vue: "connaissances" as Vue, label: "Connaissances", icone: "◈" },
+        { vue: "projets" as Vue, compte: compteProjets },
+        { vue: "plans_test" as Vue },
+        { vue: "connaissances" as Vue },
       ],
     },
     {
       titre: "Cartographie",
-      items: [
-        { vue: "habilitations" as Vue, label: "Habilitations", icone: "⊞" },
-        { vue: "champs" as Vue, label: "Champs", icone: "≣" },
-        { vue: "integrations" as Vue, label: "Intégrations", icone: "⇄" },
-      ],
+      items: [{ vue: "habilitations" as Vue }, { vue: "champs" as Vue }, { vue: "integrations" as Vue }],
     },
     {
       titre: "Système",
-      items: [{ vue: "agents" as Vue, label: "Agents", icone: "✦" }],
+      items: [{ vue: "agents" as Vue }],
     },
     {
       titre: "Mobile",
-      items: [{ vue: "mobile" as Vue, label: "Écrans mobiles", icone: "▯" }],
+      items: [{ vue: "mobile" as Vue }],
     },
   ];
 }
@@ -110,6 +109,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    document.title = `${LIBELLES_VUE[vue]} — Registre SI`;
+  }, [vue]);
+
+  useEffect(() => {
     if (etatAuth !== "connecte") return;
     recupererConversations()
       .then((r) => setConversations(r.conversations))
@@ -143,26 +146,29 @@ export default function App() {
         </div>
 
         <div className="sidebar__recherche">
-          <span aria-hidden="true">⌕</span>
+          <Search size={14} aria-hidden="true" />
           <span>Demander à l'agent</span>
-          <span className="sidebar__recherche-raccourci">⌘K</span>
+          <kbd className="sidebar__recherche-raccourci">⌘K</kbd>
         </div>
 
         {groupes.map((groupe) => (
           <div className="nav-groupe" key={groupe.titre}>
             <div className="nav-groupe__titre">{groupe.titre}</div>
             <nav className="nav">
-              {groupe.items.map((o) => (
-                <button
-                  key={o.vue}
-                  className={`nav__item${vue === o.vue ? " nav__item--actif" : ""}`}
-                  onClick={() => setVue(o.vue)}
-                >
-                  <span className="nav__icone">{o.icone}</span>
-                  {o.label}
-                  {!!o.compte && <span className="nav__compte">{o.compte}</span>}
-                </button>
-              ))}
+              {groupe.items.map((o) => {
+                const Icone = ICONES_NAV[o.vue];
+                return (
+                  <button
+                    key={o.vue}
+                    className={`nav__item${vue === o.vue ? " nav__item--actif" : ""}`}
+                    onClick={() => setVue(o.vue)}
+                  >
+                    <Icone size={18} className="nav__icone" aria-hidden="true" />
+                    {LIBELLES_VUE[o.vue]}
+                    {!!o.compte && <span className="nav__compte">{o.compte}</span>}
+                  </button>
+                );
+              })}
             </nav>
           </div>
         ))}
@@ -209,11 +215,12 @@ export default function App() {
             <button
               className="sidebar__deconnexion"
               title="Se déconnecter"
+              aria-label="Se déconnecter"
               onClick={() => {
                 seDeconnecter().finally(() => setEtatAuth("deconnecte"));
               }}
             >
-              ⏻
+              <LogOut size={16} aria-hidden="true" />
             </button>
           )}
         </div>
@@ -237,6 +244,7 @@ export default function App() {
         {vue === "agents" && <Agents />}
         {vue === "mobile" && <EcransMobiles />}
       </main>
+      <ToastHost />
     </div>
   );
 }

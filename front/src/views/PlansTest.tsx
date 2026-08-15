@@ -303,7 +303,7 @@ export function PlansTest() {
 
   return (
     <div>
-      <PageHeader groupe="Projets" titre="Plans de test">
+      <PageHeader vue="plans_test" groupe="Projets" titre="Plans de test">
         <button className="btn btn--primaire" onClick={() => setCreationOuverte((v) => !v)}>
           {creationOuverte ? "Fermer" : "+ Nouveau plan"}
         </button>

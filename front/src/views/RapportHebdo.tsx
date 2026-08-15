@@ -3,6 +3,7 @@ import { recupererRapportHebdo } from "../lib/api";
 import { rendreMarkdownLeger } from "../lib/markdown-lite";
 import { PageHeader } from "../components/PageHeader";
 import { ActionsGlobales } from "../components/ActionsGlobales";
+import { SqueletteTexte } from "../components/Squelette";
 
 export function RapportHebdo() {
   const [markdown, setMarkdown] = useState<string | null>(null);
@@ -24,7 +25,7 @@ export function RapportHebdo() {
 
   return (
     <div>
-      <PageHeader groupe="Mémoire" titre="Rapport hebdo">
+      <PageHeader vue="rapport" groupe="Mémoire" titre="Rapport hebdo">
         <button className="btn" onClick={copier} disabled={!markdown}>
           {copie ? "Copié" : "Copier le markdown"}
         </button>
@@ -32,7 +33,7 @@ export function RapportHebdo() {
       </PageHeader>
 
       {erreur && <div className="erreur">{erreur}</div>}
-      {!erreur && markdown === null && <div className="chargement">Chargement…</div>}
+      {!erreur && markdown === null && <SqueletteTexte lignes={8} />}
       {!erreur && markdown !== null && <div className="rapport">{rendreMarkdownLeger(markdown)}</div>}
     </div>
   );

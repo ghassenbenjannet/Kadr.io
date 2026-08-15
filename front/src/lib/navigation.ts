@@ -21,6 +21,24 @@ export type Vue =
   | "agents"
   | "mobile";
 
+/** Libellé humain par vue — source unique pour les labels de nav et le <title> de la page (Prompt N, point 8). */
+export const LIBELLES_VUE: Record<Vue, string> = {
+  aujourdhui: "Aujourd'hui",
+  conversation: "Conversation",
+  kanban: "Kanban",
+  journal: "Journal",
+  constats: "Constats",
+  rapport: "Rapport hebdo",
+  projets: "Projets",
+  plans_test: "Plans de test",
+  connaissances: "Connaissances",
+  habilitations: "Habilitations",
+  champs: "Champs",
+  integrations: "Intégrations",
+  agents: "Agents",
+  mobile: "Écrans mobiles",
+};
+
 let gestionnaireNavigation: ((vue: Vue) => void) | null = null;
 let gestionnaireOuvertureCreation: (() => void) | null = null;
 // Si "Nouvelle entrée" est cliqué depuis un autre écran, Journal ne s'enregistre

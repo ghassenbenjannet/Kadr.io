@@ -43,7 +43,7 @@ export function Habilitations() {
 
   return (
     <div>
-      <PageHeader groupe="Cartographie" titre="Matrice d'habilitations">
+      <PageHeader vue="habilitations" groupe="Cartographie" titre="Matrice d'habilitations">
         <ActionsGlobales />
       </PageHeader>
 

@@ -60,6 +60,7 @@
 
   --bouton-texte: var(--primitif-bouton-texte);
   --ombre-carte: 0 1px 2px var(--primitif-ombre-carte);
+  --ombre-flottante: var(--primitif-ombre-flottante);
 
   /* Les deux thèmes enregistrés sont clairs — pas de bascule dark mode ici. */
   color-scheme: light;

@@ -15,7 +15,7 @@ export function ChampsSourceVerite() {
 
   return (
     <div>
-      <PageHeader groupe="Cartographie" titre="Champs par source de vérité">
+      <PageHeader vue="champs" groupe="Cartographie" titre="Champs par source de vérité">
         <ActionsGlobales />
       </PageHeader>
 

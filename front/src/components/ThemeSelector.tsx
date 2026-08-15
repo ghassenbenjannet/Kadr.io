@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SwatchBook } from "lucide-react";
 import { THEMES, appliquerTheme, themeInitial, themeSuivant, type NomTheme } from "../lib/themes";
 
 /** Icône, pas un écran dédié — bascule console/papier, visible sur tous les écrans (infrastructure transverse, hors du gel §1 Jalon 4). */
@@ -20,7 +21,7 @@ export function ThemeSelector() {
       title={`Thème : ${definition.label} — cliquer pour passer à ${suivant.label}`}
       aria-label={`Changer de thème (actuel : ${definition.label})`}
     >
-      ◑
+      <SwatchBook size={16} aria-hidden="true" />
     </button>
   );
 }

@@ -5,7 +5,7 @@ import { ActionsGlobales } from "../components/ActionsGlobales";
 export function EcransMobiles() {
   return (
     <div>
-      <PageHeader groupe="Mobile" titre="Écrans mobiles">
+      <PageHeader vue="mobile" groupe="Mobile" titre="Écrans mobiles">
         <ActionsGlobales />
       </PageHeader>
 
