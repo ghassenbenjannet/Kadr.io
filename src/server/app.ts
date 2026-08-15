@@ -24,6 +24,20 @@ import { creerDocument } from "../tools/creer-document.js";
 import { schemaEntree as schemaCreerDocument } from "../tools/creer-document.js";
 import { mettreAJourDocument } from "../tools/mettre-a-jour-document.js";
 import { schemaEntree as schemaMettreAJourDocument } from "../tools/mettre-a-jour-document.js";
+import { mettreAJourDemande } from "../tools/mettre-a-jour-demande.js";
+import { schemaEntree as schemaMettreAJourDemande } from "../tools/mettre-a-jour-demande.js";
+import { mettreAJourDecision } from "../tools/mettre-a-jour-decision.js";
+import { schemaEntree as schemaMettreAJourDecision } from "../tools/mettre-a-jour-decision.js";
+import { mettreAJourChangement } from "../tools/mettre-a-jour-changement.js";
+import { schemaEntree as schemaMettreAJourChangement } from "../tools/mettre-a-jour-changement.js";
+import { mettreAJourIncident } from "../tools/mettre-a-jour-incident.js";
+import { schemaEntree as schemaMettreAJourIncident } from "../tools/mettre-a-jour-incident.js";
+import { mettreAJourTicket } from "../tools/mettre-a-jour-ticket.js";
+import { schemaEntree as schemaMettreAJourTicket } from "../tools/mettre-a-jour-ticket.js";
+import { mettreAJourProjet } from "../tools/mettre-a-jour-projet.js";
+import { schemaEntree as schemaMettreAJourProjet } from "../tools/mettre-a-jour-projet.js";
+import { mettreAJourEpic } from "../tools/mettre-a-jour-epic.js";
+import { schemaEntree as schemaMettreAJourEpic } from "../tools/mettre-a-jour-epic.js";
 import { constatsOuverts } from "../tools/constats-ouverts.js";
 import { genererRapport } from "../tools/generer-rapport.js";
 import {
@@ -51,6 +65,19 @@ export interface DependancesApp {
 
 const COOKIE_SESSION = "registre_session";
 const ROUTES_AUTH_PUBLIQUES = new Set(["/api/login", "/api/logout", "/api/session"]);
+
+// Même whitelist que detailEntiteComplet (server/entites.ts) : entité du
+// journal -> schéma + fonction de mise à jour, pour la route d'écriture
+// directe PUT /api/journal/:entite/:id ci-dessous.
+const MISE_A_JOUR_ENTITE: Record<
+  string,
+  { schema: z.ZodRawShape; executer: (db: Database.Database, params: unknown) => unknown }
+> = {
+  demande: { schema: schemaMettreAJourDemande, executer: (db, p) => mettreAJourDemande(db, p as never) },
+  decision: { schema: schemaMettreAJourDecision, executer: (db, p) => mettreAJourDecision(db, p as never) },
+  changement: { schema: schemaMettreAJourChangement, executer: (db, p) => mettreAJourChangement(db, p as never) },
+  incident: { schema: schemaMettreAJourIncident, executer: (db, p) => mettreAJourIncident(db, p as never) },
+};
 
 function messageCleManquante(config: ConfigAgent): string {
   if (config.fournisseur === "compatible_openai") {
@@ -227,6 +254,53 @@ export function creerApp(deps: DependancesApp): Hono {
       return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
     }
     const resultat = mettreAJourDocument(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  // Même principe que ci-dessus, étendu à toutes les fiches objet : une
+  // écriture directe sur les champs qu'un humain édite lui-même sur la
+  // fiche (statut, description, notes) n'a pas besoin de repasser par la
+  // validation de l'IA — celle-ci reste le seul chemin pour les autres
+  // écritures que l'agent propose en conversation.
+  app.put("/api/journal/:entite/:id", async (c) => {
+    const config2 = MISE_A_JOUR_ENTITE[c.req.param("entite")];
+    if (!config2) return c.json({ ok: false, erreur: `Entité inconnue : ${c.req.param("entite")}` }, 404);
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(config2.schema).safeParse({ ...corps, id: c.req.param("id") });
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = config2.executer(db, analyse.data) as { ok: boolean };
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.put("/api/tickets/:id", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaMettreAJourTicket).safeParse({ ...corps, id: c.req.param("id") });
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = mettreAJourTicket(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.put("/api/projets/:id", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaMettreAJourProjet).safeParse({ ...corps, id: c.req.param("id") });
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = mettreAJourProjet(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.put("/api/epics/:id", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaMettreAJourEpic).safeParse({ ...corps, id: c.req.param("id") });
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = mettreAJourEpic(db, analyse.data);
     return c.json(resultat, resultat.ok ? 200 : 400);
   });
 

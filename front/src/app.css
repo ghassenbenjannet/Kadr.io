@@ -1056,7 +1056,8 @@ td.editable {
 
 .champ input[type="text"],
 .champ input[type="number"],
-.champ textarea {
+.champ textarea,
+.champ select {
   background: var(--paper-sunken);
   border: 1px solid var(--rule);
   border-radius: var(--rayon-s);
@@ -1073,9 +1074,34 @@ td.editable {
 }
 
 .champ input:focus,
-.champ textarea:focus {
+.champ textarea:focus,
+.champ select:focus {
   outline: 2px solid var(--rule-focus);
   outline-offset: 1px;
+}
+
+.editeur-fiche {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-3);
+  margin: var(--e-3) 0 var(--e-4);
+  padding: var(--e-4);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--rayon-m);
+}
+
+.editeur-fiche__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+}
+
+.fiche__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e-3);
 }
 
 .champ__erreur {

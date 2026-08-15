@@ -1,9 +1,27 @@
 import { useEffect, useState } from "react";
-import { recupererProjet, creerDocumentDirect, type ProjetDetailComplet } from "../lib/api";
+import {
+  recupererProjet,
+  creerDocumentDirect,
+  mettreAJourProjetDirect,
+  mettreAJourEpicDirect,
+  type ProjetDetailComplet,
+} from "../lib/api";
 import { LIBELLES_TYPE_TICKET, badgeStatutTicket, badgeStatutCas } from "../lib/tickets-libelles";
 import { LIBELLES_TYPE_DOCUMENT } from "../lib/documents-libelles";
+import { OPTIONS_STATUT_PROJET, OPTIONS_STATUT_EPIC } from "../lib/statuts-libelles";
+import { EditeurFiche, type DescripteurChamp } from "../components/EditeurFiche";
 import { TicketDetail } from "./TicketDetail";
 import { DocumentEditor } from "./DocumentEditor";
+
+const CHAMPS_PROJET: DescripteurChamp[] = [
+  { cle: "statut", label: "Statut", type: "select", options: OPTIONS_STATUT_PROJET },
+  { cle: "description", label: "Description", type: "textarea" },
+];
+
+const CHAMPS_EPIC: DescripteurChamp[] = [
+  { cle: "statut", label: "Statut", type: "select", options: OPTIONS_STATUT_EPIC },
+  { cle: "description", label: "Description", type: "textarea" },
+];
 
 function formaterDate(iso: string): string {
   const d = new Date(iso);
@@ -19,6 +37,12 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
   const [nouveauTitre, setNouveauTitre] = useState("");
   const [nouveauType, setNouveauType] = useState("note");
   const [creationEnCours, setCreationEnCours] = useState(false);
+  const [editionProjet, setEditionProjet] = useState(false);
+  const [valeursProjet, setValeursProjet] = useState<Record<string, string>>({});
+  const [enregistrementProjet, setEnregistrementProjet] = useState<"inactif" | "en_cours" | "erreur">("inactif");
+  const [epicEnEdition, setEpicEnEdition] = useState<string | null>(null);
+  const [valeursEpic, setValeursEpic] = useState<Record<string, string>>({});
+  const [enregistrementEpic, setEnregistrementEpic] = useState<"inactif" | "en_cours" | "erreur">("inactif");
 
   function charger() {
     let annule = false;
@@ -37,9 +61,67 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
 
   useEffect(() => {
     setDetail(null);
+    setEditionProjet(false);
+    setEpicEnEdition(null);
     return charger();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  function ouvrirEditionProjet() {
+    if (!detail) return;
+    setValeursProjet({ statut: detail.projet.statut, description: detail.projet.description ?? "" });
+    setEditionProjet(true);
+    setEnregistrementProjet("inactif");
+  }
+
+  async function enregistrerProjet() {
+    if (!detail) return;
+    const modifies: Record<string, string> = {};
+    if (valeursProjet.statut !== detail.projet.statut && valeursProjet.statut) modifies.statut = valeursProjet.statut;
+    if (valeursProjet.description !== (detail.projet.description ?? "")) {
+      modifies.description = valeursProjet.description ?? "";
+    }
+    if (Object.keys(modifies).length === 0) {
+      setEditionProjet(false);
+      return;
+    }
+    setEnregistrementProjet("en_cours");
+    try {
+      await mettreAJourProjetDirect(id, modifies);
+      charger();
+      setEditionProjet(false);
+      setEnregistrementProjet("inactif");
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+      setEnregistrementProjet("erreur");
+    }
+  }
+
+  function ouvrirEditionEpic(epicId: string, statut: string, description: string | null) {
+    setValeursEpic({ statut, description: description ?? "" });
+    setEpicEnEdition(epicId);
+    setEnregistrementEpic("inactif");
+  }
+
+  async function enregistrerEpic(epicId: string, statutOriginal: string, descriptionOriginal: string | null) {
+    const modifies: Record<string, string> = {};
+    if (valeursEpic.statut !== statutOriginal && valeursEpic.statut) modifies.statut = valeursEpic.statut;
+    if (valeursEpic.description !== (descriptionOriginal ?? "")) modifies.description = valeursEpic.description ?? "";
+    if (Object.keys(modifies).length === 0) {
+      setEpicEnEdition(null);
+      return;
+    }
+    setEnregistrementEpic("en_cours");
+    try {
+      await mettreAJourEpicDirect(epicId, modifies);
+      charger();
+      setEpicEnEdition(null);
+      setEnregistrementEpic("inactif");
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+      setEnregistrementEpic("erreur");
+    }
+  }
 
   async function creerPage() {
     if (!detail || !nouveauTitre.trim()) return;
@@ -96,7 +178,33 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
                 </div>
               </div>
             </div>
+            {!editionProjet && (
+              <div className="main__entete-actions">
+                <button className="sidebar__nouvelle" onClick={ouvrirEditionProjet}>
+                  Modifier
+                </button>
+              </div>
+            )}
           </div>
+
+          {editionProjet && (
+            <>
+              <EditeurFiche
+                champs={CHAMPS_PROJET}
+                valeurs={valeursProjet}
+                onChange={(cle, valeur) => setValeursProjet((v) => ({ ...v, [cle]: valeur }))}
+              />
+              <div className="editeur-fiche__actions">
+                <button className="btn btn--primaire" onClick={enregistrerProjet} disabled={enregistrementProjet === "en_cours"}>
+                  Enregistrer
+                </button>
+                <button className="btn" onClick={() => setEditionProjet(false)} disabled={enregistrementProjet === "en_cours"}>
+                  Annuler
+                </button>
+                {enregistrementProjet === "erreur" && <span className="champ__erreur">Échec de l'enregistrement</span>}
+              </div>
+            </>
+          )}
 
           <div className="constats-groupe">
             <div className="constats-groupe__titre-ligne">
@@ -153,9 +261,48 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
           )}
           {detail.epics.map((epic) => (
             <div className="constats-groupe" key={epic.id}>
-              <div className="constats-groupe__titre">
-                {epic.nom} · {epic.tickets.length} ticket{epic.tickets.length === 1 ? "" : "s"}
+              <div className="constats-groupe__titre-ligne">
+                <div className="constats-groupe__titre">
+                  {epic.nom} · {epic.statut.replace("_", " ")} · {epic.tickets.length} ticket
+                  {epic.tickets.length === 1 ? "" : "s"}
+                </div>
+                {epicEnEdition !== epic.id && (
+                  <button
+                    className="sidebar__nouvelle"
+                    onClick={() => ouvrirEditionEpic(epic.id, epic.statut, epic.description)}
+                  >
+                    Modifier
+                  </button>
+                )}
               </div>
+
+              {epic.description && epicEnEdition !== epic.id && (
+                <div className="main__soustitre">{epic.description}</div>
+              )}
+
+              {epicEnEdition === epic.id && (
+                <>
+                  <EditeurFiche
+                    champs={CHAMPS_EPIC}
+                    valeurs={valeursEpic}
+                    onChange={(cle, valeur) => setValeursEpic((v) => ({ ...v, [cle]: valeur }))}
+                  />
+                  <div className="editeur-fiche__actions">
+                    <button
+                      className="btn btn--primaire"
+                      onClick={() => enregistrerEpic(epic.id, epic.statut, epic.description)}
+                      disabled={enregistrementEpic === "en_cours"}
+                    >
+                      Enregistrer
+                    </button>
+                    <button className="btn" onClick={() => setEpicEnEdition(null)} disabled={enregistrementEpic === "en_cours"}>
+                      Annuler
+                    </button>
+                    {enregistrementEpic === "erreur" && <span className="champ__erreur">Échec de l'enregistrement</span>}
+                  </div>
+                </>
+              )}
+
               <div className="liste">
                 {epic.tickets.map((t) => (
                   <button className="ligne ligne--cliquable" key={t.id} onClick={() => setTicketSelectionne(t.id)}>

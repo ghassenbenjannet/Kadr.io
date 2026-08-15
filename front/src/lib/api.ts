@@ -147,6 +147,7 @@ export interface EpicDetail {
   id: string;
   nom: string;
   statut: string;
+  description: string | null;
   tickets: TicketDetail[];
 }
 
@@ -188,6 +189,53 @@ export function recupererEntiteJournal(
   id: string
 ): Promise<{ ok: true; entite: string } & Record<string, unknown>> {
   return requeteJson(`/api/journal/${entite}/${id}`);
+}
+
+// Écriture directe (sans validation IA) sur les fiches objet — même principe
+// que l'éditeur de documents : ces champs sont tapés par Ghassen lui-même.
+export function mettreAJourEntiteDirect(
+  entite: string,
+  id: string,
+  champs: Record<string, string>
+): Promise<{ ok: true; id: string; resume: string; avertissements?: string[] }> {
+  return requeteJson(`/api/journal/${entite}/${id}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(champs),
+  });
+}
+
+export function mettreAJourTicketDirect(
+  id: string,
+  champs: Record<string, string>
+): Promise<{ ok: true; id: string; resume: string }> {
+  return requeteJson(`/api/tickets/${id}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(champs),
+  });
+}
+
+export function mettreAJourProjetDirect(
+  id: string,
+  champs: Record<string, string>
+): Promise<{ ok: true; id: string; resume: string }> {
+  return requeteJson(`/api/projets/${id}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(champs),
+  });
+}
+
+export function mettreAJourEpicDirect(
+  id: string,
+  champs: Record<string, string>
+): Promise<{ ok: true; id: string; resume: string }> {
+  return requeteJson(`/api/epics/${id}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(champs),
+  });
 }
 
 export interface TicketDetailComplet {

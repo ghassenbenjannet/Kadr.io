@@ -39,6 +39,7 @@ export interface EpicDetail {
   id: string;
   nom: string;
   statut: string;
+  description: string | null;
   tickets: TicketDetail[];
 }
 
@@ -135,8 +136,8 @@ export function detailProjet(db: Database.Database, id: string): ProjetDetail | 
   if (!projet) return null;
 
   const epicRows = db
-    .prepare("SELECT id, nom, statut FROM epics WHERE projet_id = ? ORDER BY cree_le")
-    .all(id) as { id: string; nom: string; statut: string }[];
+    .prepare("SELECT id, nom, statut, description FROM epics WHERE projet_id = ? ORDER BY cree_le")
+    .all(id) as { id: string; nom: string; statut: string; description: string | null }[];
   const ticketsParEpic = db.prepare(
     "SELECT id, titre, type, statut FROM tickets WHERE epic_id = ? ORDER BY cree_le"
   );

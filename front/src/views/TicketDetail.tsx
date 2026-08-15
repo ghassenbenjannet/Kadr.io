@@ -1,26 +1,62 @@
 import { useEffect, useState } from "react";
-import { recupererTicket, type TicketDetailComplet } from "../lib/api";
+import { recupererTicket, mettreAJourTicketDirect, type TicketDetailComplet } from "../lib/api";
 import { LIBELLES_TYPE_TICKET, badgeStatutTicket, badgeStatutCas } from "../lib/tickets-libelles";
+import { EditeurFiche, type DescripteurChamp } from "../components/EditeurFiche";
+import { OPTIONS_STATUT_TICKET } from "../lib/statuts-libelles";
+
+const CHAMPS_MODIFIABLES: DescripteurChamp[] = [
+  { cle: "statut", label: "Statut", type: "select", options: OPTIONS_STATUT_TICKET },
+  { cle: "description", label: "Description", type: "textarea" },
+];
 
 export function TicketDetail({ id, onRetour }: { id: string; onRetour: () => void }) {
   const [ticket, setTicket] = useState<TicketDetailComplet | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [edition, setEdition] = useState(false);
+  const [valeurs, setValeurs] = useState<Record<string, string>>({});
+  const [enregistrement, setEnregistrement] = useState<"inactif" | "en_cours" | "erreur">("inactif");
+
+  function charger() {
+    setErreur(null);
+    return recupererTicket(id)
+      .then((r) => setTicket(r))
+      .catch((e) => setErreur(e instanceof Error ? e.message : String(e)));
+  }
 
   useEffect(() => {
-    let annule = false;
     setTicket(null);
-    setErreur(null);
-    recupererTicket(id)
-      .then((r) => {
-        if (!annule) setTicket(r);
-      })
-      .catch((e) => {
-        if (!annule) setErreur(e instanceof Error ? e.message : String(e));
-      });
-    return () => {
-      annule = true;
-    };
+    setEdition(false);
+    charger();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  function ouvrirEdition() {
+    if (!ticket) return;
+    setValeurs({ statut: ticket.statut, description: ticket.description ?? "" });
+    setEdition(true);
+    setEnregistrement("inactif");
+  }
+
+  async function enregistrer() {
+    if (!ticket) return;
+    const modifies: Record<string, string> = {};
+    if (valeurs.statut !== ticket.statut && valeurs.statut) modifies.statut = valeurs.statut;
+    if (valeurs.description !== (ticket.description ?? "")) modifies.description = valeurs.description ?? "";
+    if (Object.keys(modifies).length === 0) {
+      setEdition(false);
+      return;
+    }
+    setEnregistrement("en_cours");
+    try {
+      await mettreAJourTicketDirect(id, modifies);
+      await charger();
+      setEdition(false);
+      setEnregistrement("inactif");
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+      setEnregistrement("erreur");
+    }
+  }
 
   return (
     <div>
@@ -45,7 +81,33 @@ export function TicketDetail({ id, onRetour }: { id: string; onRetour: () => voi
                 </div>
               </div>
             </div>
+            {!edition && (
+              <div className="main__entete-actions">
+                <button className="sidebar__nouvelle" onClick={ouvrirEdition}>
+                  Modifier
+                </button>
+              </div>
+            )}
           </div>
+
+          {edition && (
+            <>
+              <EditeurFiche
+                champs={CHAMPS_MODIFIABLES}
+                valeurs={valeurs}
+                onChange={(cle, valeur) => setValeurs((v) => ({ ...v, [cle]: valeur }))}
+              />
+              <div className="editeur-fiche__actions">
+                <button className="btn btn--primaire" onClick={enregistrer} disabled={enregistrement === "en_cours"}>
+                  Enregistrer
+                </button>
+                <button className="btn" onClick={() => setEdition(false)} disabled={enregistrement === "en_cours"}>
+                  Annuler
+                </button>
+                {enregistrement === "erreur" && <span className="champ__erreur">Échec de l'enregistrement</span>}
+              </div>
+            </>
+          )}
 
           <dl className="fiche">
             <div className="fiche__ligne">
