@@ -20,6 +20,18 @@ import * as outilConstatsOuverts from "./tools/constats-ouverts.js";
 import { constatsOuverts } from "./tools/constats-ouverts.js";
 import * as outilRapport from "./tools/generer-rapport.js";
 import { genererRapport } from "./tools/generer-rapport.js";
+import * as outilDecrireSysteme from "./tools/decrire-systeme.js";
+import { decrireSysteme } from "./tools/decrire-systeme.js";
+import * as outilDecrireModule from "./tools/decrire-module.js";
+import { decrireModule } from "./tools/decrire-module.js";
+import * as outilDecrireChamp from "./tools/decrire-champ.js";
+import { decrireChamp } from "./tools/decrire-champ.js";
+import * as outilDecrireHabilitation from "./tools/decrire-habilitation.js";
+import { decrireHabilitation } from "./tools/decrire-habilitation.js";
+import * as outilDecrireIntegration from "./tools/decrire-integration.js";
+import { decrireIntegration } from "./tools/decrire-integration.js";
+import * as outilDecrireAutomatisation from "./tools/decrire-automatisation.js";
+import { decrireAutomatisation } from "./tools/decrire-automatisation.js";
 
 const db = ouvrirDb();
 migrer(db);
@@ -76,6 +88,45 @@ server.registerTool(
   outilRapport.nom,
   { description: outilRapport.description, inputSchema: outilRapport.schemaEntree },
   async (args) => texte(genererRapport(db, args))
+);
+
+server.registerTool(
+  outilDecrireSysteme.nom,
+  { description: outilDecrireSysteme.description, inputSchema: outilDecrireSysteme.schemaEntree },
+  async (args) => texte(decrireSysteme(db, args))
+);
+
+server.registerTool(
+  outilDecrireModule.nom,
+  { description: outilDecrireModule.description, inputSchema: outilDecrireModule.schemaEntree },
+  async (args) => texte(decrireModule(db, args))
+);
+
+server.registerTool(
+  outilDecrireChamp.nom,
+  { description: outilDecrireChamp.description, inputSchema: outilDecrireChamp.schemaEntree },
+  async (args) => texte(decrireChamp(db, args))
+);
+
+server.registerTool(
+  outilDecrireHabilitation.nom,
+  { description: outilDecrireHabilitation.description, inputSchema: outilDecrireHabilitation.schemaEntree },
+  async (args) => texte(decrireHabilitation(db, args))
+);
+
+server.registerTool(
+  outilDecrireIntegration.nom,
+  { description: outilDecrireIntegration.description, inputSchema: outilDecrireIntegration.schemaEntree },
+  async (args) => texte(decrireIntegration(db, args))
+);
+
+server.registerTool(
+  outilDecrireAutomatisation.nom,
+  {
+    description: outilDecrireAutomatisation.description,
+    inputSchema: outilDecrireAutomatisation.schemaEntree,
+  },
+  async (args) => texte(decrireAutomatisation(db, args))
 );
 
 const transport = new StdioServerTransport();
