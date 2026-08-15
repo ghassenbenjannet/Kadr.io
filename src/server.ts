@@ -32,6 +32,8 @@ import * as outilDecrireIntegration from "./tools/decrire-integration.js";
 import { decrireIntegration } from "./tools/decrire-integration.js";
 import * as outilDecrireAutomatisation from "./tools/decrire-automatisation.js";
 import { decrireAutomatisation } from "./tools/decrire-automatisation.js";
+import * as outilImpact from "./tools/impact.js";
+import { impact } from "./tools/impact.js";
 
 const db = ouvrirDb();
 migrer(db);
@@ -127,6 +129,12 @@ server.registerTool(
     inputSchema: outilDecrireAutomatisation.schemaEntree,
   },
   async (args) => texte(decrireAutomatisation(db, args))
+);
+
+server.registerTool(
+  outilImpact.nom,
+  { description: outilImpact.description, inputSchema: outilImpact.schemaEntree },
+  async (args) => texte(impact(db, args))
 );
 
 const transport = new StdioServerTransport();
