@@ -77,6 +77,37 @@ sur le fichier si présents. **Sans clé configurée, l'application démarre qua
 les vues de lecture (Journal, Constats, Rapport hebdo) fonctionnent normalement, et la
 conversation affiche une erreur explicative tant que la clé n'est pas renseignée.
 
+## Sécurité et authentification
+
+L'application n'a pas de comptes utilisateurs (elle est pensée pour un seul
+opérateur) : la protection est un **mot de passe partagé**, à définir dès que
+l'app est accessible ailleurs qu'en local.
+
+Ajoutez `password` à `~/.registre-si/config.json`, ou définissez la variable
+d'environnement `REGISTRE_PASSWORD` (prioritaire sur le fichier) :
+
+```json
+{
+  "anthropicApiKey": "sk-ant-...",
+  "password": "change-moi"
+}
+```
+
+**Sans mot de passe configuré, l'application reste accessible sans
+authentification** — un avertissement s'affiche dans les logs au démarrage.
+Acceptable en local strict ; à corriger avant toute exposition réseau.
+
+Une fois le mot de passe défini : connexion par cookie de session signé
+(HMAC, sans stockage côté serveur — les sessions expirent après 30 jours ou
+au redémarrage du serveur, puisque la clé de signature est régénérée à
+chaque démarrage), et limite de 10 tentatives échouées par IP sur 15 minutes
+avant blocage temporaire.
+
+Si l'app tourne derrière un reverse proxy HTTPS, définissez
+`REGISTRE_COOKIE_SECURE=true` pour que le cookie de session ne soit jamais
+envoyé en clair. Laissez-le à `false` (par défaut) tant que l'accès se fait
+en HTTP direct (ex. `localhost`), sans quoi le navigateur refuse le cookie.
+
 ## Démarrage
 
 ```bash
@@ -90,7 +121,7 @@ SQLite est créée automatiquement au premier démarrage
 ## Docker
 
 ```bash
-cp .env.example .env   # renseigne ANTHROPIC_API_KEY dedans
+cp .env.example .env   # renseigne ANTHROPIC_API_KEY et REGISTRE_PASSWORD dedans
 docker compose up --build
 ```
 
@@ -106,12 +137,19 @@ Sans `docker compose`, l'équivalent :
 
 ```bash
 docker build -t registre-si .
-docker run -p 3737:3737 -e ANTHROPIC_API_KEY=sk-ant-... -v registre_data:/data registre-si
+docker run -p 3737:3737 \
+  -e ANTHROPIC_API_KEY=sk-ant-... \
+  -e REGISTRE_PASSWORD=change-moi \
+  -v registre_data:/data registre-si
 ```
 
 `REGISTRE_MODEL` et `PORT` sont aussi surchargeables via `-e`. Sans clé API,
 le conteneur démarre quand même — mêmes garanties qu'en local (lecture
-disponible, conversation désactivée).
+disponible, conversation désactivée). **`REGISTRE_PASSWORD` mérite la même
+attention que la clé API** : dès que le conteneur est exposé au-delà de
+`localhost` (déploiement, reverse proxy), définissez-le — voir
+[Sécurité et authentification](#sécurité-et-authentification). Derrière un
+reverse proxy HTTPS, ajoutez aussi `-e REGISTRE_COOKIE_SECURE=true`.
 
 ## Vérification manuelle
 

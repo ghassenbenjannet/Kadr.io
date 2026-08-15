@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { recupererConversations, type ConversationResume } from "./lib/api";
+import {
+  recupererConversations,
+  seDeconnecter,
+  surSessionExpiree,
+  verifierSession,
+  type ConversationResume,
+} from "./lib/api";
 import { Journal } from "./views/Journal";
 import { Constats } from "./views/Constats";
 import { RapportHebdo } from "./views/RapportHebdo";
@@ -10,6 +16,7 @@ import { Integrations } from "./views/Integrations";
 import { Tickets } from "./views/Tickets";
 import { Projets } from "./views/Projets";
 import { BaseConnaissances } from "./views/BaseConnaissances";
+import { Login } from "./views/Login";
 
 type Vue =
   | "conversation"
@@ -51,16 +58,34 @@ const GROUPES_NAV: { titre: string; items: { vue: Vue; label: string; icone: str
   },
 ];
 
+type EtatAuth = "chargement" | "connecte" | "deconnecte";
+
 export default function App() {
+  const [etatAuth, setEtatAuth] = useState<EtatAuth>("chargement");
+  const [verrouille, setVerrouille] = useState(false);
   const [vue, setVue] = useState<Vue>("conversation");
   const [conversations, setConversations] = useState<ConversationResume[]>([]);
   const [conversationActive, setConversationActive] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    surSessionExpiree(() => setEtatAuth("deconnecte"));
+    verifierSession()
+      .then((s) => {
+        setVerrouille(s.verrouille);
+        setEtatAuth(s.authentifie ? "connecte" : "deconnecte");
+      })
+      .catch(() => setEtatAuth("deconnecte"));
+  }, []);
+
+  useEffect(() => {
+    if (etatAuth !== "connecte") return;
     recupererConversations()
       .then((r) => setConversations(r.conversations))
       .catch(() => setConversations([]));
-  }, [vue, conversationActive]);
+  }, [vue, conversationActive, etatAuth]);
+
+  if (etatAuth === "chargement") return <div className="page-chargement">Chargement…</div>;
+  if (etatAuth === "deconnecte") return <Login onConnecte={() => setEtatAuth("connecte")} />;
 
   return (
     <div className="app">
@@ -119,6 +144,17 @@ export default function App() {
             ))}
           </div>
         </div>
+
+        {verrouille && (
+          <button
+            className="sidebar__deconnexion"
+            onClick={() => {
+              seDeconnecter().finally(() => setEtatAuth("deconnecte"));
+            }}
+          >
+            Se déconnecter
+          </button>
+        )}
       </aside>
 
       <main className={vue === "conversation" ? "main main--conversation" : "main"}>

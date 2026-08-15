@@ -134,6 +134,57 @@
   color: var(--ink);
 }
 
+.sidebar__deconnexion {
+  background: none;
+  border: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-size: var(--taille-meta);
+  padding: var(--e-2) var(--e-3);
+  border-radius: var(--rayon-s);
+  text-align: left;
+}
+
+.sidebar__deconnexion:hover {
+  background: var(--paper-sunken);
+  color: var(--ink);
+}
+
+.page-chargement {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  font-family: var(--police-mono);
+  font-size: var(--taille-meta);
+}
+
+.page-connexion {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+}
+
+.carte-connexion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e-4);
+  width: 320px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--rayon-m);
+  padding: var(--e-6) var(--e-5);
+}
+
+.carte-connexion__titre {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--e-2);
+}
+
 .conversations-recentes {
   display: flex;
   flex-direction: column;

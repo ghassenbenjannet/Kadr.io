@@ -47,13 +47,45 @@ export interface EcritureProposee {
   resultat: unknown | null;
 }
 
+const ROUTES_AUTH = new Set(["/api/login", "/api/logout", "/api/session"]);
+
+let gestionnaireSessionExpiree: (() => void) | null = null;
+
+/** Appelé quand une requête protégée reçoit un 401 : la session a expiré ou n'existe plus. */
+export function surSessionExpiree(gestionnaire: () => void): void {
+  gestionnaireSessionExpiree = gestionnaire;
+}
+
 async function requeteJson<T>(chemin: string, init?: RequestInit): Promise<T> {
   const res = await fetch(chemin, init);
   const corps = await res.json();
   if (!res.ok) {
+    if (res.status === 401 && !ROUTES_AUTH.has(chemin)) gestionnaireSessionExpiree?.();
     throw new Error((corps as { erreur?: string }).erreur ?? `Erreur HTTP ${res.status}`);
   }
   return corps as T;
+}
+
+export interface EtatSession {
+  ok: true;
+  verrouille: boolean;
+  authentifie: boolean;
+}
+
+export function verifierSession(): Promise<EtatSession> {
+  return requeteJson("/api/session");
+}
+
+export function seConnecter(motDePasse: string): Promise<{ ok: true }> {
+  return requeteJson("/api/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ motDePasse }),
+  });
+}
+
+export function seDeconnecter(): Promise<{ ok: true }> {
+  return requeteJson("/api/logout", { method: "POST" });
 }
 
 export function recupererJournal(filtres: {
@@ -263,6 +295,7 @@ export async function envoyerMessage(
   });
 
   if (!res.ok) {
+    if (res.status === 401) gestionnaireSessionExpiree?.();
     const corps = await res.json().catch(() => ({}));
     gestionnaires.onErreur?.((corps as { erreur?: string }).erreur ?? `Erreur HTTP ${res.status}`);
     return;
