@@ -7,16 +7,20 @@
   "engines": {
     "node": ">=20"
   },
+  "main": "dist/server/index.js",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "tsc -p tsconfig.build.json && mkdir -p dist/db/migrations && cp src/db/schema.sql dist/db/schema.sql && cp src/db/migrations/*.sql dist/db/migrations/",
+    "build": "tsc -p tsconfig.build.json && mkdir -p dist/db/migrations && cp src/db/schema.sql dist/db/schema.sql && cp src/db/migrations/*.sql dist/db/migrations/ && if [ -f src/agent/prompt-systeme.md ]; then cp src/agent/prompt-systeme.md dist/agent/prompt-systeme.md; fi",
+    "start": "node dist/server/index.js",
     "web": "node dist/web/server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
+    "@hono/node-server": "^2.1.1",
     "better-sqlite3": "^11.9.1",
+    "hono": "^4.13.2",
     "nanoid": "^5.0.9",
     "zod": "^3.24.2",
     "zod-to-json-schema": "^3.25.2"
