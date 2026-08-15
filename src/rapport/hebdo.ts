@@ -77,6 +77,12 @@ interface VigilanceLigne {
   consequence: string;
 }
 
+interface AnnulationLigne {
+  entite: string;
+  resume: string;
+  raison: string;
+}
+
 interface ProchaineDemande {
   demandeur: string;
   equipe: string;
@@ -107,6 +113,8 @@ export interface DonneesHebdo {
   changements: ChangementLigne[];
   incidents: IncidentLigne[];
   vigilance: VigilanceLigne[];
+  /** §Prompt L : annulées cette semaine, gardées visibles pour ne pas silencier un constat. */
+  annulations: AnnulationLigne[];
   semaineProchaine: {
     demandesArbitrees: ProchaineDemande[];
     decisionsValidees: ProchaineDecision[];
@@ -115,6 +123,30 @@ export interface DonneesHebdo {
     elementsDecrits: CarteEtElementsDecrits;
     nouveauxConstatsMI: VigilanceLigne[];
   };
+}
+
+const ENTITES_JOURNAL: { entite: string; table: string }[] = [
+  { entite: "demande", table: "demandes" },
+  { entite: "decision", table: "decisions" },
+  { entite: "changement", table: "changements" },
+  { entite: "incident", table: "incidents" },
+];
+
+function collecterAnnulations(db: Database.Database, debutIso: string, finIso: string): AnnulationLigne[] {
+  const resultats: AnnulationLigne[] = [];
+  for (const { entite, table } of ENTITES_JOURNAL) {
+    const rows = db
+      .prepare(`SELECT id, annulation_raison FROM ${table} WHERE annule_le >= ? AND annule_le < ? ORDER BY annule_le`)
+      .all(debutIso, finIso) as { id: string; annulation_raison: string | null }[];
+    for (const r of rows) {
+      resultats.push({
+        entite,
+        resume: detailEntite(db, entite, r.id)?.libelle ?? `${entite} ${r.id}`,
+        raison: r.annulation_raison ?? "",
+      });
+    }
+  }
+  return resultats;
 }
 
 export function collecterDonneesHebdo(
@@ -127,7 +159,7 @@ export function collecterDonneesHebdo(
   const finIso = fin.toISOString();
 
   const demandesRecues = db
-    .prepare("SELECT equipe FROM demandes WHERE cree_le >= ? AND cree_le < ?")
+    .prepare("SELECT equipe FROM demandes WHERE cree_le >= ? AND cree_le < ? AND annule_le IS NULL")
     .all(debutIso, finIso) as { equipe: string }[];
 
   const parEquipe: Record<string, number> = {};
@@ -137,13 +169,13 @@ export function collecterDonneesHebdo(
 
   const traitees = db
     .prepare(
-      "SELECT COUNT(*) AS n FROM demandes WHERE statut = 'realisee' AND maj_le >= ? AND maj_le < ?"
+      "SELECT COUNT(*) AS n FROM demandes WHERE statut = 'realisee' AND maj_le >= ? AND maj_le < ? AND annule_le IS NULL"
     )
     .get(debutIso, finIso) as { n: number };
 
   const enAttenteRows = db
     .prepare(
-      "SELECT demandeur, equipe, expression_brute, reformulation, cree_le FROM demandes WHERE statut IN ('recue','qualifiee') ORDER BY cree_le"
+      "SELECT demandeur, equipe, expression_brute, reformulation, cree_le FROM demandes WHERE statut IN ('recue','qualifiee') AND annule_le IS NULL ORDER BY cree_le"
     )
     .all() as {
     demandeur: string;
@@ -162,7 +194,7 @@ export function collecterDonneesHebdo(
 
   const changementsRows = db
     .prepare(
-      "SELECT cree_le, type, description, rollback FROM changements WHERE cree_le >= ? AND cree_le < ? ORDER BY cree_le"
+      "SELECT cree_le, type, description, rollback FROM changements WHERE cree_le >= ? AND cree_le < ? AND annule_le IS NULL ORDER BY cree_le"
     )
     .all(debutIso, finIso) as { cree_le: string; type: string; description: string; rollback: string | null }[];
 
@@ -175,7 +207,7 @@ export function collecterDonneesHebdo(
 
   const incidentsRows = db
     .prepare(
-      "SELECT symptome, impact, cree_le, resolu_le FROM incidents WHERE cree_le >= ? AND cree_le < ? ORDER BY cree_le"
+      "SELECT symptome, impact, cree_le, resolu_le FROM incidents WHERE cree_le >= ? AND cree_le < ? AND annule_le IS NULL ORDER BY cree_le"
     )
     .all(debutIso, finIso) as { symptome: string; impact: string; cree_le: string; resolu_le: string | null }[];
 
@@ -201,12 +233,12 @@ export function collecterDonneesHebdo(
 
   const demandesArbitreesRows = db
     .prepare(
-      "SELECT demandeur, equipe, expression_brute, reformulation FROM demandes WHERE statut = 'arbitree' ORDER BY cree_le"
+      "SELECT demandeur, equipe, expression_brute, reformulation FROM demandes WHERE statut = 'arbitree' AND annule_le IS NULL ORDER BY cree_le"
     )
     .all() as { demandeur: string; equipe: string; expression_brute: string; reformulation: string | null }[];
 
   const decisionsValideesRows = db
-    .prepare("SELECT decision FROM decisions WHERE statut = 'validee' ORDER BY cree_le")
+    .prepare("SELECT decision FROM decisions WHERE statut = 'validee' AND annule_le IS NULL ORDER BY cree_le")
     .all() as { decision: string }[];
 
   function compterCreesCetteSemaine(table: string): number {
@@ -250,6 +282,7 @@ export function collecterDonneesHebdo(
     changements,
     incidents,
     vigilance,
+    annulations: collecterAnnulations(db, debutIso, finIso),
     semaineProchaine: {
       demandesArbitrees: demandesArbitreesRows.map((d) => ({
         demandeur: d.demandeur,
@@ -309,6 +342,16 @@ export function rendreHebdo(donnees: DonneesHebdo): string {
   } else {
     for (const v of donnees.vigilance) {
       lignes.push(`— ${v.resume} : ${v.consequence}`);
+    }
+  }
+  lignes.push("");
+
+  lignes.push("## Entrées annulées cette semaine");
+  if (donnees.annulations.length === 0) {
+    lignes.push("Aucune entrée annulée cette semaine.");
+  } else {
+    for (const a of donnees.annulations) {
+      lignes.push(`— [${a.entite}] ${a.resume} — motif : ${a.raison}`);
     }
   }
   lignes.push("");

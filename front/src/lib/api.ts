@@ -6,6 +6,8 @@ export interface LigneJournal {
   id: string;
   date: string;
   resume: string;
+  annule: boolean;
+  annulationRaison: string | null;
 }
 
 export interface ConstatOuvert {
@@ -121,11 +123,13 @@ export function recupererJournal(filtres: {
   entite?: string;
   depuis?: string;
   jusqu_a?: string;
+  inclureAnnulees?: boolean;
 }): Promise<{ ok: true; journal: LigneJournal[] }> {
   const params = new URLSearchParams();
   if (filtres.entite) params.set("entite", filtres.entite);
   if (filtres.depuis) params.set("depuis", filtres.depuis);
   if (filtres.jusqu_a) params.set("jusqu_a", filtres.jusqu_a);
+  if (filtres.inclureAnnulees) params.set("inclure_annulees", "1");
   const q = params.toString();
   return requeteJson(`/api/journal${q ? `?${q}` : ""}`);
 }
@@ -640,8 +644,15 @@ export function mettreAJourDocumentDirect(
 
 // --- Suppression directe --------------------------------------------------
 
-export function supprimerEntiteDirect(entite: string, id: string): Promise<{ ok: true; id: string }> {
-  return requeteJson(`/api/journal/${entite}/${id}`, { method: "DELETE" });
+// Les 4 entités du journal ne se suppriment plus (Jalon 4, Prompt L) : seule
+// l'annulation reste possible, avec un motif obligatoire — voir annulerEntiteDirect.
+
+export function annulerEntiteDirect(entite: string, id: string, raison: string): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/journal/${entite}/${id}/annuler`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ raison }),
+  });
 }
 
 export function supprimerTicketDirect(id: string): Promise<{ ok: true; id: string }> {

@@ -25,6 +25,7 @@ const MIGRATIONS: Migration[] = [
   { version: 9, fichier: join(iciDir, "migrations", "v9-projet-demandes.sql") },
   { version: 10, fichier: join(iciDir, "migrations", "v10-vues-kanban.sql") },
   { version: 11, fichier: join(iciDir, "migrations", "v11-mcp.sql") },
+  { version: 12, fichier: join(iciDir, "migrations", "v12-annulation-journal.sql") },
 ];
 
 function versionCourante(db: Database.Database): number {

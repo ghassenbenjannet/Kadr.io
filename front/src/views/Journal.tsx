@@ -68,6 +68,7 @@ const FILTRES_ENTITE: { valeur: string; label: string }[] = [
 export function Journal() {
   const [entite, setEntite] = useState("");
   const [recherche, setRecherche] = useState("");
+  const [afficherAnnulees, setAfficherAnnulees] = useState(false);
   const [lignes, setLignes] = useState<LigneJournal[] | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ entite: string; id: string } | null>(null);
@@ -88,7 +89,7 @@ export function Journal() {
 
   function charger() {
     setErreur(null);
-    return recupererJournal({ entite: entite || undefined })
+    return recupererJournal({ entite: entite || undefined, inclureAnnulees: afficherAnnulees })
       .then((r) => setLignes(r.journal))
       .catch((e) => setErreur(e instanceof Error ? e.message : String(e)));
   }
@@ -97,7 +98,7 @@ export function Journal() {
     setLignes(null);
     charger();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entite]);
+  }, [entite, afficherAnnulees]);
 
   function changerTypeCreation(type: TypeCreation) {
     setTypeCreation(type);
@@ -206,14 +207,24 @@ export function Journal() {
         ))}
       </div>
 
-      <input
-        className="recherche"
-        type="search"
-        placeholder="Rechercher dans le journal…"
-        value={recherche}
-        onChange={(e) => setRecherche(e.target.value)}
-        aria-label="Rechercher dans le journal"
-      />
+      <div className="journal-barre">
+        <input
+          className="recherche"
+          type="search"
+          placeholder="Rechercher dans le journal…"
+          value={recherche}
+          onChange={(e) => setRecherche(e.target.value)}
+          aria-label="Rechercher dans le journal"
+        />
+        <label className="journal-filtre-annulees">
+          <input
+            type="checkbox"
+            checked={afficherAnnulees}
+            onChange={(e) => setAfficherAnnulees(e.target.checked)}
+          />
+          Afficher les annulées
+        </label>
+      </div>
 
       {erreur && <div className="erreur">{erreur}</div>}
       {!erreur && lignes === null && <div className="chargement">Chargement…</div>}
@@ -224,7 +235,7 @@ export function Journal() {
         <div className="liste">
           {lignesFiltrees.map((l) => (
             <button
-              className="ligne ligne--cliquable"
+              className={`ligne ligne--cliquable${l.annule ? " ligne--annulee" : ""}`}
               key={`${l.entite}-${l.id}`}
               onClick={() => setSelection({ entite: l.entite, id: l.id })}
             >
@@ -232,6 +243,9 @@ export function Journal() {
               <div className="ligne__corps">
                 <span className={badgeEntite(l.entite)}>{LIBELLES_ENTITE[l.entite] ?? l.entite}</span>
                 <span className="ligne__resume">{l.resume}</span>
+                {l.annule && (
+                  <span className="ligne__annulation">annulée — {l.annulationRaison}</span>
+                )}
               </div>
             </button>
           ))}

@@ -23,8 +23,12 @@ async function envoyer(a: ReturnType<typeof app>, methode: string, chemin: strin
   return a.request(chemin, { method: methode });
 }
 
-describe("suppression directe — entités du journal", () => {
-  it("supprime une demande et son entrée dans journal_fts", async () => {
+// Les 4 entités du journal ne se suppriment plus (Jalon 4, Prompt L) : voir
+// tests/annulation-journal.test.ts pour le remplacement (POST .../annuler).
+// Ici, seule la route DELETE historique reste à couvrir : elle doit répondre
+// 410 sans rien exécuter, quelle que soit l'entité ou l'id.
+describe("DELETE /api/journal/:entite/:id — route retirée (410)", () => {
+  it("répond 410 même pour une entité/un id valides, sans toucher à la ligne", async () => {
     contexte = creerDbTemp();
     const a = app(contexte.db);
     const d = enregistrerDemande(contexte.db, {
@@ -35,29 +39,18 @@ describe("suppression directe — entités du journal", () => {
     });
     if (!d.ok) throw new Error("échec de seed");
 
-    const avant = contexte.db
-      .prepare("SELECT COUNT(*) AS n FROM journal_fts WHERE entite = 'demande' AND entite_id = ?")
-      .get(d.id) as { n: number };
-    expect(avant.n).toBe(1);
-
     const res = await envoyer(a, "DELETE", `/api/journal/demande/${d.id}`);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(410);
 
     const ligne = contexte.db.prepare("SELECT id FROM demandes WHERE id = ?").get(d.id);
-    expect(ligne).toBeUndefined();
-    const apres = contexte.db
-      .prepare("SELECT COUNT(*) AS n FROM journal_fts WHERE entite = 'demande' AND entite_id = ?")
-      .get(d.id) as { n: number };
-    expect(apres.n).toBe(0);
+    expect(ligne).toBeDefined();
   });
 
-  it("404 sur une entité inconnue, 400 sur un id inexistant", async () => {
+  it("410 aussi sur une entité inconnue ou un id inexistant", async () => {
     contexte = creerDbTemp();
     const a = app(contexte.db);
-    const inconnue = await envoyer(a, "DELETE", "/api/journal/fromage/x");
-    expect(inconnue.status).toBe(404);
-    const introuvable = await envoyer(a, "DELETE", "/api/journal/demande/x");
-    expect(introuvable.status).toBe(400);
+    expect((await envoyer(a, "DELETE", "/api/journal/fromage/x")).status).toBe(410);
+    expect((await envoyer(a, "DELETE", "/api/journal/demande/x")).status).toBe(410);
   });
 });
 

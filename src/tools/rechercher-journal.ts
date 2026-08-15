@@ -2,6 +2,7 @@ import { z } from "zod";
 import type Database from "better-sqlite3";
 import type { Resultat } from "../db/util.js";
 import { detailEntite } from "../db/libelles.js";
+import { TABLE_PAR_ENTITE } from "./annuler-entite.js";
 
 export const nom = "rechercher_journal";
 
@@ -69,6 +70,18 @@ export function rechercherJournal(
 
   for (const ligne of lignesFts) {
     if (entree.entites && !entree.entites.includes(ligne.entite as never)) continue;
+
+    // Une entrée annulée reste dans journal_fts (pas de purge, §Prompt L) mais
+    // est exclue de la recherche par cette jointure applicative — ce n'est
+    // qu'un filtre d'affichage, jamais une suppression.
+    const tableJournal = TABLE_PAR_ENTITE[ligne.entite];
+    if (tableJournal) {
+      const estAnnulee = db
+        .prepare(`SELECT annule_le FROM ${tableJournal} WHERE id = ?`)
+        .get(ligne.entite_id) as { annule_le: string | null } | undefined;
+      if (estAnnulee?.annule_le) continue;
+    }
+
     const detail = detailEntite(db, ligne.entite, ligne.entite_id);
     if (!detail) continue;
     if (entree.depuis && detail.date < entree.depuis) continue;

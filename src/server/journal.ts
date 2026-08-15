@@ -12,6 +12,8 @@ export interface LigneJournal {
   id: string;
   date: string;
   resume: string;
+  annule: boolean;
+  annulationRaison: string | null;
 }
 
 export interface FiltresJournal {
@@ -19,6 +21,8 @@ export interface FiltresJournal {
   depuis?: string;
   jusquA?: string;
   limite?: number;
+  /** Inclut les entrées annulées (grisées côté écran Journal). Par défaut, exclues. */
+  inclureAnnulees?: boolean;
 }
 
 export function listerJournal(db: Database.Database, filtres: FiltresJournal = {}): LigneJournal[] {
@@ -28,11 +32,11 @@ export function listerJournal(db: Database.Database, filtres: FiltresJournal = {
 
   const lignes: LigneJournal[] = [];
   for (const entite of entites) {
-    const rows = db.prepare(`SELECT id, cree_le FROM ${tableDe(entite)} ORDER BY cree_le DESC`).all() as {
-      id: string;
-      cree_le: string;
-    }[];
+    const rows = db
+      .prepare(`SELECT id, cree_le, annule_le, annulation_raison FROM ${tableDe(entite)} ORDER BY cree_le DESC`)
+      .all() as { id: string; cree_le: string; annule_le: string | null; annulation_raison: string | null }[];
     for (const row of rows) {
+      if (!filtres.inclureAnnulees && row.annule_le) continue;
       if (filtres.depuis && row.cree_le < filtres.depuis) continue;
       if (filtres.jusquA && row.cree_le > filtres.jusquA) continue;
       const detail = detailEntite(db, entite, row.id);
@@ -41,7 +45,14 @@ export function listerJournal(db: Database.Database, filtres: FiltresJournal = {
       // rapport en prose) ; ici la date et le type sont déjà des colonnes
       // distinctes de la ligne, donc on ne garde que le reste.
       const resume = libelle.replace(/^\S+ du \d{2}\/\d{2} : /, "");
-      lignes.push({ entite, id: row.id, date: row.cree_le, resume });
+      lignes.push({
+        entite,
+        id: row.id,
+        date: row.cree_le,
+        resume,
+        annule: row.annule_le !== null,
+        annulationRaison: row.annulation_raison,
+      });
     }
   }
 

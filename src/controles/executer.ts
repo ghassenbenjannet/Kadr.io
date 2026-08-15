@@ -31,16 +31,23 @@ export interface FamilleControle {
 const FAMILLE_PRATIQUE: FamilleControle = {
   nom: "pratique",
   codes: ["C1", "C2", "C3", "C4", "C5", "C6"],
+  // annule_le IS NULL sur les 4 requêtes : une entrée annulée (Prompt L)
+  // sort ainsi automatiquement de la vigie — lancer_controles étant
+  // idempotent, un constat déjà ouvert sur une entrée annulée passe en
+  // 'traité' au prochain passage (voir la boucle existants/clesActives
+  // plus bas, inchangée).
   calculer: (db) => {
     const changements = db
-      .prepare("SELECT id, cree_le, rollback, test_effectue, demande_id, decision_id FROM changements")
+      .prepare("SELECT id, cree_le, rollback, test_effectue, demande_id, decision_id FROM changements WHERE annule_le IS NULL")
       .all() as ChangementRow[];
-    const decisions = db.prepare("SELECT id, statut, decideur FROM decisions").all() as DecisionRow[];
+    const decisions = db
+      .prepare("SELECT id, statut, decideur FROM decisions WHERE annule_le IS NULL")
+      .all() as DecisionRow[];
     const demandes = db
-      .prepare("SELECT id, cree_le, statut, equipe FROM demandes")
+      .prepare("SELECT id, cree_le, statut, equipe FROM demandes WHERE annule_le IS NULL")
       .all() as DemandeRow[];
     const incidents = db
-      .prepare("SELECT id, resolu_le, action_preventive FROM incidents")
+      .prepare("SELECT id, resolu_le, action_preventive FROM incidents WHERE annule_le IS NULL")
       .all() as IncidentRow[];
     return executerControlesPratique({ changements, decisions, demandes, incidents });
   },

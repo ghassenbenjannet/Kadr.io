@@ -29,7 +29,7 @@ import {
   delierProjetDemande,
 } from "./projets.js";
 import { detailDocument, listerConnaissances, supprimerDocument } from "./documents.js";
-import { supprimerEntiteJournal, TABLE_PAR_ENTITE } from "../tools/supprimer-entite.js";
+import { annulerEntiteJournal, TABLE_PAR_ENTITE } from "../tools/annuler-entite.js";
 import {
   listerVuesKanban,
   sauvegarderVueKanban,
@@ -243,7 +243,8 @@ export function creerApp(deps: DependancesApp): Hono {
     const entite = c.req.query("entite");
     const depuis = c.req.query("depuis");
     const jusquA = c.req.query("jusqu_a");
-    const lignes = listerJournal(db, { entite, depuis, jusquA });
+    const inclureAnnulees = c.req.query("inclure_annulees") === "1";
+    const lignes = listerJournal(db, { entite, depuis, jusquA, inclureAnnulees });
     return c.json({ ok: true, journal: lignes });
   });
 
@@ -392,11 +393,29 @@ export function creerApp(deps: DependancesApp): Hono {
     return c.json(resultat, resultat.ok ? 200 : 400);
   });
 
+  // Les entrées du journal ne se suppriment plus (Jalon 4, Prompt L) : la
+  // route historique répond 410 plutôt que d'exécuter quoi que ce soit.
   app.delete("/api/journal/:entite/:id", (c) => {
+    return c.json(
+      {
+        ok: false,
+        erreur:
+          "Les entrées du journal ne se suppriment plus : utilisez POST /api/journal/:entite/:id/annuler (motif obligatoire).",
+      },
+      410
+    );
+  });
+
+  app.post("/api/journal/:entite/:id/annuler", async (c) => {
     if (!TABLE_PAR_ENTITE[c.req.param("entite")]) {
       return c.json({ ok: false, erreur: `Entité inconnue : ${c.req.param("entite")}` }, 404);
     }
-    const resultat = supprimerEntiteJournal(db, c.req.param("entite"), c.req.param("id"));
+    const corps = await c.req.json().catch(() => ({}));
+    const raison = typeof corps.raison === "string" ? corps.raison.trim() : "";
+    if (!raison) {
+      return c.json({ ok: false, erreur: "Un motif est requis pour annuler une entrée." }, 400);
+    }
+    const resultat = annulerEntiteJournal(db, c.req.param("entite"), c.req.param("id"), raison);
     return c.json(resultat, resultat.ok ? 200 : 400);
   });
 

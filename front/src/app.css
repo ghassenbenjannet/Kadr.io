@@ -555,6 +555,38 @@ td.editable {
   outline-offset: 1px;
 }
 
+.journal-barre {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--e-4);
+}
+
+.journal-barre .recherche {
+  flex: 1 1 260px;
+}
+
+.journal-filtre-annulees {
+  display: flex;
+  align-items: center;
+  gap: var(--e-2);
+  font-size: var(--taille-meta);
+  color: var(--ink-3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ligne--annulee {
+  opacity: 0.55;
+}
+
+.ligne__annulation {
+  font-size: var(--taille-meta);
+  color: var(--ink-3);
+  font-style: italic;
+  margin-left: auto;
+}
+
 /* --- Avatars ------------------------------------------------------------ */
 
 .avatar {
@@ -1354,6 +1386,15 @@ td.editable {
   padding: var(--e-2) var(--e-3);
   border-radius: var(--rayon-s);
   margin-bottom: var(--e-3);
+}
+
+.fiche-annulee {
+  background: var(--etat-attention-fond);
+  color: var(--etat-attention);
+  font-size: var(--taille-corps);
+  padding: var(--e-3) var(--e-4);
+  border-radius: var(--rayon-s);
+  margin-bottom: var(--e-4);
 }
 
 .carte-validation__champs {

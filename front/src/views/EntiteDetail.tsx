@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { recupererEntiteJournal, mettreAJourEntiteDirect, supprimerEntiteDirect } from "../lib/api";
+import { recupererEntiteJournal, mettreAJourEntiteDirect, annulerEntiteDirect } from "../lib/api";
 import { libelleChamp } from "../lib/outils-libelles";
 import { EditeurFiche, type DescripteurChamp } from "../components/EditeurFiche";
 import { OPTIONS_STATUT_DEMANDE, OPTIONS_STATUT_DECISION, OPTIONS_PRIORITE } from "../lib/statuts-libelles";
@@ -79,7 +79,7 @@ const CHAMPS_MODIFIABLES: Record<string, DescripteurChamp[]> = {
 
 function formaterValeur(cle: string, valeur: unknown): string {
   if (valeur === null || valeur === undefined || valeur === "") return "";
-  if (cle === "cree_le" || cle === "maj_le" || cle === "resolu_le") {
+  if (cle === "cree_le" || cle === "maj_le" || cle === "resolu_le" || cle === "annule_le") {
     const d = new Date(String(valeur));
     return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
@@ -117,6 +117,7 @@ export function EntiteDetail({
 
   const champs = CHAMPS_PAR_ENTITE[entite] ?? [];
   const champsModifiables = CHAMPS_MODIFIABLES[entite] ?? [];
+  const estAnnulee = Boolean(donnees?.annule_le);
 
   function ouvrirEdition() {
     if (!donnees) return;
@@ -154,11 +155,18 @@ export function EntiteDetail({
     }
   }
 
-  async function supprimer() {
-    if (!confirm(`Supprimer cette fiche « ${TITRES_ENTITE[entite] ?? entite} » ?`)) return;
+  async function annuler() {
+    const raison = prompt(
+      `Annuler cette fiche « ${TITRES_ENTITE[entite] ?? entite} » — motif (obligatoire) :`
+    );
+    if (raison === null) return;
+    if (!raison.trim()) {
+      setErreur("Un motif est requis pour annuler une entrée.");
+      return;
+    }
     try {
-      await supprimerEntiteDirect(entite, id);
-      onRetour();
+      await annulerEntiteDirect(entite, id, raison.trim());
+      await charger();
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e));
     }
@@ -184,19 +192,26 @@ export function EntiteDetail({
                 <h1>{TITRES_ENTITE[entite] ?? entite}</h1>
               </div>
             </div>
-            {!edition && (
+            {!edition && !estAnnulee && (
               <div className="main__entete-actions">
                 {champsModifiables.length > 0 && (
                   <button className="sidebar__nouvelle" onClick={ouvrirEdition}>
                     Modifier
                   </button>
                 )}
-                <button className="sidebar__nouvelle sidebar__nouvelle--danger" onClick={supprimer}>
-                  Supprimer
+                <button className="sidebar__nouvelle sidebar__nouvelle--danger" onClick={annuler}>
+                  Annuler
                 </button>
               </div>
             )}
           </div>
+
+          {estAnnulee && (
+            <div className="fiche-annulee">
+              Entrée annulée le {formaterValeur("annule_le", donnees!.annule_le)} — motif :{" "}
+              {String(donnees!.annulation_raison ?? "")}
+            </div>
+          )}
 
           {edition && (
             <>

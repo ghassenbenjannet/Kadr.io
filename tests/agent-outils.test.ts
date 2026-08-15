@@ -77,6 +77,12 @@ describe("agent/outils — catalogue et adaptateur", () => {
     }
   });
 
+  it("annuler_entite n'est jamais dans le catalogue — action humaine uniquement (REST/UI), pas d'agent", () => {
+    const catalogue = catalogueOutils();
+    expect(catalogue.map((d) => d.nom)).not.toContain("annuler_entite");
+    expect(outilParNom("annuler_entite")).toBeUndefined();
+  });
+
   it("le schéma de enregistrer_demande liste ses champs requis", () => {
     const schemas = schemasAnthropic();
     const demande = schemas.find((s) => s.name === "enregistrer_demande");

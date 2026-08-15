@@ -43,6 +43,7 @@ describe("liste des outils MCP exposés", () => {
     expect(noms.sort()).toEqual(attendu.sort());
     expect(noms).not.toContain("charger_mode");
     expect(noms).not.toContain("supprimer_entite");
+    expect(noms).not.toContain("annuler_entite");
     expect(outilsDuCatalogueExposesMcp().length).toBe(catalogueOutils().length - 1);
   });
 
