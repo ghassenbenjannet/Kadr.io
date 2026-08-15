@@ -38,6 +38,20 @@ import { mettreAJourProjet } from "../tools/mettre-a-jour-projet.js";
 import { schemaEntree as schemaMettreAJourProjet } from "../tools/mettre-a-jour-projet.js";
 import { mettreAJourEpic } from "../tools/mettre-a-jour-epic.js";
 import { schemaEntree as schemaMettreAJourEpic } from "../tools/mettre-a-jour-epic.js";
+import { enregistrerDemande } from "../tools/enregistrer-demande.js";
+import { schemaEntree as schemaEnregistrerDemande } from "../tools/enregistrer-demande.js";
+import { enregistrerDecision } from "../tools/enregistrer-decision.js";
+import { schemaEntree as schemaEnregistrerDecision } from "../tools/enregistrer-decision.js";
+import { enregistrerChangement } from "../tools/enregistrer-changement.js";
+import { schemaEntree as schemaEnregistrerChangement } from "../tools/enregistrer-changement.js";
+import { enregistrerIncident } from "../tools/enregistrer-incident.js";
+import { schemaEntree as schemaEnregistrerIncident } from "../tools/enregistrer-incident.js";
+import { creerProjet } from "../tools/creer-projet.js";
+import { schemaEntree as schemaCreerProjet } from "../tools/creer-projet.js";
+import { creerEpic } from "../tools/creer-epic.js";
+import { schemaEntree as schemaCreerEpic } from "../tools/creer-epic.js";
+import { creerTicket } from "../tools/creer-ticket.js";
+import { schemaEntree as schemaCreerTicket } from "../tools/creer-ticket.js";
 import { constatsOuverts } from "../tools/constats-ouverts.js";
 import { genererRapport } from "../tools/generer-rapport.js";
 import {
@@ -77,6 +91,17 @@ const MISE_A_JOUR_ENTITE: Record<
   decision: { schema: schemaMettreAJourDecision, executer: (db, p) => mettreAJourDecision(db, p as never) },
   changement: { schema: schemaMettreAJourChangement, executer: (db, p) => mettreAJourChangement(db, p as never) },
   incident: { schema: schemaMettreAJourIncident, executer: (db, p) => mettreAJourIncident(db, p as never) },
+};
+
+// Même whitelist, pour la création directe POST /api/journal/:entite.
+const CREATION_ENTITE: Record<
+  string,
+  { schema: z.ZodRawShape; executer: (db: Database.Database, params: unknown) => unknown }
+> = {
+  demande: { schema: schemaEnregistrerDemande, executer: (db, p) => enregistrerDemande(db, p as never) },
+  decision: { schema: schemaEnregistrerDecision, executer: (db, p) => enregistrerDecision(db, p as never) },
+  changement: { schema: schemaEnregistrerChangement, executer: (db, p) => enregistrerChangement(db, p as never) },
+  incident: { schema: schemaEnregistrerIncident, executer: (db, p) => enregistrerIncident(db, p as never) },
 };
 
 function messageCleManquante(config: ConfigAgent): string {
@@ -301,6 +326,51 @@ export function creerApp(deps: DependancesApp): Hono {
       return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
     }
     const resultat = mettreAJourEpic(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  // Écriture directe : création. Même justification que les routes de mise
+  // à jour ci-dessus — sans elles, rien n'est créable sans clé de modèle
+  // configurée (l'agent est le seul autre chemin de création).
+  app.post("/api/journal/:entite", async (c) => {
+    const config2 = CREATION_ENTITE[c.req.param("entite")];
+    if (!config2) return c.json({ ok: false, erreur: `Entité inconnue : ${c.req.param("entite")}` }, 404);
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(config2.schema).safeParse(corps);
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = config2.executer(db, analyse.data) as { ok: boolean };
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.post("/api/projets", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaCreerProjet).safeParse(corps);
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = creerProjet(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.post("/api/epics", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaCreerEpic).safeParse(corps);
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = creerEpic(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.post("/api/tickets", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaCreerTicket).safeParse(corps);
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = creerTicket(db, analyse.data);
     return c.json(resultat, resultat.ok ? 200 : 400);
   });
 

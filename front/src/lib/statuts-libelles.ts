@@ -40,3 +40,32 @@ export const OPTIONS_STATUT_EPIC = [
   { valeur: "en_cours", label: "En cours" },
   { valeur: "termine", label: "Terminé" },
 ];
+
+export const OPTIONS_EQUIPE = [
+  { valeur: "CS", label: "CS" },
+  { valeur: "AE", label: "AE" },
+  { valeur: "Marketing", label: "Marketing" },
+  { valeur: "ADV", label: "ADV" },
+  { valeur: "Produit", label: "Produit" },
+  { valeur: "Communication", label: "Communication" },
+  { valeur: "Direction", label: "Direction" },
+  { valeur: "Autre", label: "Autre" },
+];
+
+export const OPTIONS_TYPE_DEMANDE = [
+  { valeur: "evolution", label: "Évolution" },
+  { valeur: "correction", label: "Correction" },
+  { valeur: "question", label: "Question" },
+  { valeur: "acces", label: "Accès" },
+  { valeur: "incident", label: "Incident" },
+];
+
+export const OPTIONS_TYPE_CHANGEMENT = [
+  { valeur: "parametrage", label: "Paramétrage" },
+  { valeur: "deluge", label: "Deluge" },
+  { valeur: "sql", label: "SQL" },
+  { valeur: "javascript", label: "JavaScript" },
+  { valeur: "config_api", label: "Config API" },
+  { valeur: "habilitations", label: "Habilitations" },
+  { valeur: "autre", label: "Autre" },
+];

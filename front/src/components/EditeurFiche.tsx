@@ -8,6 +8,8 @@ export interface DescripteurChamp {
   label: string;
   type: "texte" | "textarea" | "select";
   options?: OptionChamp[];
+  /** Purement indicatif (astérisque) : la validation des champs requis reste à la charge de l'appelant. */
+  requis?: boolean;
 }
 
 /** Formulaire générique pour l'édition directe (immédiate, sans validation IA) d'une fiche objet. */
@@ -26,6 +28,7 @@ export function EditeurFiche({
         <div className="champ" key={c.cle}>
           <label className="champ__label" htmlFor={`champ-${c.cle}`}>
             {c.label}
+            {c.requis ? " *" : ""}
           </label>
           {c.type === "select" ? (
             <select id={`champ-${c.cle}`} value={valeurs[c.cle] ?? ""} onChange={(e) => onChange(c.cle, e.target.value)}>
