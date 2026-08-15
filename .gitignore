@@ -6,3 +6,4 @@ dist/
 *.db-shm
 .registre-si/
 zoho-credentials.json
+.env

@@ -87,6 +87,32 @@ Ouvre le serveur sur `http://localhost:3737` (port réglable via `PORT`). La bas
 SQLite est créée automatiquement au premier démarrage
 (`~/.registre-si/registre.db`, réglable via `REGISTRE_DB_PATH`).
 
+## Docker
+
+```bash
+cp .env.example .env   # renseigne ANTHROPIC_API_KEY dedans
+docker compose up --build
+```
+
+Ouvre `http://localhost:3737`. Le build compile le backend et le front dans une
+étape séparée (image de build avec la chaîne de compilation, au cas où
+`better-sqlite3` doive être reconstruit) ; l'image finale ne contient que le
+résultat, tourne avec un utilisateur non-root, et persiste tout
+(`registre.db`, `config.json`, les identifiants Zoho une fois configurés) dans
+un volume nommé (`registre_data`, monté sur `/data`, qui sert de `$HOME` au
+conteneur) — les données survivent à un `docker compose down` (pas à un `-v`).
+
+Sans `docker compose`, l'équivalent :
+
+```bash
+docker build -t registre-si .
+docker run -p 3737:3737 -e ANTHROPIC_API_KEY=sk-ant-... -v registre_data:/data registre-si
+```
+
+`REGISTRE_MODEL` et `PORT` sont aussi surchargeables via `-e`. Sans clé API,
+le conteneur démarre quand même — mêmes garanties qu'en local (lecture
+disponible, conversation désactivée).
+
 ## Vérification manuelle
 
 1. `npm run build && npm start`, puis ouvrez `http://localhost:3737`.

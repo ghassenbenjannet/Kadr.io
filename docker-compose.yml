@@ -1,0 +1,13 @@
+services:
+  registre-si:
+    build: .
+    ports:
+      - "3737:3737"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      REGISTRE_MODEL: ${REGISTRE_MODEL:-}
+    volumes:
+      - registre_data:/data
+
+volumes:
+  registre_data:

@@ -1,0 +1,13 @@
+node_modules
+front/node_modules
+dist
+front/dist
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.registre-si
+zoho-credentials.json
+.git
+.env
+docs
