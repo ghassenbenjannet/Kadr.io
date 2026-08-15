@@ -73,6 +73,49 @@ export function recupererConstats(): Promise<{ ok: true; constats: ConstatOuvert
   return requeteJson("/api/constats");
 }
 
+export interface ChampAvecContexte {
+  id: string;
+  nom: string;
+  module: string;
+  systeme: string;
+  sourceDeVerite: string | null;
+  editable: number | null;
+}
+
+export type DroitCellule = "editable" | "visible" | "masque" | "non_declare";
+
+export function recupererHabilitations(moduleFiltre?: string): Promise<{
+  ok: true;
+  champs: ChampAvecContexte[];
+  profils: string[];
+  modules: string[];
+  cellules: Record<string, DroitCellule>;
+}> {
+  const q = moduleFiltre ? `?module=${encodeURIComponent(moduleFiltre)}` : "";
+  return requeteJson(`/api/habilitations${q}`);
+}
+
+export interface GroupeSourceDeVerite {
+  source: string;
+  champs: (ChampAvecContexte & { contredit: boolean })[];
+}
+
+export function recupererChamps(): Promise<{ ok: true; groupes: GroupeSourceDeVerite[] }> {
+  return requeteJson("/api/champs");
+}
+
+export interface IntegrationAvecConstats {
+  id: string;
+  nom: string;
+  source: string;
+  cible: string;
+  constatsOuverts: number;
+}
+
+export function recupererIntegrations(): Promise<{ ok: true; integrations: IntegrationAvecConstats[] }> {
+  return requeteJson("/api/integrations");
+}
+
 export async function recupererRapportHebdo(semaine?: string): Promise<string> {
   const q = semaine ? `?semaine=${encodeURIComponent(semaine)}` : "";
   const res = await fetch(`/api/rapport/hebdo${q}`);

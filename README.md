@@ -18,6 +18,11 @@ qui remplace le serveur MCP initial par cette application autonome.
   par un client externe : il embarque son propre agent (streaming, appel d'outils,
   validation humaine avant toute écriture) et sa propre interface (conversation,
   journal, constats, rapport hebdo).
+- **Portage de la cartographie (Jalon 2) dans l'app principale** : la matrice
+  d'habilitations, les champs par source de vérité et la carte des intégrations —
+  jusque-là des pages HTML statiques séparées — sont maintenant des écrans React de
+  la même application, dans la même navigation. Le serveur web statique et
+  `npm run web` ont été retirés : une seule interface, à jour en temps réel.
 - **Jalon 3 (import Zoho)** : amorcé (migration, `zoho_configurer`, client HTTP Zoho
   testé sur transport injecté). La suite (découverte, mapper, fusion, import,
   contrôles de dérive) est **délibérément arrêtée** : elle exige une exécution réelle
@@ -83,6 +88,8 @@ SQLite est créée automatiquement au premier démarrage
    Comptes, champ Statut_Client » (`decrire_champ`, proposé puis à valider), « Si je
    modifie Statut_Client, qu'est-ce qui casse ? » (`impact`, lecture directe, pas de
    validation), et ouvrez l'écran **Rapport hebdo**.
+7. Ouvrez **Habilitations** et **Champs** : le champ Statut_Client décrit à l'étape 6
+   y apparaît aussitôt — même base, mêmes données, pas de synchronisation à faire.
 
 ## Écrans
 
@@ -92,10 +99,13 @@ SQLite est créée automatiquement au premier démarrage
 | Journal | Demandes, décisions, changements, incidents — filtrable, lecture seule |
 | Constats | La vigie, groupée par famille, conséquence toujours visible |
 | Rapport hebdo | Rendu du rapport de la semaine, bouton copier pour l'envoi au CEO |
+| Habilitations | Matrice champs × profils — distinction « non déclaré » ≠ « masqué » ≠ « visible » ≠ « édite », filtrable par module |
+| Champs | Champs groupés par source de vérité déclarée, contradictions (contrôle M2) en tête de groupe |
+| Intégrations | Flux source → cible avec le nombre de constats ouverts rattachés |
 
-L'interface Jalon 2 en pages HTML statiques (matrice d'habilitations, carte des
-intégrations) reste disponible séparément via `npm run web` (voir plus bas) ; elle
-n'a pas encore été portée en écrans React de l'application principale.
+Les écrans sont groupés dans la navigation en deux sections : **Registre**
+(Conversation, Journal, Constats, Rapport hebdo) et **Cartographie** (Habilitations,
+Champs, Intégrations).
 
 ## Outils de l'agent
 
@@ -131,18 +141,6 @@ souvenirs), il permet de répondre à :
 Si l'un des trois échoue en usage réel, c'est un signal à traiter avant d'ajouter quoi
 que ce soit d'autre.
 
-## Interface web Jalon 2 (lecture seule, séparée)
-
-```bash
-npm run web        # http://localhost:3737 (port : variable WEB_PORT)
-```
-
-4 pages générées depuis la base, indépendantes de l'application principale : matrice
-d'habilitations (filtrable par module, distinction « non déclaré » ≠ « masqué »),
-champs par source de vérité (contradictions en tête), carte des intégrations,
-constats ouverts. Ne lancez pas ce serveur et `npm start` en même temps sans changer
-l'un des deux ports (`WEB_PORT` / `PORT`) : ils utilisent `3737` par défaut.
-
 ## Développement
 
 ```bash
@@ -153,9 +151,11 @@ npm run build         # backend + front
 
 Structure : `src/db` (schéma, migrations), `src/controles` (C/M/I), `src/tools`
 (logique des outils, fonctions pures `(db, params) => Resultat`), `src/agent`
-(catalogue d'outils, boucle, client Anthropic, prompt système), `src/server` (Hono),
-`src/rapport`, `src/web` (pages Jalon 2), `src/zoho` (Jalon 3) ; `front/` (React +
-Vite, buildé vers `dist/public`).
+(catalogue d'outils, boucle, client Anthropic, prompt système), `src/server` (Hono,
+routes API), `src/rapport`, `src/web` (requêtes de cartographie partagées avec l'API
++ rendu HTML autonome utilisé par `generer_rapport(type: "matrice_habilitations")`),
+`src/zoho` (Jalon 3) ; `front/` (React + Vite, tous les écrans y compris
+cartographie, buildé vers `dist/public`).
 
 ## Sauvegarde
 

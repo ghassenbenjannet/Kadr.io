@@ -4,6 +4,11 @@ import { creerApp } from "../src/server/app.js";
 import { enregistrerDemande } from "../src/tools/enregistrer-demande.js";
 import { lancerControles } from "../src/tools/lancer-controles.js";
 import { enregistrerChangement } from "../src/tools/enregistrer-changement.js";
+import { decrireSysteme } from "../src/tools/decrire-systeme.js";
+import { decrireModule } from "../src/tools/decrire-module.js";
+import { decrireChamp } from "../src/tools/decrire-champ.js";
+import { decrireHabilitation } from "../src/tools/decrire-habilitation.js";
+import { decrireIntegration } from "../src/tools/decrire-integration.js";
 import type { ClientAnthropic, ParametresCreationMessage, ResultatMessageAnthropic } from "../src/agent/client.js";
 import type { ConfigAgent } from "../src/agent/config.js";
 
@@ -83,6 +88,59 @@ describe("routes de lecture", () => {
     expect(res.headers.get("content-type")).toContain("text/markdown");
     const texte = await res.text();
     expect(texte).toContain("# Revue SI");
+  });
+
+  it("GET /api/habilitations retourne la matrice, filtrable par module", async () => {
+    contexte = creerDbTemp();
+    decrireSysteme(contexte.db, { nom: "Zoho CRM", role: "CRM" });
+    decrireModule(contexte.db, { systeme: "Zoho CRM", nom: "Comptes" });
+    decrireChamp(contexte.db, { systeme: "Zoho CRM", module: "Comptes", nom: "Statut_Client" });
+    decrireHabilitation(contexte.db, {
+      profil: "ADV",
+      systeme: "Zoho CRM",
+      module: "Comptes",
+      champ: "Statut_Client",
+      visible: true,
+      editable: false,
+    });
+    const app = creerApp({ db: contexte.db, config: { apiKey: null, model: "x", maxTokens: 1 }, promptSysteme: PROMPT });
+
+    const complet = (await (await app.request("/api/habilitations")).json()) as any;
+    expect(complet.ok).toBe(true);
+    expect(complet.champs.length).toBe(1);
+    expect(complet.profils).toEqual(["ADV"]);
+    expect(Object.values(complet.cellules)).toEqual(["visible"]);
+
+    const filtre = (await (await app.request("/api/habilitations?module=Autre")).json()) as any;
+    expect(filtre.champs.length).toBe(0);
+  });
+
+  it("GET /api/champs groupe par source de vérité", async () => {
+    contexte = creerDbTemp();
+    decrireSysteme(contexte.db, { nom: "Zoho CRM", role: "CRM" });
+    decrireModule(contexte.db, { systeme: "Zoho CRM", nom: "Comptes" });
+    decrireChamp(contexte.db, {
+      systeme: "Zoho CRM",
+      module: "Comptes",
+      nom: "Statut_Client",
+      source_de_verite: "App Devis",
+    });
+    const app = creerApp({ db: contexte.db, config: { apiKey: null, model: "x", maxTokens: 1 }, promptSysteme: PROMPT });
+    const corps = (await (await app.request("/api/champs")).json()) as any;
+    expect(corps.ok).toBe(true);
+    expect(corps.groupes.some((g: any) => g.source === "App Devis")).toBe(true);
+  });
+
+  it("GET /api/integrations retourne les flux avec leurs constats ouverts", async () => {
+    contexte = creerDbTemp();
+    decrireSysteme(contexte.db, { nom: "Zoho CRM", role: "CRM" });
+    decrireSysteme(contexte.db, { nom: "App Devis", role: "Devis" });
+    decrireIntegration(contexte.db, { nom: "Devis -> CRM", source: "App Devis", cible: "Zoho CRM" });
+    const app = creerApp({ db: contexte.db, config: { apiKey: null, model: "x", maxTokens: 1 }, promptSysteme: PROMPT });
+    const corps = (await (await app.request("/api/integrations")).json()) as any;
+    expect(corps.ok).toBe(true);
+    expect(corps.integrations.length).toBe(1);
+    expect(corps.integrations[0].nom).toBe("Devis -> CRM");
   });
 
   it("GET /api/conversations puis /api/conversations/:id", async () => {

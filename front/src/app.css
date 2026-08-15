@@ -39,6 +39,21 @@
   letter-spacing: 0.07em;
 }
 
+.nav-groupe {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-groupe__titre {
+  font-size: var(--taille-caption);
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 var(--e-2);
+  margin-bottom: 2px;
+}
+
 .nav {
   display: flex;
   flex-direction: column;
@@ -156,17 +171,96 @@
 }
 
 .main__entete {
-  margin-bottom: var(--e-5);
+  margin-bottom: var(--e-6);
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--e-4);
+}
+
+.main__entete-titre {
+  display: flex;
+  align-items: center;
+  gap: var(--e-3);
+}
+
+.main__entete-actions {
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.page-icone {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-sunken);
+  border: 1px solid var(--rule);
+  border-radius: var(--rayon-m);
+  font-size: 1.125rem;
+  color: var(--ink-2);
 }
 
 .main__soustitre {
   font-size: var(--taille-meta);
   color: var(--ink-3);
   margin-top: 2px;
+}
+
+/* --- Tableaux (Notion-like : discrets, hover de ligne) ----------------- */
+
+.tableau-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--taille-corps);
+}
+
+thead th {
+  text-align: left;
+  font-size: var(--taille-caption);
+  font-weight: 500;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: var(--e-2) var(--e-3);
+  border-bottom: 1px solid var(--rule-strong);
+  white-space: nowrap;
+}
+
+tbody td {
+  padding: var(--e-2) var(--e-3);
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  vertical-align: middle;
+}
+
+tbody tr:hover {
+  background: var(--paper-raised);
+}
+
+th.centre,
+td.centre {
+  text-align: center;
+}
+
+td.masque {
+  color: var(--ink-4);
+}
+
+td.non-declare {
+  color: var(--ink-4);
+  font-style: italic;
+}
+
+td.editable {
+  color: var(--etat-succes);
+  font-weight: 500;
 }
 
 /* --- Badges d'état (strictement sémantiques) --------------------------- */

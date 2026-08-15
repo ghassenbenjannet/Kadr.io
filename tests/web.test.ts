@@ -1,15 +1,13 @@
+// Le rendu HTML autonome de la matrice d'habilitations n'est plus servi par un
+// serveur web séparé (porté en écran React, voir front/src/views/Habilitations.tsx) :
+// il ne sert plus qu'à l'export produit par generer_rapport(type: "matrice_habilitations").
 import { afterEach, describe, expect, it } from "vitest";
 import { creerDbTemp, fermerDbTemp, type DbTemp } from "./helpers.js";
 import { decrireSysteme } from "../src/tools/decrire-systeme.js";
 import { decrireModule } from "../src/tools/decrire-module.js";
 import { decrireChamp } from "../src/tools/decrire-champ.js";
 import { decrireHabilitation } from "../src/tools/decrire-habilitation.js";
-import { decrireIntegration } from "../src/tools/decrire-integration.js";
 import { rendrePageHabilitations } from "../src/web/pages/habilitations.js";
-import { rendrePageChamps } from "../src/web/pages/champs.js";
-import { rendrePageIntegrations } from "../src/web/pages/integrations.js";
-import { rendrePageConstats } from "../src/web/pages/constats.js";
-import { lancerControles } from "../src/tools/lancer-controles.js";
 import { genererRapport } from "../src/tools/generer-rapport.js";
 
 let contexte: DbTemp;
@@ -46,11 +44,10 @@ function construireCarte(db: DbTemp["db"]) {
     editable: true,
     justification: "délégation CEO",
   });
-  decrireIntegration(db, { nom: "Devis -> CRM", source: "App Devis", cible: "Zoho CRM" });
 }
 
-describe("pages web", () => {
-  it("matrice d'habilitations : distingue non déclaré / masqué / visible / éditable", () => {
+describe("export HTML matrice d'habilitations", () => {
+  it("distingue non déclaré / masqué / visible / éditable", () => {
     contexte = creerDbTemp();
     construireCarte(contexte.db);
     const html = rendrePageHabilitations(contexte.db, undefined);
@@ -62,7 +59,7 @@ describe("pages web", () => {
     expect(html).toContain("non déclaré");
   });
 
-  it("matrice d'habilitations : le filtre par module réduit les lignes", () => {
+  it("le filtre par module réduit les lignes", () => {
     contexte = creerDbTemp();
     construireCarte(contexte.db);
     decrireModule(contexte.db, { systeme: "Zoho CRM", nom: "Devis" });
@@ -74,43 +71,6 @@ describe("pages web", () => {
     const filtree = rendrePageHabilitations(contexte.db, "Comptes");
     expect(filtree).not.toContain("Reference");
     expect(filtree).toContain("Statut_Client");
-  });
-
-  it("champs par source de vérité : contradiction M2 signalée", () => {
-    contexte = creerDbTemp();
-    const db = contexte.db;
-    decrireSysteme(db, { nom: "Zoho CRM", role: "CRM" });
-    decrireModule(db, { systeme: "Zoho CRM", nom: "Comptes" });
-    decrireChamp(db, {
-      systeme: "Zoho CRM",
-      module: "Comptes",
-      nom: "Statut_Client",
-      source_de_verite: "App Devis",
-      editable: true,
-    });
-    const html = rendrePageChamps(db);
-    expect(html).toContain("App Devis");
-    expect(html).toContain("contredit sa source");
-  });
-
-  it("carte des intégrations : affiche source -> cible et les constats ouverts", () => {
-    contexte = creerDbTemp();
-    construireCarte(contexte.db);
-    lancerControles(contexte.db, { perimetre: "integration" });
-    const html = rendrePageIntegrations(contexte.db);
-    expect(html).toContain("Devis -&gt; CRM");
-    expect(html).toContain("App Devis");
-    expect(html).toMatch(/point\(s\) de vigilance/);
-  });
-
-  it("constats ouverts : groupés par famille sans code brut", () => {
-    contexte = creerDbTemp();
-    construireCarte(contexte.db);
-    lancerControles(contexte.db, { perimetre: "tous" });
-    const html = rendrePageConstats(contexte.db);
-    expect(html).toContain("Modèle");
-    expect(html).toContain("Intégration");
-    expect(html).not.toMatch(/>M1</);
   });
 
   it("generer_rapport('matrice_habilitations') retourne du HTML autonome", () => {

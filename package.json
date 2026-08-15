@@ -15,8 +15,7 @@
     "build": "npm run build:server && npm run build:front",
     "build:server": "tsc -p tsconfig.build.json && mkdir -p dist/db/migrations && cp src/db/schema.sql dist/db/schema.sql && cp src/db/migrations/*.sql dist/db/migrations/ && if [ -f src/agent/prompt-systeme.md ]; then cp src/agent/prompt-systeme.md dist/agent/prompt-systeme.md; fi",
     "build:front": "cd front && npm install && npm run build",
-    "start": "node dist/server/index.js",
-    "web": "node dist/web/server.js"
+    "start": "node dist/server/index.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

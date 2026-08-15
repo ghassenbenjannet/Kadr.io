@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { recupererJournal, type LigneJournal } from "../lib/api";
+import { PageHeader } from "../components/PageHeader";
 
 const LIBELLES_ENTITE: Record<string, string> = {
   demande: "Demande",
@@ -36,12 +37,7 @@ export function Journal() {
 
   return (
     <div>
-      <div className="main__entete">
-        <div>
-          <h1>Journal</h1>
-          <div className="main__soustitre">Demandes, décisions, changements, incidents — lecture seule.</div>
-        </div>
-      </div>
+      <PageHeader icone="☰" titre="Journal" sousTitre="Demandes, décisions, changements, incidents — lecture seule." />
 
       <div className="filtre">
         <select value={entite} onChange={(e) => setEntite(e.target.value)} aria-label="Filtrer par type">

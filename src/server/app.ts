@@ -15,6 +15,12 @@ import { trouverEcriture } from "../agent/ecritures.js";
 import { listerJournal } from "./journal.js";
 import { constatsOuverts } from "../tools/constats-ouverts.js";
 import { genererRapport } from "../tools/generer-rapport.js";
+import {
+  matriceHabilitations,
+  modulesDistincts,
+  champsParSourceDeVerite,
+  integrationsAvecConstats,
+} from "../web/donnees.js";
 
 export interface DependancesApp {
   db: Database.Database;
@@ -48,6 +54,21 @@ export function creerApp(deps: DependancesApp): Hono {
     const resultat = genererRapport(db, { type: "hebdo", semaine });
     if (!resultat.ok) return c.json(resultat, 400);
     return c.body(resultat.markdown ?? "", 200, { "Content-Type": "text/markdown; charset=utf-8" });
+  });
+
+  app.get("/api/habilitations", (c) => {
+    const moduleFiltre = c.req.query("module") || undefined;
+    const { champs, profils, cellules } = matriceHabilitations(db, moduleFiltre);
+    const modules = modulesDistincts(db);
+    return c.json({ ok: true, champs, profils, modules, cellules: Object.fromEntries(cellules) });
+  });
+
+  app.get("/api/champs", (c) => {
+    return c.json({ ok: true, groupes: champsParSourceDeVerite(db) });
+  });
+
+  app.get("/api/integrations", (c) => {
+    return c.json({ ok: true, integrations: integrationsAvecConstats(db) });
   });
 
   app.get("/api/conversations", (c) => {

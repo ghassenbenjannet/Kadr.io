@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { recupererConstats, type ConstatOuvert } from "../lib/api";
+import { PageHeader } from "../components/PageHeader";
 
 type Famille = "pratique" | "modele" | "integration";
 
@@ -32,12 +33,7 @@ export function Constats() {
 
   return (
     <div>
-      <div className="main__entete">
-        <div>
-          <h1>Constats</h1>
-          <div className="main__soustitre">La vigie : chaque constat cite sa conséquence.</div>
-        </div>
-      </div>
+      <PageHeader icone="▲" titre="Constats" sousTitre="La vigie : chaque constat cite sa conséquence." />
 
       {erreur && <div className="erreur">{erreur}</div>}
       {!erreur && constats === null && <div className="chargement">Chargement…</div>}

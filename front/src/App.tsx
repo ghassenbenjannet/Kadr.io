@@ -4,14 +4,37 @@ import { Journal } from "./views/Journal";
 import { Constats } from "./views/Constats";
 import { RapportHebdo } from "./views/RapportHebdo";
 import { Conversation } from "./views/Conversation";
+import { Habilitations } from "./views/Habilitations";
+import { ChampsSourceVerite } from "./views/ChampsSourceVerite";
+import { Integrations } from "./views/Integrations";
 
-type Vue = "conversation" | "journal" | "constats" | "rapport";
+type Vue =
+  | "conversation"
+  | "journal"
+  | "constats"
+  | "rapport"
+  | "habilitations"
+  | "champs"
+  | "integrations";
 
-const ONGLETS: { vue: Vue; label: string; icone: string }[] = [
-  { vue: "conversation", label: "Conversation", icone: "●" },
-  { vue: "journal", label: "Journal", icone: "☰" },
-  { vue: "constats", label: "Constats", icone: "▲" },
-  { vue: "rapport", label: "Rapport hebdo", icone: "▤" },
+const GROUPES_NAV: { titre: string; items: { vue: Vue; label: string; icone: string }[] }[] = [
+  {
+    titre: "Registre",
+    items: [
+      { vue: "conversation", label: "Conversation", icone: "●" },
+      { vue: "journal", label: "Journal", icone: "☰" },
+      { vue: "constats", label: "Constats", icone: "▲" },
+      { vue: "rapport", label: "Rapport hebdo", icone: "▤" },
+    ],
+  },
+  {
+    titre: "Cartographie",
+    items: [
+      { vue: "habilitations", label: "Habilitations", icone: "⊞" },
+      { vue: "champs", label: "Champs", icone: "≣" },
+      { vue: "integrations", label: "Intégrations", icone: "⇄" },
+    ],
+  },
 ];
 
 export default function App() {
@@ -33,18 +56,23 @@ export default function App() {
           <span className="sidebar__baseline">Abraxio</span>
         </div>
 
-        <nav className="nav">
-          {ONGLETS.map((o) => (
-            <button
-              key={o.vue}
-              className={`nav__item${vue === o.vue ? " nav__item--actif" : ""}`}
-              onClick={() => setVue(o.vue)}
-            >
-              <span className="nav__icone">{o.icone}</span>
-              {o.label}
-            </button>
-          ))}
-        </nav>
+        {GROUPES_NAV.map((groupe) => (
+          <div className="nav-groupe" key={groupe.titre}>
+            <div className="nav-groupe__titre">{groupe.titre}</div>
+            <nav className="nav">
+              {groupe.items.map((o) => (
+                <button
+                  key={o.vue}
+                  className={`nav__item${vue === o.vue ? " nav__item--actif" : ""}`}
+                  onClick={() => setVue(o.vue)}
+                >
+                  <span className="nav__icone">{o.icone}</span>
+                  {o.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        ))}
 
         <div className="sidebar__section">
           <div className="sidebar__section-titre">
@@ -86,6 +114,9 @@ export default function App() {
         {vue === "journal" && <Journal />}
         {vue === "constats" && <Constats />}
         {vue === "rapport" && <RapportHebdo />}
+        {vue === "habilitations" && <Habilitations />}
+        {vue === "champs" && <ChampsSourceVerite />}
+        {vue === "integrations" && <Integrations />}
       </main>
     </div>
   );
