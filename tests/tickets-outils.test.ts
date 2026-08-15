@@ -17,32 +17,69 @@ afterEach(() => {
 });
 
 describe("creer_projet", () => {
-  it("crée un projet, éventuellement lié à une demande", () => {
+  it("crée un projet, éventuellement lié à une ou plusieurs demandes", () => {
     contexte = creerDbTemp();
-    const demande = enregistrerDemande(contexte.db, {
+    const demande1 = enregistrerDemande(contexte.db, {
       demandeur: "Sophie",
       equipe: "CS",
       expression_brute: "on veut une vue 360",
       type: "evolution",
     });
-    expect(demande.ok).toBe(true);
-    if (!demande.ok) return;
+    const demande2 = enregistrerDemande(contexte.db, {
+      demandeur: "Marc",
+      equipe: "ADV",
+      expression_brute: "on veut exporter les commandes",
+      type: "evolution",
+    });
+    expect(demande1.ok).toBe(true);
+    expect(demande2.ok).toBe(true);
+    if (!demande1.ok || !demande2.ok) return;
 
-    const r = creerProjet(contexte.db, { nom: "CS-Vue360", demande_id: demande.id });
+    const r = creerProjet(contexte.db, { nom: "CS-Vue360", demande_ids: [demande1.id, demande2.id] });
     expect(r.ok).toBe(true);
+    if (!r.ok) return;
 
-    const ligne = contexte.db.prepare("SELECT demande_id, statut FROM projets WHERE nom = ?").get("CS-Vue360") as {
-      demande_id: string;
+    const statut = contexte.db.prepare("SELECT statut FROM projets WHERE nom = ?").get("CS-Vue360") as {
       statut: string;
     };
-    expect(ligne.demande_id).toBe(demande.id);
-    expect(ligne.statut).toBe("actif");
+    expect(statut.statut).toBe("actif");
+
+    const liens = contexte.db
+      .prepare("SELECT demande_id FROM projet_demandes WHERE projet_id = ? ORDER BY demande_id")
+      .all(r.id) as { demande_id: string }[];
+    expect(liens.map((l) => l.demande_id).sort()).toEqual([demande1.id, demande2.id].sort());
   });
 
   it("refuse une demande_id inconnue", () => {
     contexte = creerDbTemp();
-    const r = creerProjet(contexte.db, { nom: "Projet X", demande_id: "inconnue" });
+    const r = creerProjet(contexte.db, { nom: "Projet X", demande_ids: ["inconnue"] });
     expect(r.ok).toBe(false);
+  });
+
+  it("rappeler avec un nouveau demande_id sur un projet existant ajoute le lien sans retirer les précédents", () => {
+    contexte = creerDbTemp();
+    const demande1 = enregistrerDemande(contexte.db, {
+      demandeur: "Sophie",
+      equipe: "CS",
+      expression_brute: "x",
+      type: "evolution",
+    });
+    const demande2 = enregistrerDemande(contexte.db, {
+      demandeur: "Marc",
+      equipe: "ADV",
+      expression_brute: "y",
+      type: "evolution",
+    });
+    if (!demande1.ok || !demande2.ok) throw new Error("échec de seed");
+
+    const r1 = creerProjet(contexte.db, { nom: "Projet Y", demande_ids: [demande1.id] });
+    if (!r1.ok) throw new Error("échec création");
+    creerProjet(contexte.db, { nom: "Projet Y", demande_ids: [demande2.id] });
+
+    const liens = contexte.db.prepare("SELECT COUNT(*) AS n FROM projet_demandes WHERE projet_id = ?").get(r1.id) as {
+      n: number;
+    };
+    expect(liens.n).toBe(2);
   });
 
   it("upsert par nom : un second appel met à jour plutôt que dupliquer", () => {

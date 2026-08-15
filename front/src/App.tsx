@@ -18,7 +18,7 @@ import { Conversation } from "./views/Conversation";
 import { Habilitations } from "./views/Habilitations";
 import { ChampsSourceVerite } from "./views/ChampsSourceVerite";
 import { Integrations } from "./views/Integrations";
-import { Demandes } from "./views/Demandes";
+import { Kanban } from "./views/Kanban";
 import { Projets } from "./views/Projets";
 import { BaseConnaissances } from "./views/BaseConnaissances";
 import { PlansTest } from "./views/PlansTest";
@@ -33,7 +33,7 @@ function construireGroupes(compteDemandes: number, compteConstats: number, compt
       items: [
         { vue: "aujourdhui" as Vue, label: "Aujourd'hui", icone: "◐" },
         { vue: "conversation" as Vue, label: "Conversation", icone: "●" },
-        { vue: "demandes" as Vue, label: "Demandes", icone: "▥", compte: compteDemandes },
+        { vue: "kanban" as Vue, label: "Kanban", icone: "▥", compte: compteDemandes },
       ],
     },
     {
@@ -222,7 +222,7 @@ export default function App() {
         {vue === "conversation" && (
           <Conversation conversationId={conversationActive} onConversationDemarree={setConversationActive} />
         )}
-        {vue === "demandes" && <Demandes />}
+        {vue === "kanban" && <Kanban />}
         {vue === "projets" && <Projets />}
         {vue === "connaissances" && <BaseConnaissances />}
         {vue === "journal" && <Journal />}

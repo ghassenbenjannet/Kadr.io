@@ -8,7 +8,7 @@
 export type Vue =
   | "aujourdhui"
   | "conversation"
-  | "demandes"
+  | "kanban"
   | "projets"
   | "connaissances"
   | "journal"

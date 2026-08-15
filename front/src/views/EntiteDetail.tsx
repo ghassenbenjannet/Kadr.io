@@ -248,6 +248,29 @@ export function EntiteDetail({
               );
             })}
           </dl>
+
+          {entite === "demande" && (
+            <div className="constats-groupe">
+              <div className="constats-groupe__titre">Projets liés</div>
+              {(() => {
+                const projetsLies = (donnees.projets_lies as { id: string; nom: string }[] | undefined) ?? [];
+                if (projetsLies.length === 0) {
+                  return <div className="etat-vide">Aucun projet lié à cette demande pour l'instant.</div>;
+                }
+                return (
+                  <div className="liste">
+                    {projetsLies.map((p) => (
+                      <div className="ligne" key={p.id}>
+                        <div className="ligne__corps">
+                          <span className="ligne__resume">{p.nom}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </>
       )}
     </div>

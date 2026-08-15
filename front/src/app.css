@@ -873,7 +873,8 @@ td.editable {
   padding: var(--e-2) var(--e-1);
 }
 
-.carte-demande {
+.carte-demande,
+.carte-ticket {
   background: var(--paper-raised);
   border: 1px solid var(--rule);
   border-radius: var(--rayon-xl);
@@ -884,7 +885,8 @@ td.editable {
   gap: var(--e-2);
 }
 
-.carte-demande--cliquable {
+.carte-demande--cliquable,
+.carte-ticket--cliquable {
   font: inherit;
   text-align: left;
   color: inherit;
@@ -892,9 +894,27 @@ td.editable {
   width: 100%;
 }
 
-.carte-demande--cliquable:hover {
+.carte-demande--cliquable:hover,
+.carte-ticket--cliquable:hover {
   border-color: var(--rule-strong);
   background: var(--paper-sunken);
+}
+
+.carte-ticket__entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.carte-ticket__titre {
+  font-size: var(--taille-meta);
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.carte-ticket__contexte {
+  font-size: var(--taille-caption);
+  color: var(--ink-4);
 }
 
 .kanban__point {

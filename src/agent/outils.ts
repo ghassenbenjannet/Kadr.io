@@ -57,6 +57,8 @@ import * as outilExecuterCasTest from "../tools/executer-cas-test.js";
 import { executerCasTest } from "../tools/executer-cas-test.js";
 import * as outilLierTicketPlanTest from "../tools/lier-ticket-plan-test.js";
 import { lierTicketPlanTest } from "../tools/lier-ticket-plan-test.js";
+import * as outilLierProjetDemande from "../tools/lier-projet-demande.js";
+import { lierProjetDemande } from "../tools/lier-projet-demande.js";
 import * as outilEtatProjet from "../tools/etat-projet.js";
 import { etatProjet } from "../tools/etat-projet.js";
 import * as outilMettreAJourProjet from "../tools/mettre-a-jour-projet.js";
@@ -297,6 +299,13 @@ const DEFINITIONS: DefinitionOutil[] = [
     nature: "ecriture",
     schemaEntree: outilLierTicketPlanTest.schemaEntree,
     executer: (db, p) => lierTicketPlanTest(db, p as never),
+  },
+  {
+    nom: outilLierProjetDemande.nom,
+    description: outilLierProjetDemande.description,
+    nature: "ecriture",
+    schemaEntree: outilLierProjetDemande.schemaEntree,
+    executer: (db, p) => lierProjetDemande(db, p as never),
   },
   {
     nom: outilMettreAJourProjet.nom,

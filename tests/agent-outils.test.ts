@@ -35,6 +35,7 @@ describe("agent/outils — catalogue et adaptateur", () => {
       "creer_plan_test",
       "executer_cas_test",
       "lier_ticket_plan_test",
+      "lier_projet_demande",
       "mettre_a_jour_projet",
       "mettre_a_jour_epic",
       "mettre_a_jour_decision",

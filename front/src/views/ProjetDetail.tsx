@@ -8,7 +8,11 @@ import {
   creerTicketDirect,
   supprimerProjetDirect,
   supprimerEpicDirect,
+  recupererDemandes,
+  lierProjetDemandeDirect,
+  delierProjetDemandeDirect,
   type ProjetDetailComplet,
+  type DemandeComplete,
 } from "../lib/api";
 import { LIBELLES_TYPE_TICKET, badgeStatutTicket, badgeStatutCas } from "../lib/tickets-libelles";
 import { LIBELLES_TYPE_DOCUMENT } from "../lib/documents-libelles";
@@ -76,6 +80,9 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
   });
   const [creationTicketEnCours, setCreationTicketEnCours] = useState(false);
   const [erreurCreationTicket, setErreurCreationTicket] = useState<string | null>(null);
+  const [demandesDisponibles, setDemandesDisponibles] = useState<DemandeComplete[]>([]);
+  const [demandeALier, setDemandeALier] = useState("");
+  const [liaisonDemandeEnCours, setLiaisonDemandeEnCours] = useState(false);
 
   function charger() {
     let annule = false;
@@ -96,9 +103,35 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
     setDetail(null);
     setEditionProjet(false);
     setEpicEnEdition(null);
+    recupererDemandes()
+      .then((r) => setDemandesDisponibles(r.demandes))
+      .catch(() => setDemandesDisponibles([]));
     return charger();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  async function lierDemande() {
+    if (!demandeALier) return;
+    setLiaisonDemandeEnCours(true);
+    try {
+      await lierProjetDemandeDirect(id, demandeALier);
+      setDemandeALier("");
+      charger();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLiaisonDemandeEnCours(false);
+    }
+  }
+
+  async function delierDemande(demandeId: string) {
+    try {
+      await delierProjetDemandeDirect(id, demandeId);
+      charger();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e));
+    }
+  }
 
   function ouvrirEditionProjet() {
     if (!detail) return;
@@ -325,6 +358,45 @@ export function ProjetDetail({ id, onRetour }: { id: string; onRetour: () => voi
               </div>
             </>
           )}
+
+          <div className="constats-groupe">
+            <div className="constats-groupe__titre-ligne">
+              <div className="constats-groupe__titre">Demandes liées</div>
+              {demandesDisponibles.filter((d) => !detail.demandes_liees.some((l) => l.id === d.id)).length > 0 && (
+                <div style={{ display: "flex", gap: "var(--e-2)" }}>
+                  <select value={demandeALier} onChange={(e) => setDemandeALier(e.target.value)}>
+                    <option value="">Lier une demande existante…</option>
+                    {demandesDisponibles
+                      .filter((d) => !detail.demandes_liees.some((l) => l.id === d.id))
+                      .map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.demandeur} — {d.expression_brute.slice(0, 50)}
+                        </option>
+                      ))}
+                  </select>
+                  <button className="btn" onClick={lierDemande} disabled={!demandeALier || liaisonDemandeEnCours}>
+                    Lier
+                  </button>
+                </div>
+              )}
+            </div>
+            {detail.demandes_liees.length === 0 && <div className="etat-vide">Aucune demande liée à ce projet.</div>}
+            {detail.demandes_liees.length > 0 && (
+              <div className="liste">
+                {detail.demandes_liees.map((d) => (
+                  <div className="ligne" key={d.id}>
+                    <div className="ligne__corps">
+                      <span className="badge badge--neutre">{d.demandeur}</span>
+                      <span className="ligne__resume">{d.expression_brute}</span>
+                      <button className="btn" style={{ marginLeft: "auto" }} onClick={() => delierDemande(d.id)}>
+                        Délier
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="constats-groupe">
             <div className="constats-groupe__titre-ligne">

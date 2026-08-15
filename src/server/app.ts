@@ -24,9 +24,18 @@ import {
   supprimerProjet,
   supprimerEpic,
   supprimerTicket,
+  listerTickets,
+  lierProjetDemandeDirect,
+  delierProjetDemande,
 } from "./projets.js";
 import { detailDocument, listerConnaissances, supprimerDocument } from "./documents.js";
 import { supprimerEntiteJournal, TABLE_PAR_ENTITE } from "../tools/supprimer-entite.js";
+import {
+  listerVuesKanban,
+  sauvegarderVueKanban,
+  supprimerVueKanban,
+  schemaSauvegarderVueKanban,
+} from "./vuesKanban.js";
 import { detailEntiteComplet } from "./entites.js";
 import { creerDocument } from "../tools/creer-document.js";
 import { schemaEntree as schemaCreerDocument } from "../tools/creer-document.js";
@@ -281,7 +290,8 @@ export function creerApp(deps: DependancesApp): Hono {
   });
 
   app.get("/api/demandes", (c) => {
-    return c.json({ ok: true, demandes: listerDemandes(db) });
+    const projetId = c.req.query("projet_id") || undefined;
+    return c.json({ ok: true, demandes: listerDemandes(db, { projetId }) });
   });
 
   app.get("/api/journal/:entite/:id", (c) => {
@@ -294,6 +304,34 @@ export function creerApp(deps: DependancesApp): Hono {
     const detail = detailTicket(db, c.req.param("id"));
     if (!detail) return c.json({ ok: false, erreur: "Ticket introuvable." }, 404);
     return c.json({ ok: true, ...detail });
+  });
+
+  // Tous les tickets, tous projets confondus — alimente le kanban configurable.
+  app.get("/api/tickets", (c) => {
+    const projetId = c.req.query("projet_id") || undefined;
+    const epicId = c.req.query("epic_id") || undefined;
+    return c.json({ ok: true, tickets: listerTickets(db, { projetId, epicId }) });
+  });
+
+  // --- Vues sauvegardées du kanban -----------------------------------------
+
+  app.get("/api/vues-kanban", (c) => {
+    return c.json({ ok: true, vues: listerVuesKanban(db) });
+  });
+
+  app.post("/api/vues-kanban", async (c) => {
+    const corps = await c.req.json().catch(() => ({}));
+    const analyse = z.object(schemaSauvegarderVueKanban).safeParse(corps);
+    if (!analyse.success) {
+      return c.json({ ok: false, erreur: analyse.error.issues[0]?.message ?? "Corps invalide." }, 400);
+    }
+    const resultat = sauvegarderVueKanban(db, analyse.data);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.delete("/api/vues-kanban/:id", (c) => {
+    const resultat = supprimerVueKanban(db, c.req.param("id"));
+    return c.json(resultat, resultat.ok ? 200 : 400);
   });
 
   app.get("/api/connaissances", (c) => {
@@ -460,6 +498,20 @@ export function creerApp(deps: DependancesApp): Hono {
     const detail = detailProjet(db, c.req.param("id"));
     if (!detail) return c.json({ ok: false, erreur: "Projet introuvable." }, 404);
     return c.json({ ok: true, ...detail });
+  });
+
+  app.post("/api/projets/:id/demandes", async (c) => {
+    const corps = await c.req.json<{ demande_id?: string }>().catch(() => ({}) as { demande_id?: string });
+    if (!corps.demande_id) {
+      return c.json({ ok: false, erreur: "demande_id est requis." }, 400);
+    }
+    const resultat = lierProjetDemandeDirect(db, c.req.param("id"), corps.demande_id);
+    return c.json(resultat, resultat.ok ? 200 : 400);
+  });
+
+  app.delete("/api/projets/:id/demandes/:demandeId", (c) => {
+    const resultat = delierProjetDemande(db, c.req.param("id"), c.req.param("demandeId"));
+    return c.json(resultat, resultat.ok ? 200 : 400);
   });
 
   // --- Plans de test -----------------------------------------------------

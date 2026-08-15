@@ -148,8 +148,12 @@ export interface DemandeComplete {
   maj_le: string;
 }
 
-export function recupererDemandes(): Promise<{ ok: true; demandes: DemandeComplete[] }> {
-  return requeteJson("/api/demandes");
+export function recupererDemandes(filtres: { projetId?: string } = {}): Promise<{
+  ok: true;
+  demandes: DemandeComplete[];
+}> {
+  const q = filtres.projetId ? `?projet_id=${encodeURIComponent(filtres.projetId)}` : "";
+  return requeteJson(`/api/demandes${q}`);
 }
 
 export interface ProjetResume {
@@ -202,15 +206,38 @@ export interface DocumentResume {
   maj_le: string;
 }
 
+export interface DemandeLiee {
+  id: string;
+  demandeur: string;
+  expression_brute: string;
+  statut: string;
+}
+
 export interface ProjetDetailComplet {
   projet: { id: string; nom: string; statut: string; description: string | null };
   epics: EpicDetail[];
   suite_recette: PlanTestDetail[];
   documents: DocumentResume[];
+  demandes_liees: DemandeLiee[];
 }
 
 export function recupererProjet(id: string): Promise<{ ok: true } & ProjetDetailComplet> {
   return requeteJson(`/api/projets/${id}`);
+}
+
+export function lierProjetDemandeDirect(
+  projetId: string,
+  demandeId: string
+): Promise<{ ok: true; projet_id: string; demande_id: string }> {
+  return requeteJson(`/api/projets/${projetId}/demandes`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ demande_id: demandeId }),
+  });
+}
+
+export function delierProjetDemandeDirect(projetId: string, demandeId: string): Promise<{ ok: true }> {
+  return requeteJson(`/api/projets/${projetId}/demandes/${demandeId}`, { method: "DELETE" });
 }
 
 export function recupererEntiteJournal(
@@ -328,6 +355,68 @@ export interface TicketDetailComplet {
 
 export function recupererTicket(id: string): Promise<{ ok: true } & TicketDetailComplet> {
   return requeteJson(`/api/tickets/${id}`);
+}
+
+export interface TicketAvecContexte {
+  id: string;
+  titre: string;
+  type: string;
+  statut: string;
+  cree_le: string;
+  epic_id: string;
+  epic_nom: string;
+  projet_id: string;
+  projet_nom: string;
+}
+
+/** Tous les tickets, tous projets confondus (filtrables) — alimente le kanban configurable. */
+export function recupererTickets(
+  filtres: { projetId?: string; epicId?: string } = {}
+): Promise<{ ok: true; tickets: TicketAvecContexte[] }> {
+  const params = new URLSearchParams();
+  if (filtres.projetId) params.set("projet_id", filtres.projetId);
+  if (filtres.epicId) params.set("epic_id", filtres.epicId);
+  const q = params.toString();
+  return requeteJson(`/api/tickets${q ? `?${q}` : ""}`);
+}
+
+// --- Kanban configurable : vues sauvegardées --------------------------------
+
+export type EntiteKanban = "demande" | "ticket";
+
+export interface FiltresKanban {
+  projet_id?: string;
+  epic_id?: string;
+}
+
+export interface VueKanban {
+  id: string;
+  cree_le: string;
+  nom: string;
+  entite: EntiteKanban;
+  filtres: FiltresKanban;
+  maj_le: string;
+}
+
+export function recupererVuesKanban(): Promise<{ ok: true; vues: VueKanban[] }> {
+  return requeteJson("/api/vues-kanban");
+}
+
+/** Enregistrer sous un nom déjà utilisé remplace la vue plutôt que de la dupliquer. */
+export function sauvegarderVueKanbanDirect(args: {
+  nom: string;
+  entite: EntiteKanban;
+  filtres: FiltresKanban;
+}): Promise<{ ok: true; id: string }> {
+  return requeteJson("/api/vues-kanban", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(args),
+  });
+}
+
+export function supprimerVueKanbanDirect(id: string): Promise<{ ok: true; id: string }> {
+  return requeteJson(`/api/vues-kanban/${id}`, { method: "DELETE" });
 }
 
 export interface ChampAvecContexte {

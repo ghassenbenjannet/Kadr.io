@@ -59,11 +59,19 @@ export interface PlanTestDetail {
   cas: CasTestDetail[];
 }
 
+export interface DemandeLiee {
+  id: string;
+  demandeur: string;
+  expression_brute: string;
+  statut: string;
+}
+
 export interface ProjetDetail {
   projet: { id: string; nom: string; statut: string; description: string | null };
   epics: EpicDetail[];
   suite_recette: PlanTestDetail[];
   documents: DocumentResume[];
+  demandes_liees: DemandeLiee[];
 }
 
 export interface TicketDetailComplet {
@@ -166,7 +174,84 @@ export function detailProjet(db: Database.Database, id: string): ProjetDetail | 
     cas: casParPlan.all(p.id) as CasTestDetail[],
   }));
 
-  return { projet, epics, suite_recette: suiteRecette, documents: listerDocuments(db, id) };
+  const demandesLiees = db
+    .prepare(
+      `SELECT d.id, d.demandeur, d.expression_brute, d.statut
+       FROM demandes d
+       JOIN projet_demandes pd ON pd.demande_id = d.id
+       WHERE pd.projet_id = ? ORDER BY d.cree_le`
+    )
+    .all(id) as DemandeLiee[];
+
+  return {
+    projet,
+    epics,
+    suite_recette: suiteRecette,
+    documents: listerDocuments(db, id),
+    demandes_liees: demandesLiees,
+  };
+}
+
+export function lierProjetDemandeDirect(
+  db: Database.Database,
+  projetId: string,
+  demandeId: string
+): Resultat<{ projet_id: string; demande_id: string }> {
+  const projet = db.prepare("SELECT id FROM projets WHERE id = ?").get(projetId);
+  if (!projet) return { ok: false, erreur: "Projet introuvable." };
+  const demande = db.prepare("SELECT id FROM demandes WHERE id = ?").get(demandeId);
+  if (!demande) return { ok: false, erreur: "Demande introuvable." };
+  db.prepare("INSERT OR IGNORE INTO projet_demandes (projet_id, demande_id) VALUES (?, ?)").run(
+    projetId,
+    demandeId
+  );
+  return { ok: true, projet_id: projetId, demande_id: demandeId };
+}
+
+export function delierProjetDemande(db: Database.Database, projetId: string, demandeId: string): Resultat<object> {
+  db.prepare("DELETE FROM projet_demandes WHERE projet_id = ? AND demande_id = ?").run(projetId, demandeId);
+  return { ok: true };
+}
+
+export interface TicketAvecContexte {
+  id: string;
+  titre: string;
+  type: string;
+  statut: string;
+  cree_le: string;
+  epic_id: string;
+  epic_nom: string;
+  projet_id: string;
+  projet_nom: string;
+}
+
+/** Tous les tickets, tous projets confondus, pour le kanban configurable — filtrable par projet et/ou epic. */
+export function listerTickets(
+  db: Database.Database,
+  filtres: { projetId?: string; epicId?: string }
+): TicketAvecContexte[] {
+  const conditions: string[] = [];
+  const params: Record<string, string> = {};
+  if (filtres.projetId) {
+    conditions.push("p.id = @projetId");
+    params.projetId = filtres.projetId;
+  }
+  if (filtres.epicId) {
+    conditions.push("e.id = @epicId");
+    params.epicId = filtres.epicId;
+  }
+  const clause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  return db
+    .prepare(
+      `SELECT t.id, t.titre, t.type, t.statut, t.cree_le,
+              e.id AS epic_id, e.nom AS epic_nom, p.id AS projet_id, p.nom AS projet_nom
+       FROM tickets t
+       JOIN epics e ON e.id = t.epic_id
+       JOIN projets p ON p.id = e.projet_id
+       ${clause}
+       ORDER BY t.cree_le DESC`
+    )
+    .all(params) as TicketAvecContexte[];
 }
 
 // Les FK de epics/tickets/ticket_plans_test sont déclarées ON DELETE CASCADE

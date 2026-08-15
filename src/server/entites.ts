@@ -23,5 +23,14 @@ export function detailEntiteComplet(
   if (entite === "decision" && typeof row.options === "string") {
     row.options = JSON.parse(row.options);
   }
+  if (entite === "demande") {
+    row.projets_lies = db
+      .prepare(
+        `SELECT p.id, p.nom FROM projets p
+         JOIN projet_demandes pd ON pd.projet_id = p.id
+         WHERE pd.demande_id = ? ORDER BY p.nom`
+      )
+      .all(id);
+  }
   return row;
 }
