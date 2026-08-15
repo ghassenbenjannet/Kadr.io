@@ -384,38 +384,49 @@ export async function envoyerMessage(
   args: { conversationId?: string; message: string },
   gestionnaires: EvenementFluxChat
 ): Promise<void> {
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(args),
-  });
+  // Tout est capturé ici, y compris les échecs de fetch() lui-même (réseau
+  // coupé, endpoint injoignable) et les erreurs de lecture du flux en cours
+  // de route : sans ce filet, une requête qui échoue avant même de recevoir
+  // une réponse HTTP plante silencieusement — ni erreur affichée, ni sortie
+  // de l'état "en cours" côté Conversation.tsx.
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(args),
+    });
 
-  if (!res.ok) {
-    if (res.status === 401) gestionnaireSessionExpiree?.();
-    const corps = await res.json().catch(() => ({}));
-    gestionnaires.onErreur?.((corps as { erreur?: string }).erreur ?? `Erreur HTTP ${res.status}`);
-    return;
-  }
-  if (!res.body) {
-    gestionnaires.onErreur?.("Réponse sans flux.");
-    return;
-  }
-
-  const lecteur = res.body.getReader();
-  const decodeur = new TextDecoder();
-  let tampon = "";
-
-  while (true) {
-    const { done, value } = await lecteur.read();
-    if (done) break;
-    tampon += decodeur.decode(value, { stream: true });
-
-    let indexSeparateur: number;
-    while ((indexSeparateur = tampon.indexOf("\n\n")) >= 0) {
-      const bloc = tampon.slice(0, indexSeparateur);
-      tampon = tampon.slice(indexSeparateur + 2);
-      distribuerEvenementSSE(bloc, gestionnaires);
+    if (!res.ok) {
+      if (res.status === 401) gestionnaireSessionExpiree?.();
+      const corps = await res.json().catch(() => ({}));
+      gestionnaires.onErreur?.((corps as { erreur?: string }).erreur ?? `Erreur HTTP ${res.status}`);
+      return;
     }
+    if (!res.body) {
+      gestionnaires.onErreur?.("Réponse sans flux.");
+      return;
+    }
+
+    const lecteur = res.body.getReader();
+    const decodeur = new TextDecoder();
+    let tampon = "";
+
+    while (true) {
+      const { done, value } = await lecteur.read();
+      if (done) break;
+      tampon += decodeur.decode(value, { stream: true });
+
+      let indexSeparateur: number;
+      while ((indexSeparateur = tampon.indexOf("\n\n")) >= 0) {
+        const bloc = tampon.slice(0, indexSeparateur);
+        tampon = tampon.slice(indexSeparateur + 2);
+        distribuerEvenementSSE(bloc, gestionnaires);
+      }
+    }
+  } catch (e) {
+    gestionnaires.onErreur?.(
+      e instanceof Error ? `Requête échouée : ${e.message}` : "Requête échouée (erreur réseau)."
+    );
   }
 }
 

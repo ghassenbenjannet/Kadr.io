@@ -205,6 +205,9 @@ export function Conversation({ conversationId, onConversationDemarree }: Props) 
             </div>
           );
         })}
+        {enCours && elements[elements.length - 1]?.type === "user" && (
+          <div className="trace mono trace--attente">réflexion…</div>
+        )}
         <div ref={finRef} />
       </div>
 
