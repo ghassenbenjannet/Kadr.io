@@ -36,7 +36,7 @@
   justify-content: center;
   background: var(--accent);
   border-radius: var(--rayon-s);
-  color: #fff;
+  color: var(--accent-texte);
   font-size: 1rem;
 }
 
@@ -62,7 +62,7 @@
   display: flex;
   align-items: center;
   gap: var(--e-2);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--paper-sidebar-hover);
   border: 1px solid var(--sidebar-rule);
   border-radius: var(--rayon-m);
   padding: var(--e-2) var(--e-3);
@@ -205,7 +205,7 @@
   height: 30px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--sidebar-avatar-fond);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -248,6 +248,23 @@
 }
 
 .sidebar__deconnexion:hover {
+  color: var(--sidebar-ink);
+  background: var(--paper-sidebar-hover);
+}
+
+.sidebar__theme {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--sidebar-ink-3);
+  font-size: 1rem;
+  padding: var(--e-1);
+  border-radius: var(--rayon-s);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.sidebar__theme:hover {
   color: var(--sidebar-ink);
   background: var(--paper-sidebar-hover);
 }
@@ -1117,11 +1134,11 @@ td.editable {
   gap: var(--e-2);
   padding: 9px 14px;
   border-radius: var(--rayon-m);
-  border: 1px solid rgba(13, 18, 32, 0.12);
+  border: 1px solid var(--rule-bouton);
   background: var(--paper-raised);
   font-weight: 600;
   font-size: 13px;
-  color: #3a4358;
+  color: var(--bouton-texte);
   transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1), background 120ms;
 }
 
@@ -1140,12 +1157,12 @@ td.editable {
 
 .btn--primaire {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--accent-texte);
   border-color: var(--accent);
 }
 
 .btn--primaire:hover {
-  background: #2246b8;
+  background: var(--accent-hover);
 }
 
 .btn--danger {
@@ -1626,9 +1643,9 @@ td.editable {
 }
 
 .rapport-carte .btn {
-  background: #ffffff;
+  background: var(--paper-raised);
   color: var(--ink);
-  border-color: #ffffff;
+  border-color: var(--paper-raised);
 }
 
 .rapport-carte .btn:hover {

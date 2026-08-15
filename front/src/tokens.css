@@ -1,59 +1,13 @@
-/* Registre SI — tokens visuels (relooking : sidebar sombre, badges colorés
-   par type d'entité, cartes blanches sur fond gris clair). Palette reprise
-   du mockup Claude Design (accent + 3 couleurs de type : bleu/vert/violet/
-   rouge — la même palette que celle exposée comme options d'accent dans le
-   mockup). Le rouge/vert restent aussi les couleurs sémantiques d'état
-   (succès/danger) : cohérent plutôt que redondant. */
+/* Registre SI — tokens visuels. Les tokens de COULEUR vivent dans
+   primitives.css (par thème) et semantique.css (mapping fixe) — voir
+   docs/design-tokens.md. Ce fichier ne garde que ce qui ne dépend jamais du
+   thème actif : typographie, espacement, rayons, et les styles d'éléments
+   globaux (body, h1-h4…). */
+
+@import "./primitives.css";
+@import "./semantique.css";
 
 :root {
-  /* Surfaces */
-  --paper: #f4f6f9;
-  --paper-raised: #ffffff;
-  --paper-sunken: #eef1f5;
-  --paper-sidebar: #0d1117;
-  --paper-sidebar-raised: rgba(255, 255, 255, 0.1);
-  --paper-sidebar-hover: rgba(255, 255, 255, 0.06);
-
-  /* Encre — texte, gris froid quasi neutre */
-  --ink: #0d1220;
-  --ink-2: rgba(13, 18, 32, 0.66);
-  --ink-3: rgba(13, 18, 32, 0.46);
-  --ink-4: rgba(13, 18, 32, 0.28);
-  --ink-on-dark: #f4f6f9;
-
-  /* Encre sur la sidebar sombre */
-  --sidebar-ink: #ffffff;
-  --sidebar-ink-2: rgba(255, 255, 255, 0.62);
-  --sidebar-ink-3: rgba(255, 255, 255, 0.4);
-  --sidebar-rule: rgba(255, 255, 255, 0.1);
-
-  /* Règles — bordures, toujours l'encre en transparence */
-  --rule: rgba(13, 18, 32, 0.09);
-  --rule-strong: rgba(13, 18, 32, 0.18);
-  --rule-focus: rgba(13, 18, 32, 0.6);
-
-  /* Accent — bleu, navigation active, boutons primaires, badge "demande" */
-  --accent: #2954d1;
-  --accent-fond: #e8edfc;
-
-  /* Couleurs par type d'entité (badges) — même palette que les états */
-  --type-demande: #2954d1;
-  --type-demande-fond: #e8edfc;
-  --type-changement: #1f7a5c;
-  --type-changement-fond: #e3f5ec;
-  --type-decision: #6b3fc4;
-  --type-decision-fond: #f0e9fb;
-  --type-incident: #c4342a;
-  --type-incident-fond: #fbe8e6;
-
-  /* Sémantique — succès/danger alignés sur changement/incident, attention distincte (ambre) */
-  --etat-succes: #1f7a5c;
-  --etat-succes-fond: #e3f5ec;
-  --etat-attention: #9c6b0a;
-  --etat-attention-fond: #f6ecd2;
-  --etat-danger: #c4342a;
-  --etat-danger-fond: #fbe8e6;
-
   /* Typographie */
   --police-texte: "Public Sans", -apple-system, "Segoe UI", sans-serif;
   --police-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -80,10 +34,6 @@
   --rayon-l: 12px;
   --rayon-xl: 14px;
   --rayon-pilule: 999px;
-
-  --ombre-carte: 0 1px 2px rgba(13, 18, 32, 0.04);
-
-  color-scheme: light;
 }
 
 * {

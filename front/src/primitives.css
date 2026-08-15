@@ -1,0 +1,123 @@
+/* Couche PRIMITIVE (Jalon 4, Prompt M) : valeurs brutes qui varient par
+   thème — surfaces, encre, filets, température. Ce fichier ne sait rien du
+   sens métier d'une couleur ; c'est le rôle de semantique.css. Chaque thème
+   redéclare l'intégralité des primitifs (pas de fusion implicite par
+   cascade) : un thème est un jeu de valeurs complet et autonome, jamais un
+   correctif partiel du précédent — voir docs/design-tokens.md.
+
+   Basculer de thème ne change QUE ce fichier. semantique.css et tous les
+   composants restent inchangés : les rôles (succès/attention/danger/accent)
+   ne bougent jamais, seule leur température/luminosité s'ajuste. */
+
+:root,
+:root[data-theme="console"] {
+  /* Surfaces — neutres froids, encre presque noire (direction "console technique") */
+  --primitif-surface-app: #f4f6f9;
+  --primitif-surface-carte: #ffffff;
+  --primitif-surface-creuse: #eef1f5;
+  --primitif-surface-sidebar: #0d1117;
+  --primitif-surface-sidebar-elevee: rgba(255, 255, 255, 0.1);
+  --primitif-surface-sidebar-survol: rgba(255, 255, 255, 0.06);
+  --primitif-surface-sidebar-avatar: rgba(255, 255, 255, 0.12);
+
+  /* Encre */
+  --primitif-encre-1: #0d1220;
+  --primitif-encre-2: rgba(13, 18, 32, 0.66);
+  --primitif-encre-3: rgba(13, 18, 32, 0.46);
+  --primitif-encre-4: rgba(13, 18, 32, 0.28);
+  --primitif-encre-inverse: #f4f6f9;
+
+  --primitif-encre-sidebar-1: #ffffff;
+  --primitif-encre-sidebar-2: rgba(255, 255, 255, 0.62);
+  --primitif-encre-sidebar-3: rgba(255, 255, 255, 0.4);
+  --primitif-filet-sidebar: rgba(255, 255, 255, 0.1);
+
+  /* Filets */
+  --primitif-filet-1: rgba(13, 18, 32, 0.09);
+  --primitif-filet-2: rgba(13, 18, 32, 0.18);
+  --primitif-filet-focus: rgba(13, 18, 32, 0.6);
+  --primitif-filet-bouton: rgba(13, 18, 32, 0.12);
+
+  /* Accent — bleu, navigation active et liens uniquement */
+  --primitif-accent: #2954d1;
+  --primitif-accent-fond: #e8edfc;
+  --primitif-accent-survol: #2246b8;
+  --primitif-accent-texte: #ffffff;
+
+  /* États métier — jamais réutilisés comme décoration */
+  --primitif-etat-succes: #1f7a5c;
+  --primitif-etat-succes-fond: #e3f5ec;
+  --primitif-etat-attention: #9c6b0a;
+  --primitif-etat-attention-fond: #f6ecd2;
+  --primitif-etat-danger: #c4342a;
+  --primitif-etat-danger-fond: #fbe8e6;
+
+  /* Type d'entité (badges Journal) — catégoriel, pas un état */
+  --primitif-type-demande: #2954d1;
+  --primitif-type-demande-fond: #e8edfc;
+  --primitif-type-changement: #1f7a5c;
+  --primitif-type-changement-fond: #e3f5ec;
+  --primitif-type-decision: #6b3fc4;
+  --primitif-type-decision-fond: #f0e9fb;
+  --primitif-type-incident: #c4342a;
+  --primitif-type-incident-fond: #fbe8e6;
+
+  --primitif-bouton-texte: #3a4358;
+  --primitif-ombre-carte: rgba(13, 18, 32, 0.04);
+}
+
+:root[data-theme="papier"] {
+  /* Surfaces — kraft d'archive, papier légèrement chaud (direction "dossier
+     d'instruction" du premier jet, jamais livrée) */
+  --primitif-surface-app: #f7f2e7;
+  --primitif-surface-carte: #fffcf5;
+  --primitif-surface-creuse: #efe6d3;
+  --primitif-surface-sidebar: #1c150d;
+  --primitif-surface-sidebar-elevee: rgba(253, 246, 232, 0.1);
+  --primitif-surface-sidebar-survol: rgba(253, 246, 232, 0.06);
+  --primitif-surface-sidebar-avatar: rgba(253, 246, 232, 0.12);
+
+  /* Encre — brun-noir, jamais un gris froid */
+  --primitif-encre-1: #241a0f;
+  --primitif-encre-2: rgba(36, 26, 15, 0.68);
+  --primitif-encre-3: rgba(36, 26, 15, 0.48);
+  --primitif-encre-4: rgba(36, 26, 15, 0.28);
+  --primitif-encre-inverse: #f7f2e7;
+
+  --primitif-encre-sidebar-1: #fdf6e8;
+  --primitif-encre-sidebar-2: rgba(253, 246, 232, 0.64);
+  --primitif-encre-sidebar-3: rgba(253, 246, 232, 0.42);
+  --primitif-filet-sidebar: rgba(253, 246, 232, 0.12);
+
+  --primitif-filet-1: rgba(36, 26, 15, 0.1);
+  --primitif-filet-2: rgba(36, 26, 15, 0.2);
+  --primitif-filet-focus: rgba(36, 26, 15, 0.62);
+  --primitif-filet-bouton: rgba(36, 26, 15, 0.14);
+
+  /* Accent — même rôle (nav active, liens), teinte réchauffée vers l'indigo */
+  --primitif-accent: #3a4fa0;
+  --primitif-accent-fond: #e8e6f5;
+  --primitif-accent-survol: #2b3b7c;
+  --primitif-accent-texte: #fdf6e8;
+
+  /* États métier — même famille de teinte que console (vert/ambre/rouge),
+     réchauffés ; jamais réassignés à un autre rôle */
+  --primitif-etat-succes: #3f7a44;
+  --primitif-etat-succes-fond: #e6efdd;
+  --primitif-etat-attention: #8a5a12;
+  --primitif-etat-attention-fond: #f2e2bd;
+  --primitif-etat-danger: #a23a26;
+  --primitif-etat-danger-fond: #f5e2da;
+
+  --primitif-type-demande: #3a4fa0;
+  --primitif-type-demande-fond: #e8e6f5;
+  --primitif-type-changement: #3f7a44;
+  --primitif-type-changement-fond: #e6efdd;
+  --primitif-type-decision: #7a4f8a;
+  --primitif-type-decision-fond: #efe2f0;
+  --primitif-type-incident: #a23a26;
+  --primitif-type-incident-fond: #f5e2da;
+
+  --primitif-bouton-texte: #4a3d2c;
+  --primitif-ombre-carte: rgba(36, 26, 15, 0.07);
+}

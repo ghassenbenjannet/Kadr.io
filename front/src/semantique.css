@@ -1,0 +1,66 @@
+/* Couche SÉMANTIQUE (Jalon 4, Prompt M) : mapping FIXE, un seul fichier pour
+   tous les thèmes — jamais de sélecteur [data-theme] ici. Chaque token
+   pointe vers un primitif (primitives.css), donc sa valeur RÉSOLUE change
+   avec le thème actif, mais son RÔLE ne change jamais : --etat-danger
+   signifie toujours "état métier dangereux", --accent toujours "navigation
+   active / lien", quel que soit le thème. Voir docs/design-tokens.md.
+
+   Règle non négociable : --etat-succes / --etat-attention / --etat-danger
+   ne représentent QUE des états métier (constat ouvert, changement sans
+   rollback, incident, validé/rejeté) — jamais une décoration. --accent est
+   unique, réservé à la navigation active et aux liens — jamais un "brand
+   primary". Aucun composant n'a le droit d'utiliser une couleur hors des
+   variables nommées ici (ou des tokens non colorés de tokens.css). */
+
+:root {
+  --paper: var(--primitif-surface-app);
+  --paper-raised: var(--primitif-surface-carte);
+  --paper-sunken: var(--primitif-surface-creuse);
+  --paper-sidebar: var(--primitif-surface-sidebar);
+  --paper-sidebar-raised: var(--primitif-surface-sidebar-elevee);
+  --paper-sidebar-hover: var(--primitif-surface-sidebar-survol);
+  --sidebar-avatar-fond: var(--primitif-surface-sidebar-avatar);
+
+  --ink: var(--primitif-encre-1);
+  --ink-2: var(--primitif-encre-2);
+  --ink-3: var(--primitif-encre-3);
+  --ink-4: var(--primitif-encre-4);
+  --ink-on-dark: var(--primitif-encre-inverse);
+
+  --sidebar-ink: var(--primitif-encre-sidebar-1);
+  --sidebar-ink-2: var(--primitif-encre-sidebar-2);
+  --sidebar-ink-3: var(--primitif-encre-sidebar-3);
+  --sidebar-rule: var(--primitif-filet-sidebar);
+
+  --rule: var(--primitif-filet-1);
+  --rule-strong: var(--primitif-filet-2);
+  --rule-focus: var(--primitif-filet-focus);
+  --rule-bouton: var(--primitif-filet-bouton);
+
+  --accent: var(--primitif-accent);
+  --accent-fond: var(--primitif-accent-fond);
+  --accent-hover: var(--primitif-accent-survol);
+  --accent-texte: var(--primitif-accent-texte);
+
+  --etat-succes: var(--primitif-etat-succes);
+  --etat-succes-fond: var(--primitif-etat-succes-fond);
+  --etat-attention: var(--primitif-etat-attention);
+  --etat-attention-fond: var(--primitif-etat-attention-fond);
+  --etat-danger: var(--primitif-etat-danger);
+  --etat-danger-fond: var(--primitif-etat-danger-fond);
+
+  --type-demande: var(--primitif-type-demande);
+  --type-demande-fond: var(--primitif-type-demande-fond);
+  --type-changement: var(--primitif-type-changement);
+  --type-changement-fond: var(--primitif-type-changement-fond);
+  --type-decision: var(--primitif-type-decision);
+  --type-decision-fond: var(--primitif-type-decision-fond);
+  --type-incident: var(--primitif-type-incident);
+  --type-incident-fond: var(--primitif-type-incident-fond);
+
+  --bouton-texte: var(--primitif-bouton-texte);
+  --ombre-carte: 0 1px 2px var(--primitif-ombre-carte);
+
+  /* Les deux thèmes enregistrés sont clairs — pas de bascule dark mode ici. */
+  color-scheme: light;
+}

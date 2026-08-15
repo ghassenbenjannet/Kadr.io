@@ -25,6 +25,7 @@ import { PlansTest } from "./views/PlansTest";
 import { Agents } from "./views/Agents";
 import { EcransMobiles } from "./views/EcransMobiles";
 import { Login } from "./views/Login";
+import { ThemeSelector } from "./components/ThemeSelector";
 
 function construireGroupes(compteDemandes: number, compteConstats: number, compteProjets: number) {
   return [
@@ -138,6 +139,7 @@ export default function App() {
             <span className="sidebar__nom">Registre SI</span>
             <span className="sidebar__baseline">Abraxio</span>
           </div>
+          <ThemeSelector />
         </div>
 
         <div className="sidebar__recherche">

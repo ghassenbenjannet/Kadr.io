@@ -11,6 +11,10 @@ import "@fontsource/ibm-plex-mono/500.css";
 import "./tokens.css";
 import "./app.css";
 import App from "./App.tsx";
+import { themeInitial, appliquerTheme } from "./lib/themes.ts";
+
+// Appliqué avant le premier rendu pour éviter un flash du thème par défaut.
+appliquerTheme(themeInitial());
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
