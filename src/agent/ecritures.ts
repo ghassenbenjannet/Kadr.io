@@ -92,6 +92,26 @@ export function trouverEcriture(db: Database.Database, id: string): EcritureProp
   return row ? ligneVersEcriture(row) : null;
 }
 
+export function listerEcrituresEnAttente(db: Database.Database): EcritureProposee[] {
+  const rows = db
+    .prepare(
+      "SELECT id, conversation_id, message_id, origine, tool_use_id, outil, parametres, statut, resultat, tranche_le FROM ecritures_proposees WHERE statut = 'en_attente' ORDER BY rowid"
+    )
+    .all() as {
+    id: string;
+    conversation_id: string | null;
+    message_id: string | null;
+    origine: OrigineEcriture;
+    tool_use_id: string;
+    outil: string;
+    parametres: string;
+    statut: StatutEcriture;
+    resultat: string | null;
+    tranche_le: string | null;
+  }[];
+  return rows.map(ligneVersEcriture);
+}
+
 export function trancherEcriture(
   db: Database.Database,
   id: string,

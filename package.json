@@ -15,11 +15,13 @@
     "build": "npm run build:server && npm run build:front",
     "build:server": "tsc -p tsconfig.build.json && mkdir -p dist/db/migrations dist/agent/modes && cp src/db/schema.sql dist/db/schema.sql && cp src/db/migrations/*.sql dist/db/migrations/ && cp src/agent/modes/*.md dist/agent/modes/ && if [ -f src/agent/prompt-systeme.md ]; then cp src/agent/prompt-systeme.md dist/agent/prompt-systeme.md; fi",
     "build:front": "cd front && npm install && npm run build",
-    "start": "node dist/server/index.js"
+    "start": "node dist/server/index.js",
+    "mcp": "node dist/mcp/server.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
     "@hono/node-server": "^2.1.1",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "better-sqlite3": "^11.9.1",
     "hono": "^4.13.2",
     "nanoid": "^5.0.9",

@@ -1,12 +1,12 @@
-// Avertissements affichés SUR la carte de validation, avant exécution —
-// donc recalculés côté client à partir des paramètres proposés (les
-// avertissements du Jalon 1 ne sont produits qu'après exécution côté
-// serveur). Textes repris mot pour mot des outils correspondants.
+// Avertissements affichés à la proposition d'une écriture, avant exécution —
+// donc calculés à partir des paramètres proposés, pas du résultat (les
+// avertissements du Jalon 1 ne sont produits qu'après exécution côté outil).
+// Texte partagé par le front (carte de validation) et le serveur MCP (§5.4).
 //
-// Duplication assumée (§4 spec Jalon 4) : le serveur MCP et l'app partagent
-// cette logique, mais le tsconfig du front (include: ["src"]) empêche
-// d'importer src/agent/avertissements.ts, la version canonique. Les deux
-// copies doivent rester synchronisées à la main.
+// Front (front/src/lib/avertissements-proposition.ts) ne peut pas importer
+// ce fichier — son tsconfig restreint la compilation à front/src — donc il
+// en garde une copie dupliquée à dessein (§4 de la spec Jalon 4) ; toute
+// modification ici doit être reportée là-bas.
 
 export function avertissementsPourProposition(outil: string, parametres: Record<string, unknown>): string[] {
   const avertissements: string[] = [];
