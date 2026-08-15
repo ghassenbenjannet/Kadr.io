@@ -41,7 +41,7 @@ describe("migration v2 -> v3", () => {
 
     migrer(db);
 
-    expect(db.pragma("user_version", { simple: true })).toBe(3);
+    expect(db.pragma("user_version", { simple: true })).toBeGreaterThanOrEqual(3);
 
     const champ = db.prepare("SELECT nom, disparu_le FROM champs WHERE nom = 'Statut_Client'").get() as {
       nom: string;
