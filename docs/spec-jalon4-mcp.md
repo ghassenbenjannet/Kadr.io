@@ -25,15 +25,20 @@ Interdits spécifiques à ce jalon — à vérifier par grep en fin de travail :
 * `src/mcp/**` n'importe JAMAIS `@anthropic-ai/sdk`, `agent/client.ts`, `agent/boucle.ts` ni `agent/prompt.ts`. Le serveur MCP est un fournisseur d'outils : le raisonnement, c'est Claude Desktop qui le fait, couvert par l'abonnement.
 * `confirmer_ecriture` exécute la fonction d'outil directement puis tranche. Il ne rappelle aucune boucle, ne reprend aucune conversation, ne touche pas à l'API Anthropic.
 
-## 3. Migration v8 — écritures hors conversation
+## 3. Migration v11 — écritures hors conversation
+
+> Note de mise à jour (branche `claude/registre-si-specs-6lo1ab`) : trois jalons ont été
+> livrés entre la rédaction de cette spec et son implémentation — agents_modes (v8),
+> projet_demandes (v9), vues_kanban (v10). La numérotation ci-dessous a été ajustée en
+> conséquence (v8 → v11) ; la structure de table proposée est inchangée.
 
 `ecritures_proposees` exige aujourd'hui `conversation_id` et `message_id` NOT NULL. Une écriture née en MCP n'a ni l'un ni l'autre.
 
-SQLite ne sait pas retirer un NOT NULL par ALTER : reconstruction de table (pattern : CREATE nouvelle table → INSERT SELECT → DROP → RENAME), en suivant le style des migrations v2–v7 existantes :
+SQLite ne sait pas retirer un NOT NULL par ALTER : reconstruction de table (pattern : CREATE nouvelle table → INSERT SELECT → DROP → RENAME), en suivant le style des migrations v2–v10 existantes :
 
 ```sql
--- v8-mcp.sql
-CREATE TABLE ecritures_proposees_v8 (
+-- v11-mcp.sql
+CREATE TABLE ecritures_proposees_v11 (
   id              TEXT PRIMARY KEY,
   conversation_id TEXT REFERENCES conversations(id),   -- nullable désormais
   message_id      TEXT REFERENCES messages(id),        -- nullable désormais
@@ -46,12 +51,12 @@ CREATE TABLE ecritures_proposees_v8 (
   resultat        TEXT,
   tranche_le      TEXT
 );
-INSERT INTO ecritures_proposees_v8
+INSERT INTO ecritures_proposees_v11
   SELECT id, conversation_id, message_id, 'app', tool_use_id, outil, parametres,
          statut, resultat, tranche_le
   FROM ecritures_proposees;
 DROP TABLE ecritures_proposees;
-ALTER TABLE ecritures_proposees_v8 RENAME TO ecritures_proposees;
+ALTER TABLE ecritures_proposees_v11 RENAME TO ecritures_proposees;
 ```
 
 Pour une écriture MCP : `tool_use_id = 'mcp-' + nanoid()`, `origine='mcp'`.
@@ -145,7 +150,7 @@ Conserver tels quels les deux blocs `<<< À COMPLÉTER >>>`.
 
 Sans processus stdio réel : instancier le serveur et invoquer les handlers directement (ou via le transport in-memory du SDK).
 
-1. Migration v8 : DB v7 avec écritures existantes → reconstruite sans perte, `origine='app'` partout, remigrer sans effet.
+1. Migration v11 : DB v10 avec écritures existantes → reconstruite sans perte (colonnes comprises : comparer le schéma avant/après), `origine='app'` partout, remigrer sans effet.
 2. Lecture via MCP : `rechercher_journal` exécute et répond (pas d'écriture proposée).
 3. Écriture via MCP : `enregistrer_changement` sans rollback → AUCUNE ligne dans `changements`, une `ecriture_proposee` `origine='mcp'`, réponse contenant l'avertissement rollback.
 4. `confirmer_ecriture` : exécute, ligne créée, statut `validee` ; avec `parametres` corrigés → `modifiee_validee` et les valeurs corrigées en base ; deuxième confirmation → ok:false « déjà tranchée » ; paramètres invalides (zod) → ok:false, écriture toujours `en_attente`.
@@ -166,10 +171,10 @@ JAMAIS, (2) comment « l'IA propose, l'humain valide » survit sans carte cliqua
 (3) les directives de gel du §1. Mêmes règles de travail que les jalons précédents.
 ```
 
-### Prompt I — Migration v8 et tranchage hors conversation
+### Prompt I — Migration v11 et tranchage hors conversation
 
 ```
-Étapes §3 : migration v8 par reconstruction de table (pattern des migrations
+Étapes §3 : migration v11 par reconstruction de table (pattern des migrations
 existantes), origine 'app'/'mcp', puis adaptation du tranchage pour qu'une écriture
 sans conversation_id ne crée aucun message tool_result.
 

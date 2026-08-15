@@ -20,7 +20,7 @@ import {
   listerMessages,
   versMessagesAnthropic,
 } from "./messages.js";
-import { creerEcritureProposee, trancherEcriture, trouverEcriture, type EcritureProposee } from "./ecritures.js";
+import { creerEcritureProposee, trancherEtNotifier, trouverEcriture, type EcritureProposee } from "./ecritures.js";
 
 export const MAX_TOURS_DEFAUT = 8;
 
@@ -195,27 +195,23 @@ export async function reprendreApresDecision(
     throw new Error(`Outil inconnu : ${ecriture.outil}`);
   }
 
+  if (!ecriture.conversation_id) {
+    throw new Error(
+      `Écriture proposée sans conversation (origine ${ecriture.origine}) : à trancher via confirmer_ecriture/rejeter_ecriture, pas via l'API app.`
+    );
+  }
+  const conversationId = ecriture.conversation_id;
+
   if (entree.decision === "rejeter") {
     const resultatAnnulation = { ok: false, erreur: "Proposition rejetée par l'opérateur." };
-    trancherEcriture(db, ecriture.id, "rejetee", resultatAnnulation);
-    enregistrerMessage(db, ecriture.conversation_id, "tool_result", [
-      {
-        type: "tool_result",
-        tool_use_id: ecriture.tool_use_id,
-        content: JSON.stringify(resultatAnnulation),
-        is_error: true,
-      },
-    ]);
+    trancherEtNotifier(db, ecriture, "rejetee", resultatAnnulation, { estErreur: true });
   } else {
     const parametresProposes = ecriture.parametres;
     const parametresFinal = entree.parametres === undefined ? parametresProposes : entree.parametres;
     const corrige = JSON.stringify(parametresFinal) !== JSON.stringify(parametresProposes);
 
     const resultat = await definition.executer(db, parametresFinal);
-    trancherEcriture(db, ecriture.id, corrige ? "modifiee_validee" : "validee", resultat);
-    enregistrerMessage(db, ecriture.conversation_id, "tool_result", [
-      { type: "tool_result", tool_use_id: ecriture.tool_use_id, content: JSON.stringify(resultat) },
-    ]);
+    trancherEtNotifier(db, ecriture, corrige ? "modifiee_validee" : "validee", resultat);
   }
 
   return boucler({
@@ -223,7 +219,7 @@ export async function reprendreApresDecision(
     client,
     config,
     promptSysteme,
-    conversationId: ecriture.conversation_id,
+    conversationId,
     rappels,
     maxTours,
   });
