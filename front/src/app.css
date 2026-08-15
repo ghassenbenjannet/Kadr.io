@@ -345,6 +345,46 @@ td.editable {
   color: var(--ink);
 }
 
+.ligne--cliquable {
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  color: inherit;
+}
+
+/* --- Liens de retour ---------------------------------------------------- */
+
+.lien-retour {
+  background: none;
+  border: none;
+  font: inherit;
+  color: var(--ink-3);
+  padding: 0;
+  margin-bottom: var(--e-5);
+  cursor: pointer;
+}
+
+.lien-retour:hover {
+  color: var(--accent);
+}
+
+/* --- Suite de recette ---------------------------------------------------- */
+
+.plan-test {
+  margin-bottom: var(--e-4);
+}
+
+.plan-test__nom {
+  font-size: var(--taille-corps);
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-bottom: var(--e-1);
+}
+
 /* --- Tickets (kanban des demandes) -------------------------------------- */
 
 .kanban {

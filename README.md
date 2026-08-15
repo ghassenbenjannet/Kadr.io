@@ -23,18 +23,30 @@ qui remplace le serveur MCP initial par cette application autonome.
   jusque-là des pages HTML statiques séparées — sont maintenant des écrans React de
   la même application, dans la même navigation. Le serveur web statique et
   `npm run web` ont été retirés : une seule interface, à jour en temps réel.
-- **Écran Tickets** : le schéma des demandes portait déjà un vrai cycle de vie
-  (`recue` → `qualifiee` → `arbitree` → `realisee`, ou `refusee`/`reportee`) sans
+- **Écran Tickets (demandes)** : le schéma des demandes portait déjà un vrai cycle de
+  vie (`recue` → `qualifiee` → `arbitree` → `realisee`, ou `refusee`/`reportee`) sans
   aucun moyen de le faire avancer. L'outil `mettre_a_jour_demande` et l'écran
   Tickets (colonnes par statut) comblent ce trou — sans assignation utilisateur,
   l'équipe demandeuse suffit pour un opérateur solo.
+- **Suivi de projet** : un second axe, volontairement séparé du registre (qui garde
+  son rôle de mémoire). Hiérarchie **demande → projet → epic → ticket** (analyse,
+  documentation, atelier, bug, task), avec une **suite de recette** — des plans de
+  test (listes de cas à cocher) liés aux tickets qui en ont besoin. 8 outils agent
+  (`creer_projet`, `creer_epic`, `creer_ticket`, `mettre_a_jour_ticket`,
+  `creer_plan_test`, `executer_cas_test`, `lier_ticket_plan_test`, `etat_projet`) et
+  l'écran **Projets** (liste, puis détail par projet : epics/tickets et suite de
+  recette).
+- **Direction visuelle « console technique »** : neutres froids, encre presque
+  noire, un seul bleu de signal réservé à la navigation active — remplace la
+  direction « papier chaud » initiale, suite au retour que la palette d'origine ne
+  convenait pas.
 - **Jalon 3 (import Zoho)** : amorcé (migration, `zoho_configurer`, client HTTP Zoho
   testé sur transport injecté). La suite (découverte, mapper, fusion, import,
   contrôles de dérive) est **délibérément arrêtée** : elle exige une exécution réelle
   contre le Zoho d'Abraxio avant d'écrire le moindre code de mapping. Voir
   « Continuer le Jalon 3 » plus bas.
 
-153 tests verts (`npm test`).
+175 tests verts (`npm test`).
 
 ## Installation
 
@@ -108,22 +120,25 @@ SQLite est créée automatiquement au premier démarrage
 | Habilitations | Matrice champs × profils — distinction « non déclaré » ≠ « masqué » ≠ « visible » ≠ « édite », filtrable par module |
 | Champs | Champs groupés par source de vérité déclarée, contradictions (contrôle M2) en tête de groupe |
 | Intégrations | Flux source → cible avec le nombre de constats ouverts rattachés |
+| Projets | Liste des projets, puis détail par projet : epics avec leurs tickets, et la suite de recette (plans de test liés) |
 
-Les écrans sont groupés dans la navigation en deux sections : **Registre**
-(Conversation, Tickets, Journal, Constats, Rapport hebdo) et **Cartographie**
-(Habilitations, Champs, Intégrations).
+Les écrans sont groupés dans la navigation en trois sections : **Registre**
+(Conversation, Tickets, Journal, Constats, Rapport hebdo), **Projets**, et
+**Cartographie** (Habilitations, Champs, Intégrations).
 
 ## Outils de l'agent
 
 Outils de **lecture** (exécutés immédiatement, jamais de validation) :
 `rechercher_journal`, `constats_ouverts`, `lancer_controles`, `generer_rapport`,
-`impact`.
+`impact`, `etat_projet`.
 
 Outils d'**écriture** (toujours proposés, jamais exécutés sans validation) :
 `enregistrer_demande`, `mettre_a_jour_demande`, `enregistrer_decision`,
 `enregistrer_changement`, `enregistrer_incident`, `decrire_systeme`, `decrire_module`,
 `decrire_champ`, `decrire_habilitation`, `decrire_integration`,
-`decrire_automatisation`, `lier_changement`, `zoho_configurer`.
+`decrire_automatisation`, `lier_changement`, `zoho_configurer`, `creer_projet`,
+`creer_epic`, `creer_ticket`, `mettre_a_jour_ticket`, `creer_plan_test`,
+`executer_cas_test`, `lier_ticket_plan_test`.
 
 ## Routine hebdomadaire recommandée
 
