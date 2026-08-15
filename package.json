@@ -1,23 +1,20 @@
 {
   "name": "registre-si",
   "version": "1.0.0",
-  "description": "Registre SI — mémoire structurée et vérifiable du SI d'Abraxio (serveur MCP)",
+  "description": "Registre SI — mémoire structurée et vérifiable du SI d'Abraxio (application avec agent IA intégré)",
   "type": "module",
   "private": true,
   "engines": {
     "node": ">=20"
   },
-  "main": "dist/server.js",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "tsc -p tsconfig.build.json && mkdir -p dist/db/migrations && cp src/db/schema.sql dist/db/schema.sql && cp src/db/migrations/*.sql dist/db/migrations/",
-    "start": "node dist/server.js",
     "web": "node dist/web/server.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.0",
     "better-sqlite3": "^11.9.1",
     "nanoid": "^5.0.9",
     "zod": "^3.24.2"
