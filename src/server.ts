@@ -36,6 +36,8 @@ import * as outilImpact from "./tools/impact.js";
 import { impact } from "./tools/impact.js";
 import * as outilLierChangement from "./tools/lier-changement.js";
 import { lierChangement } from "./tools/lier-changement.js";
+import * as outilZohoConfigurer from "./tools/zoho-configurer.js";
+import { zohoConfigurer } from "./tools/zoho-configurer.js";
 
 const db = ouvrirDb();
 migrer(db);
@@ -143,6 +145,12 @@ server.registerTool(
   outilLierChangement.nom,
   { description: outilLierChangement.description, inputSchema: outilLierChangement.schemaEntree },
   async (args) => texte(lierChangement(db, args))
+);
+
+server.registerTool(
+  outilZohoConfigurer.nom,
+  { description: outilZohoConfigurer.description, inputSchema: outilZohoConfigurer.schemaEntree },
+  async (args) => texte(await zohoConfigurer(args))
 );
 
 const transport = new StdioServerTransport();

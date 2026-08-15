@@ -16,6 +16,7 @@ interface Migration {
 const MIGRATIONS: Migration[] = [
   { version: 1, fichier: join(iciDir, "schema.sql") },
   { version: 2, fichier: join(iciDir, "migrations", "v2-carte.sql") },
+  { version: 3, fichier: join(iciDir, "migrations", "v3-zoho.sql") },
 ];
 
 function versionCourante(db: Database.Database): number {

@@ -42,7 +42,7 @@ describe("migration v1 -> v2", () => {
     migrer(dbV1Seule);
 
     const version = dbV1Seule.pragma("user_version", { simple: true });
-    expect(version).toBe(2);
+    expect(version).toBeGreaterThanOrEqual(2);
 
     const demande = dbV1Seule.prepare("SELECT expression_brute FROM demandes").get() as {
       expression_brute: string;
@@ -75,8 +75,9 @@ describe("migration v1 -> v2", () => {
   it("remigrer est sans effet (idempotent)", () => {
     const { db } = nouvelleDbTemp();
     migrer(db);
+    const versionApres1erPassage = db.pragma("user_version", { simple: true });
     expect(() => migrer(db)).not.toThrow();
-    expect(db.pragma("user_version", { simple: true })).toBe(2);
+    expect(db.pragma("user_version", { simple: true })).toBe(versionApres1erPassage);
     db.close();
   });
 });
