@@ -45,8 +45,16 @@ qui remplace le serveur MCP initial par cette application autonome.
   contrôles de dérive) est **délibérément arrêtée** : elle exige une exécution réelle
   contre le Zoho d'Abraxio avant d'écrire le moindre code de mapping. Voir
   « Continuer le Jalon 3 » plus bas.
+- **Jalon 4 (transport MCP)** : livré. Second point d'entrée conversationnel — voir
+  [Utiliser depuis Claude Desktop](#utiliser-depuis-claude-desktop) — qui expose le
+  même catalogue d'outils sans passer par l'agent intégré ni l'API Anthropic. Gel de
+  périmètre associé : Conversation, Projets/ProjetDetail, Tickets/TicketDetail,
+  DocumentEditor et Base de connaissances (dont l'écran Kanban livré juste avant ce
+  jalon) ne reçoivent plus que des corrections de bug ; tout nouvel investissement
+  d'écran va vers Journal, Constats, Habilitations, Intégrations, Champs et Rapport
+  hebdo.
 
-212 tests verts (`npm test`).
+303 tests verts (`npm test`).
 
 ## Installation
 
@@ -177,6 +185,66 @@ la clé API** : dès que le conteneur est exposé au-delà de `localhost`
 (déploiement, reverse proxy), définissez-le — voir
 [Sécurité et authentification](#sécurité-et-authentification). Derrière un
 reverse proxy HTTPS, ajoutez aussi `-e REGISTRE_COOKIE_SECURE=true`.
+
+## Utiliser depuis Claude Desktop
+
+Alternative à l'agent intégré : un serveur MCP (`src/mcp/server.ts`) expose le même
+catalogue d'outils à Claude Desktop, en transport stdio. La conversation est alors
+couverte par votre abonnement claude.ai — **aucune clé API Anthropic requise pour ce
+mode**. Le principe « l'IA propose, l'humain valide » reste inchangé : les outils
+d'écriture ne font que proposer, `confirmer_ecriture` / `rejeter_ecriture` restent les
+seuls chemins d'exécution, à votre décision explicite en conversation.
+
+```bash
+npm run build:server   # compile dist/mcp/server.js (inclus dans `npm run build`)
+```
+
+Dans la configuration de Claude Desktop (`claude_desktop_config.json`) :
+
+```json
+{
+  "mcpServers": {
+    "registre-si": {
+      "command": "node",
+      "args": ["<chemin-absolu>/dist/mcp/server.js"],
+      "env": { "REGISTRE_DB_PATH": "<home>/.registre-si/registre.db" }
+    }
+  }
+}
+```
+
+Redémarrez Claude Desktop après modification. `REGISTRE_DB_PATH` doit pointer vers la
+même base que l'app (même défaut si omis : `~/.registre-si/registre.db`) — app et
+serveur MCP peuvent tourner en même temps, la base SQLite est déjà en mode WAL. Les
+instructions à coller dans un Projet Claude sont dans
+`docs/projet-claude-desktop.md`.
+
+L'app intégrée (`npm start`, ce README) reste disponible en parallèle pour les écrans
+(Journal, Constats, Projets...) et pour l'agent embarqué — le MCP est un second point
+d'entrée conversationnel, pas un remplacement.
+
+### Vérification manuelle (MCP)
+
+1. `npm run build`, renseignez la config Claude Desktop ci-dessus avec le chemin
+   absolu de votre clone, **redémarrez Claude Desktop**.
+2. Dans un nouveau chat (ou le Projet créé avec `docs/projet-claude-desktop.md`),
+   vérifiez que l'outil `🔨` liste bien les outils `registre-si` — signe que le
+   serveur MCP est connecté.
+3. Écrivez :
+
+   > Enregistre : Sophie du CS veut voir les factures dans la fiche client.
+
+4. Claude doit appeler `enregistrer_demande` puis vous répondre en présentant les
+   paramètres proposés (demandeur, équipe, expression brute, type) en JSON indenté,
+   suivis d'une phrase d'attente de validation — **sans avoir rien écrit en base à ce
+   stade**.
+5. Répondez pour valider (ex. « confirme »). Claude doit appeler `confirmer_ecriture`
+   et vous confirmer l'enregistrement.
+6. Ouvrez l'app intégrée (`npm start`, `http://localhost:3737`) sur l'écran
+   **Journal** : la demande apparaît, avec `expression_brute` reprenant exactement vos
+   mots — même base que celle utilisée par le MCP, pas de synchronisation à faire.
+7. Testez le rejet : redemandez un enregistrement, puis répondez « non, annule ».
+   Claude doit appeler `rejeter_ecriture` ; rien ne doit apparaître dans le Journal.
 
 ## Vérification manuelle
 
